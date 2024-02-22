@@ -1,4 +1,4 @@
-package cometvm
+package landslidevm
 
 import (
 	"testing"
