@@ -1,0 +1,555 @@
+syntax = "proto3";
+
+package vm;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/consideritdone/landslidevm";
+
+service LandslideVM {
+  // Initialize this VM.
+  rpc Initialize(InitializeRequest) returns (InitializeResponse);
+
+  // SetState communicates to VM its next state it starts
+  rpc SetState(SetStateRequest) returns (SetStateResponse);
+
+  // Shutdown is called when the node is shutting down.
+  rpc Shutdown(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // Creates the HTTP handlers for custom chain network calls.
+  rpc CreateHandlers(google.protobuf.Empty) returns (CreateHandlersResponse);
+  rpc Connected(ConnectedRequest) returns (google.protobuf.Empty);
+  rpc Disconnected(DisconnectedRequest) returns (google.protobuf.Empty);
+
+  // Attempt to create a new block from data contained in the VM.
+  rpc BuildBlock(BuildBlockRequest) returns (BuildBlockResponse);
+
+  // Attempt to create a block from a stream of bytes.
+  rpc ParseBlock(ParseBlockRequest) returns (ParseBlockResponse);
+
+  // Attempt to load a block.
+  rpc GetBlock(GetBlockRequest) returns (GetBlockResponse);
+
+  // Notify the VM of the currently preferred block.
+  rpc SetPreference(SetPreferenceRequest) returns (google.protobuf.Empty);
+
+  // Attempt to verify the health of the VM.
+  rpc Health(google.protobuf.Empty) returns (HealthResponse);
+
+  // Version returns the version of the VM.
+  rpc Version(google.protobuf.Empty) returns (VersionResponse);
+
+  // Notify this engine of a request for data from [nodeID].
+  rpc AppRequest(AppRequestMsg) returns (google.protobuf.Empty);
+
+  // Notify this engine that an AppRequest message it sent to [nodeID] with
+  // request ID [requestID] failed.
+  rpc AppRequestFailed(AppRequestFailedMsg) returns (google.protobuf.Empty);
+
+  // Notify this engine of a response to the AppRequest message it sent to
+  // [nodeID] with request ID [requestID].
+  rpc AppResponse(AppResponseMsg) returns (google.protobuf.Empty);
+
+  // Notify this engine of a gossip message from [nodeID].
+  rpc AppGossip(AppGossipMsg) returns (google.protobuf.Empty);
+
+  // Attempts to gather metrics from a VM.
+  rpc Gather(google.protobuf.Empty) returns (GatherResponse);
+  rpc CrossChainAppRequest(CrossChainAppRequestMsg) returns (google.protobuf.Empty);
+  rpc CrossChainAppRequestFailed(CrossChainAppRequestFailedMsg) returns (google.protobuf.Empty);
+  rpc CrossChainAppResponse(CrossChainAppResponseMsg) returns (google.protobuf.Empty);
+
+  // BatchedChainVM
+  rpc GetAncestors(GetAncestorsRequest) returns (GetAncestorsResponse);
+  rpc BatchedParseBlock(BatchedParseBlockRequest) returns (BatchedParseBlockResponse);
+
+  // HeightIndexedChainVM
+  rpc VerifyHeightIndex(google.protobuf.Empty) returns (VerifyHeightIndexResponse);
+  rpc GetBlockIDAtHeight(GetBlockIDAtHeightRequest) returns (GetBlockIDAtHeightResponse);
+
+  // StateSyncableVM
+  //
+  // StateSyncEnabled indicates whether the state sync is enabled for this VM.
+  rpc StateSyncEnabled(google.protobuf.Empty) returns (StateSyncEnabledResponse);
+
+  // GetOngoingSyncStateSummary returns an in-progress state summary if it exists.
+  rpc GetOngoingSyncStateSummary(google.protobuf.Empty) returns (GetOngoingSyncStateSummaryResponse);
+
+  // GetLastStateSummary returns the latest state summary.
+  rpc GetLastStateSummary(google.protobuf.Empty) returns (GetLastStateSummaryResponse);
+
+  // ParseStateSummary parses a state summary out of [summaryBytes].
+  rpc ParseStateSummary(ParseStateSummaryRequest) returns (ParseStateSummaryResponse);
+
+  // GetStateSummary retrieves the state summary that was generated at height
+  // [summaryHeight].
+  rpc GetStateSummary(GetStateSummaryRequest) returns (GetStateSummaryResponse);
+
+  // Block
+  rpc BlockVerify(BlockVerifyRequest) returns (BlockVerifyResponse);
+  rpc BlockAccept(BlockAcceptRequest) returns (google.protobuf.Empty);
+  rpc BlockReject(BlockRejectRequest) returns (google.protobuf.Empty);
+
+  // StateSummary
+  rpc StateSummaryAccept(StateSummaryAcceptRequest) returns (StateSummaryAcceptResponse);
+}
+
+enum State {
+  STATE_UNSPECIFIED = 0;
+  STATE_STATE_SYNCING = 1;
+  STATE_BOOTSTRAPPING = 2;
+  STATE_NORMAL_OP = 3;
+}
+
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  STATUS_PROCESSING = 1;
+  STATUS_REJECTED = 2;
+  STATUS_ACCEPTED = 3;
+}
+
+enum Error {
+  // ERROR_UNSPECIFIED is used to indicate that no error occurred.
+  ERROR_UNSPECIFIED = 0;
+  ERROR_CLOSED = 1;
+  ERROR_NOT_FOUND = 2;
+  ERROR_HEIGHT_INDEX_INCOMPLETE = 3;
+  ERROR_STATE_SYNC_NOT_IMPLEMENTED = 4;
+}
+
+message InitializeRequest {
+  uint32 network_id = 1;
+  bytes subnet_id = 2;
+  bytes chain_id = 3;
+  bytes node_id = 4;
+  // public_key is the BLS public key that would correspond with any signatures
+  // produced by the warp messaging signer
+  bytes public_key = 5;
+  bytes x_chain_id = 6;
+  bytes c_chain_id = 7;
+  bytes avax_asset_id = 8;
+  string chain_data_dir = 9;
+  bytes genesis_bytes = 10;
+  bytes upgrade_bytes = 11;
+  bytes config_bytes = 12;
+  string db_server_addr = 13;
+  // server_addr is the address of the gRPC server which serves
+  // the messenger, keystore, shared memory, blockchain alias,
+  // subnet alias, and appSender services
+  string server_addr = 14;
+}
+
+message InitializeResponse {
+  bytes last_accepted_id = 1;
+  bytes last_accepted_parent_id = 2;
+  uint64 height = 3;
+  bytes bytes = 4;
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+message SetStateRequest {
+  State state = 1;
+}
+
+message SetStateResponse {
+  bytes last_accepted_id = 1;
+  bytes last_accepted_parent_id = 2;
+  uint64 height = 3;
+  bytes bytes = 4;
+  google.protobuf.Timestamp timestamp = 5;
+}
+
+message CreateHandlersResponse {
+  repeated Handler handlers = 1;
+}
+
+message Handler {
+  string prefix = 1;
+  // server_addr is the address of the gRPC server which serves the
+  // HTTP service
+  string server_addr = 2;
+}
+
+message BuildBlockRequest {
+  optional uint64 p_chain_height = 1;
+}
+
+// Note: The status of a freshly built block is assumed to be Processing.
+message BuildBlockResponse {
+  bytes id = 1;
+  bytes parent_id = 2;
+  bytes bytes = 3;
+  uint64 height = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  bool verify_with_context = 6;
+}
+
+message ParseBlockRequest {
+  bytes bytes = 1;
+}
+
+message ParseBlockResponse {
+  bytes id = 1;
+  bytes parent_id = 2;
+  Status status = 3;
+  uint64 height = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  bool verify_with_context = 6;
+}
+
+message GetBlockRequest {
+  bytes id = 1;
+}
+
+message GetBlockResponse {
+  bytes parent_id = 1;
+  bytes bytes = 2;
+  Status status = 3;
+  uint64 height = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  // used to propagate database.ErrNotFound through RPC
+  Error err = 6;
+  bool verify_with_context = 7;
+}
+
+message SetPreferenceRequest {
+  bytes id = 1;
+}
+
+message BlockVerifyRequest {
+  bytes bytes = 1;
+  // If set, the VM server casts the block to a [block.WithVerifyContext] and
+  // calls [VerifyWithContext] instead of [Verify].
+  optional uint64 p_chain_height = 2;
+}
+
+message BlockVerifyResponse {
+  google.protobuf.Timestamp timestamp = 1;
+}
+
+message BlockAcceptRequest {
+  bytes id = 1;
+}
+
+message BlockRejectRequest {
+  bytes id = 1;
+}
+
+message HealthResponse {
+  bytes details = 1;
+}
+
+message VersionResponse {
+  string version = 1;
+}
+
+message AppRequestMsg {
+  // The node that sent us this request
+  bytes node_id = 1;
+  // The ID of this request
+  uint32 request_id = 2;
+  // deadline for this request
+  google.protobuf.Timestamp deadline = 3;
+  // The request body
+  bytes request = 4;
+}
+
+message AppRequestFailedMsg {
+  // The node that we failed to get a response from
+  bytes node_id = 1;
+  // The ID of the request we sent and didn't get a response to
+  uint32 request_id = 2;
+  // Application-defined error code
+  sint32 error_code = 3;
+  // Application-defined error message
+  string error_message = 4;
+}
+
+message AppResponseMsg {
+  // The node that we got a response from
+  bytes node_id = 1;
+  // Request ID of request that this is in response to
+  uint32 request_id = 2;
+  // The response body
+  bytes response = 3;
+}
+
+message AppGossipMsg {
+  // The node that sent us a gossip message
+  bytes node_id = 1;
+  // The message body
+  bytes msg = 2;
+}
+
+message CrossChainAppRequestMsg {
+  // The chain that sent us this request
+  bytes chain_id = 1;
+  // The ID of this request
+  uint32 request_id = 2;
+  // deadline for this request
+  google.protobuf.Timestamp deadline = 3;
+  // The request body
+  bytes request = 4;
+}
+
+message CrossChainAppRequestFailedMsg {
+  // The chain that we failed to get a response from
+  bytes chain_id = 1;
+  // The ID of the request we sent and didn't get a response to
+  uint32 request_id = 2;
+  // Application-defined error code
+  sint32 error_code = 3;
+  // Application-defined error message
+  string error_message = 4;
+}
+
+message CrossChainAppResponseMsg {
+  // The chain that we got a response from
+  bytes chain_id = 1;
+  // Request ID of request that this is in response to
+  uint32 request_id = 2;
+  // The response body
+  bytes response = 3;
+}
+
+message ConnectedRequest {
+  bytes node_id = 1;
+  // Client name (e.g avalanchego)
+  string name = 2;
+  // Client semantic version
+  uint32 major = 3;
+  uint32 minor = 4;
+  uint32 patch = 5;
+}
+
+message DisconnectedRequest {
+  bytes node_id = 1;
+}
+
+message GetAncestorsRequest {
+  bytes blk_id = 1;
+  int32 max_blocks_num = 2;
+  int32 max_blocks_size = 3;
+  int64 max_blocks_retrival_time = 4;
+}
+
+message GetAncestorsResponse {
+  repeated bytes blks_bytes = 1;
+}
+
+message BatchedParseBlockRequest {
+  repeated bytes request = 1;
+}
+
+message BatchedParseBlockResponse {
+  repeated ParseBlockResponse response = 1;
+}
+
+message VerifyHeightIndexResponse {
+  Error err = 1;
+}
+
+message GetBlockIDAtHeightRequest {
+  uint64 height = 1;
+}
+
+message GetBlockIDAtHeightResponse {
+  bytes blk_id = 1;
+  Error err = 2;
+}
+
+message LabelPair {
+  optional string name  = 1;
+  optional string value = 2;
+}
+
+enum MetricType {
+  // COUNTER must use the Metric field "counter".
+  COUNTER = 0;
+  // GAUGE must use the Metric field "gauge".
+  GAUGE = 1;
+  // SUMMARY must use the Metric field "summary".
+  SUMMARY = 2;
+  // UNTYPED must use the Metric field "untyped".
+  UNTYPED = 3;
+  // HISTOGRAM must use the Metric field "histogram".
+  HISTOGRAM = 4;
+  // GAUGE_HISTOGRAM must use the Metric field "histogram".
+  GAUGE_HISTOGRAM = 5;
+}
+
+message Gauge {
+  optional double value = 1;
+}
+
+message Counter {
+  optional double   value    = 1;
+  optional Exemplar exemplar = 2;
+
+  optional google.protobuf.Timestamp  created_timestamp = 3;
+}
+
+message Quantile {
+  optional double quantile = 1;
+  optional double value    = 2;
+}
+
+message Summary {
+  optional uint64   sample_count = 1;
+  optional double   sample_sum   = 2;
+  repeated Quantile quantile     = 3;
+
+  optional google.protobuf.Timestamp  created_timestamp = 4;
+}
+
+message Untyped {
+  optional double value = 1;
+}
+
+message Histogram {
+  optional uint64 sample_count       = 1;
+  optional double sample_count_float = 4; // Overrides sample_count if > 0.
+  optional double sample_sum         = 2;
+  // Buckets for the conventional histogram.
+  repeated Bucket bucket             = 3; // Ordered in increasing order of upper_bound, +Inf bucket is optional.
+
+  optional google.protobuf.Timestamp created_timestamp = 15;
+
+  // Everything below here is for native histograms (also known as sparse histograms).
+  // Native histograms are an experimental feature without stability guarantees.
+
+  // schema defines the bucket schema. Currently, valid numbers are -4 <= n <= 8.
+  // They are all for base-2 bucket schemas, where 1 is a bucket boundary in each case, and
+  // then each power of two is divided into 2^n logarithmic buckets.
+  // Or in other words, each bucket boundary is the previous boundary times 2^(2^-n).
+  // In the future, more bucket schemas may be added using numbers < -4 or > 8.
+  optional sint32 schema           = 5;
+  optional double zero_threshold   = 6; // Breadth of the zero bucket.
+  optional uint64 zero_count       = 7; // Count in zero bucket.
+  optional double zero_count_float = 8; // Overrides sb_zero_count if > 0.
+
+  // Negative buckets for the native histogram.
+  repeated BucketSpan negative_span =  9;
+  // Use either "negative_delta" or "negative_count", the former for
+  // regular histograms with integer counts, the latter for float
+  // histograms.
+  repeated sint64 negative_delta    = 10; // Count delta of each bucket compared to previous one (or to zero for 1st bucket).
+  repeated double negative_count    = 11; // Absolute count of each bucket.
+
+  // Positive buckets for the native histogram.
+  // Use a no-op span (offset 0, length 0) for a native histogram without any
+  // observations yet and with a zero_threshold of 0. Otherwise, it would be
+  // indistinguishable from a classic histogram.
+  repeated BucketSpan positive_span = 12;
+  // Use either "positive_delta" or "positive_count", the former for
+  // regular histograms with integer counts, the latter for float
+  // histograms.
+  repeated sint64 positive_delta    = 13; // Count delta of each bucket compared to previous one (or to zero for 1st bucket).
+  repeated double positive_count    = 14; // Absolute count of each bucket.
+
+  // Only used for native histograms. These exemplars MUST have a timestamp.
+  repeated Exemplar exemplars = 16;
+}
+
+// A Bucket of a conventional histogram, each of which is treated as
+// an individual counter-like time series by Prometheus.
+message Bucket {
+  optional uint64   cumulative_count       = 1; // Cumulative in increasing order.
+  optional double   cumulative_count_float = 4; // Overrides cumulative_count if > 0.
+  optional double   upper_bound            = 2; // Inclusive.
+  optional Exemplar exemplar               = 3;
+}
+
+// A BucketSpan defines a number of consecutive buckets in a native
+// histogram with their offset. Logically, it would be more
+// straightforward to include the bucket counts in the Span. However,
+// the protobuf representation is more compact in the way the data is
+// structured here (with all the buckets in a single array separate
+// from the Spans).
+message BucketSpan {
+  optional sint32 offset = 1; // Gap to previous span, or starting point for 1st span (which can be negative).
+  optional uint32 length = 2; // Length of consecutive buckets.
+}
+
+message Exemplar {
+  repeated LabelPair                 label     = 1;
+  optional double                    value     = 2;
+  optional google.protobuf.Timestamp timestamp = 3; // OpenMetrics-style.
+}
+
+message Metric {
+  repeated LabelPair label        = 1;
+  optional Gauge     gauge        = 2;
+  optional Counter   counter      = 3;
+  optional Summary   summary      = 4;
+  optional Untyped   untyped      = 5;
+  optional Histogram histogram    = 7;
+  optional int64     timestamp_ms = 6;
+}
+
+message MetricFamily {
+  optional string     name   = 1;
+  optional string     help   = 2;
+  optional MetricType type   = 3;
+  repeated Metric     metric = 4;
+  optional string     unit   = 5;
+}
+
+message GatherResponse {
+  repeated MetricFamily metric_families = 1;
+}
+
+message StateSyncEnabledResponse {
+  bool enabled = 1;
+  Error err = 2;
+}
+
+message GetOngoingSyncStateSummaryResponse {
+  bytes id = 1;
+  uint64 height = 2;
+  bytes bytes = 3;
+  Error err = 4;
+}
+
+message GetLastStateSummaryResponse {
+  bytes id = 1;
+  uint64 height = 2;
+  bytes bytes = 3;
+  Error err = 4;
+}
+
+message ParseStateSummaryRequest {
+  bytes bytes = 1;
+}
+
+message ParseStateSummaryResponse {
+  bytes id = 1;
+  uint64 height = 2;
+  Error err = 3;
+}
+
+message GetStateSummaryRequest {
+  uint64 height = 1;
+}
+
+message GetStateSummaryResponse {
+  bytes id = 1;
+  bytes bytes = 2;
+  Error err = 3;
+}
+
+message StateSummaryAcceptRequest {
+  bytes bytes = 1;
+}
+
+message StateSummaryAcceptResponse {
+  enum Mode {
+    MODE_UNSPECIFIED = 0;
+    MODE_SKIPPED = 1;
+    MODE_STATIC = 2;
+    MODE_DYNAMIC = 3;
+  }
+  Mode mode = 1;
+  Error err = 2;
+}
