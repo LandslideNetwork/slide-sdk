@@ -11,16 +11,24 @@ import (
 	"syscall"
 	"time"
 
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/proxy"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/consideritdone/landslidevm/proto/rpcdb"
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
 	runtimepb "github.com/consideritdone/landslidevm/proto/vm/runtime"
+	"github.com/consideritdone/landslidevm/utils/database"
+	"github.com/consideritdone/landslidevm/utils/wrappers"
 )
 
 const (
@@ -79,6 +87,13 @@ type (
 
 	LandslideVM struct {
 		allowShutdown atomic.Bool
+
+		processMetrics prometheus.Gatherer
+		db             dbm.DB
+		log            log.Logger
+
+		serverCloser wrappers.ServerCloser
+		connCloser   wrappers.Closer
 
 		appCreator AppCreator
 		app        proxy.AppConns
@@ -183,7 +198,43 @@ func Serve[T interface{ AppCreator | *LandslideVM }](ctx context.Context, subjec
 }
 
 // Initialize this VM.
-func (vm *LandslideVM) Initialize(context.Context, *vmpb.InitializeRequest) (*vmpb.InitializeResponse, error) {
+func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeRequest) (*vmpb.InitializeResponse, error) {
+	registerer := prometheus.NewRegistry()
+
+	// Current state of process metrics
+	processCollector := collectors.NewProcessCollector(collectors.ProcessCollectorOpts{})
+	if err := registerer.Register(processCollector); err != nil {
+		return nil, err
+	}
+
+	// Go process metrics using debug.GCStats
+	goCollector := collectors.NewGoCollector()
+	if err := registerer.Register(goCollector); err != nil {
+		return nil, err
+	}
+
+	// gRPC client metrics
+	grpcClientMetrics := grpc_prometheus.NewClientMetrics()
+	if err := registerer.Register(grpcClientMetrics); err != nil {
+		return nil, err
+	}
+
+	// Register metrics for each Go plugin processes
+	vm.processMetrics = registerer
+
+	// Dial the database
+	dbClientConn, err := grpc.Dial(
+		"passthrough:///"+req.DbServerAddr,
+		grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
+		grpc.WithChainStreamInterceptor(grpcClientMetrics.StreamClientInterceptor()),
+	)
+	if err != nil {
+		return nil, err
+	}
+	vm.connCloser.Add(dbClientConn)
+	vm.db = database.NewDB(rpcdb.NewDatabaseClient(dbClientConn))
+	vm.log = log.NewTMLogger(os.Stdout)
+
 	panic("ToDo: implement me")
 }
 
