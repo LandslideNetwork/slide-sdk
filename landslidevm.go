@@ -2,6 +2,7 @@ package landslidevm
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"math"
 	"net"
@@ -12,9 +13,22 @@ import (
 	"time"
 
 	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/abci/types"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/consensus"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cometbft/cometbft/mempool"
+	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/proxy"
+	"github.com/cometbft/cometbft/state"
+	"github.com/cometbft/cometbft/state/indexer"
+	blockidxkv "github.com/cometbft/cometbft/state/indexer/block/kv"
+	"github.com/cometbft/cometbft/state/txindex"
+	txidxkv "github.com/cometbft/cometbft/state/txindex/kv"
+	"github.com/cometbft/cometbft/store"
+	"github.com/cometbft/cometbft/types"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -27,6 +41,7 @@ import (
 	"github.com/consideritdone/landslidevm/proto/rpcdb"
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
 	runtimepb "github.com/consideritdone/landslidevm/proto/vm/runtime"
+	"github.com/consideritdone/landslidevm/utils"
 	"github.com/consideritdone/landslidevm/utils/database"
 	"github.com/consideritdone/landslidevm/utils/wrappers"
 )
@@ -56,6 +71,8 @@ const (
 	// require the plugin vm to upgrade to latest avalanchego release to be
 	// compatible.
 	rpcChainVMProtocol uint = 34
+
+	genesisChunkSize = 16 * 1024 * 1024 // 16
 )
 
 var (
@@ -74,40 +91,77 @@ var (
 			Timeout: defaultServerKeepAliveTimeout,
 		}),
 	}
+
+	dbPrefixBlockStore   = []byte("block-store")
+	dbPrefixStateStore   = []byte("state-store")
+	dbPrefixTxIndexer    = []byte("tx-indexer")
+	dbPrefixBlockIndexer = []byte("block-indexer")
+
+	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	proposerPubKey  = secp256k1.PubKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 )
 
 type (
-	Application = types.Application
+	Application = abcitypes.Application
 
 	AppCreatorOpts struct {
-		NetworkID uint32
+		NetworkId    uint32
+		SubnetId     []byte
+		ChainId      []byte
+		NodeId       []byte
+		PublicKey    []byte
+		XChainId     []byte
+		CChainId     []byte
+		AvaxAssetId  []byte
+		GenesisBytes []byte
+		UpgradeBytes []byte
+		ConfigBytes  []byte
 	}
 
-	AppCreator func(AppCreatorOpts) (Application, error)
+	AppCreator func(*AppCreatorOpts) (Application, error)
 
 	LandslideVM struct {
 		allowShutdown atomic.Bool
 
 		processMetrics prometheus.Gatherer
-		db             dbm.DB
-		log            log.Logger
+		serverCloser   wrappers.ServerCloser
+		connCloser     wrappers.Closer
 
-		serverCloser wrappers.ServerCloser
-		connCloser   wrappers.Closer
-
+		database   dbm.DB
 		appCreator AppCreator
 		app        proxy.AppConns
+		logger     log.Logger
+		rpcConfig  *config.RPCConfig
+
+		blockStore *store.BlockStore
+		stateStore state.Store
+		state      state.State
+		genesis    *types.GenesisDoc
+		genChunks  []string
+
+		mempool  *mempool.CListMempool
+		eventBus *types.EventBus
+
+		txIndexer      txindex.TxIndexer
+		blockIndexer   indexer.BlockIndexer
+		indexerService *txindex.IndexerService
 	}
 )
 
 func NewLocalAppCreator(app Application) AppCreator {
-	return func(AppCreatorOpts) (Application, error) {
+	return func(*AppCreatorOpts) (Application, error) {
 		return app, nil
 	}
 }
 
 func New(creator AppCreator) *LandslideVM {
 	return &LandslideVM{appCreator: creator}
+}
+
+func NewLocalGenesisDocProvider(data []byte) node.GenesisDocProvider {
+	return func() (*types.GenesisDoc, error) {
+		return types.GenesisDocFromJSON(data)
+	}
 }
 
 func Serve[T interface{ AppCreator | *LandslideVM }](ctx context.Context, subject T, options ...grpc.ServerOption) error {
@@ -232,10 +286,112 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		return nil, err
 	}
 	vm.connCloser.Add(dbClientConn)
-	vm.db = database.NewDB(rpcdb.NewDatabaseClient(dbClientConn))
-	vm.log = log.NewTMLogger(os.Stdout)
+	vm.database = database.NewDB(rpcdb.NewDatabaseClient(dbClientConn))
+	vm.logger = log.NewTMLogger(os.Stdout)
 
-	panic("ToDo: implement me")
+	dbBlockStore := dbm.NewPrefixDB(vm.database, dbPrefixBlockStore)
+	vm.blockStore = store.NewBlockStore(dbBlockStore)
+	dbStateStore := dbm.NewPrefixDB(vm.database, dbPrefixStateStore)
+	vm.stateStore = state.NewStore(dbStateStore, state.StoreOptions{DiscardABCIResponses: false})
+
+	app, err := vm.appCreator(&AppCreatorOpts{
+		NetworkId:    req.NetworkId,
+		SubnetId:     req.SubnetId,
+		ChainId:      req.CChainId,
+		NodeId:       req.NodeId,
+		PublicKey:    req.PublicKey,
+		XChainId:     req.XChainId,
+		CChainId:     req.CChainId,
+		AvaxAssetId:  req.AvaxAssetId,
+		GenesisBytes: req.GenesisBytes,
+		UpgradeBytes: req.UpgradeBytes,
+		ConfigBytes:  req.ConfigBytes,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	vm.state, vm.genesis, err = node.LoadStateFromDBOrGenesisDocProvider(
+		dbStateStore,
+		NewLocalGenesisDocProvider(req.GenesisBytes),
+	)
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < len(req.GenesisBytes); i += genesisChunkSize {
+		end := i + genesisChunkSize
+		if end > len(req.GenesisBytes) {
+			end = len(req.GenesisBytes)
+		}
+		vm.genChunks = append(vm.genChunks, base64.StdEncoding.EncodeToString(req.GenesisBytes[i:end]))
+	}
+
+	vm.app = proxy.NewAppConns(proxy.NewLocalClientCreator(app), proxy.NopMetrics())
+	vm.app.SetLogger(vm.logger.With("module", "proxy"))
+	if err := vm.app.Start(); err != nil {
+		return nil, fmt.Errorf("error starting proxy app connections: %v", err)
+	}
+
+	vm.eventBus = types.NewEventBus()
+	vm.eventBus.SetLogger(vm.logger.With("module", "events"))
+	if err := vm.eventBus.Start(); err != nil {
+		return nil, err
+	}
+
+	dbTxIndexer := dbm.NewPrefixDB(vm.database, dbPrefixTxIndexer)
+	vm.txIndexer = txidxkv.NewTxIndex(dbTxIndexer)
+
+	dbBlockIndexer := dbm.NewPrefixDB(vm.database, dbPrefixBlockIndexer)
+	vm.blockIndexer = blockidxkv.New(dbBlockIndexer)
+
+	vm.indexerService = txindex.NewIndexerService(vm.txIndexer, vm.blockIndexer, vm.eventBus, true)
+	vm.indexerService.SetLogger(vm.logger.With("module", "indexer"))
+	if err := vm.indexerService.Start(); err != nil {
+		return nil, err
+	}
+
+	handshaker := consensus.NewHandshaker(
+		vm.stateStore,
+		vm.state,
+		vm.blockStore,
+		vm.genesis,
+	)
+	handshaker.SetLogger(vm.logger.With("module", "consensus"))
+	handshaker.SetEventBus(vm.eventBus)
+	if err := handshaker.Handshake(vm.app); err != nil {
+		return nil, fmt.Errorf("error during handshake: %v", err)
+	}
+
+	vm.state, err = vm.stateStore.Load()
+	if err != nil {
+		return nil, err
+	}
+
+	vm.mempool = mempool.NewCListMempool(
+		config.DefaultMempoolConfig(),
+		vm.app.Mempool(),
+		vm.state.LastBlockHeight,
+		mempool.WithMetrics(mempool.NopMetrics()),
+		mempool.WithPreCheck(state.TxPreCheck(vm.state)),
+		mempool.WithPostCheck(state.TxPostCheck(vm.state)),
+	)
+	vm.mempool.SetLogger(vm.logger.With("module", "mempool"))
+	vm.mempool.EnableTxsAvailable()
+
+	if vm.state.LastBlockHeight == 0 {
+		block := vm.state.MakeBlock(1, make([]types.Tx, 0), utils.MakeCommit(1, time.Now(), proposerAddress), nil, proposerAddress)
+		block.LastBlockID = types.BlockID{
+			Hash: tmhash.Sum([]byte{}),
+			PartSetHeader: types.PartSetHeader{
+				Total: 0,
+				Hash:  tmhash.Sum([]byte{}),
+			},
+		}
+		panic("ToDo: accept first block")
+	}
+
+	vm.logger.Info("vm initialization completed")
+	panic("ToDo: implement return response")
 }
 
 // SetState communicates to VM its next state it starts
