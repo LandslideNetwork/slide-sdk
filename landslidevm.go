@@ -15,6 +15,7 @@ import (
 	"github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/proxy"
+	"github.com/cometbft/cometbft/store"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -74,6 +75,8 @@ var (
 			Timeout: defaultServerKeepAliveTimeout,
 		}),
 	}
+
+	dbPrefixBlockStore = []byte("block-store")
 )
 
 type (
@@ -91,6 +94,8 @@ type (
 		processMetrics prometheus.Gatherer
 		db             dbm.DB
 		log            log.Logger
+
+		blockStore *store.BlockStore
 
 		serverCloser wrappers.ServerCloser
 		connCloser   wrappers.Closer
@@ -234,6 +239,9 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 	vm.connCloser.Add(dbClientConn)
 	vm.db = database.NewDB(rpcdb.NewDatabaseClient(dbClientConn))
 	vm.log = log.NewTMLogger(os.Stdout)
+
+	dbBlockStore := database.NewDB(vm.db)
+	vm.blockStore = store.NewBlockStore(dbBlockStore)
 
 	panic("ToDo: implement me")
 }
