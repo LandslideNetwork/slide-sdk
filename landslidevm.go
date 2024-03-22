@@ -277,16 +277,20 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 	vm.processMetrics = registerer
 
 	// Dial the database
-	dbClientConn, err := grpc.Dial(
-		"passthrough:///"+req.DbServerAddr,
-		grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
-		grpc.WithChainStreamInterceptor(grpcClientMetrics.StreamClientInterceptor()),
-	)
-	if err != nil {
-		return nil, err
+	if req.DbServerAddr == "inmemory" {
+		vm.database = dbm.NewMemDB()
+	} else {
+		dbClientConn, err := grpc.Dial(
+			"passthrough:///"+req.DbServerAddr,
+			grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
+			grpc.WithChainStreamInterceptor(grpcClientMetrics.StreamClientInterceptor()),
+		)
+		if err != nil {
+			return nil, err
+		}
+		vm.connCloser.Add(dbClientConn)
+		vm.database = database.NewDB(rpcdb.NewDatabaseClient(dbClientConn))
 	}
-	vm.connCloser.Add(dbClientConn)
-	vm.database = database.NewDB(rpcdb.NewDatabaseClient(dbClientConn))
 	vm.logger = log.NewTMLogger(os.Stdout)
 
 	dbBlockStore := dbm.NewPrefixDB(vm.database, dbPrefixBlockStore)
@@ -387,11 +391,12 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 				Hash:  tmhash.Sum([]byte{}),
 			},
 		}
-		panic("ToDo: accept first block")
+		// ToDo: accept first block
 	}
 
 	vm.logger.Info("vm initialization completed")
-	panic("ToDo: implement return response")
+	// "ToDo: implement return response"
+	return nil, fmt.Errorf("ToDo: add first block acceptance")
 }
 
 // SetState communicates to VM its next state it starts

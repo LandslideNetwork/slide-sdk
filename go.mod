@@ -1,6 +1,6 @@
 module github.com/consideritdone/landslidevm
 
-go 1.22.0
+go 1.22.1
 
 require (
 	github.com/cometbft/cometbft v0.38.6
