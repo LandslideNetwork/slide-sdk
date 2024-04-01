@@ -1,4 +1,4 @@
-package utils
+package commit
 
 import (
 	"time"

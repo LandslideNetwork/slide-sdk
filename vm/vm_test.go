@@ -1,4 +1,4 @@
-package landslidevm
+package vm
 
 import (
 	"context"
@@ -12,24 +12,26 @@ import (
 )
 
 var (
-	//go:embed example/countervm/genesis.json
+	//go:embed testdata/genesis.json
 	countervmGenesis []byte
 )
 
 func TestVmCreation(t *testing.T) {
-	require.NotNil(t, New(NewLocalAppCreator(kvstore.NewInMemoryApplication())))
+	require.NotNil(t, New(func(*AppCreatorOpts) (Application, error) {
+		return kvstore.NewInMemoryApplication(), nil
+	}))
 }
 
 func TestVmInitialize(t *testing.T) {
-	vm := New(NewLocalAppCreator(kvstore.NewInMemoryApplication()))
+	vm := New(func(*AppCreatorOpts) (Application, error) {
+		return kvstore.NewInMemoryApplication(), nil
+	})
 	require.NotNil(t, vm)
 
 	res, err := vm.Initialize(context.Background(), &vmpb.InitializeRequest{
 		DbServerAddr: "inmemory",
 		GenesisBytes: countervmGenesis,
 	})
-	// ToDo: assert.NoError(t, err)
-	assert.ErrorContains(t, err, "ToDo: add first block acceptance")
-	// ToDo: assert.NotNil(t, res)
-	assert.Nil(t, res)
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
 }
