@@ -186,7 +186,7 @@ func (blockExec *BlockExecutor) ProcessProposal(
 // Validation does not mutate state, but does require historical information from the stateDB,
 // ie. to verify evidence from a validator at an old height.
 func (blockExec *BlockExecutor) ValidateBlock(state statetypes.State, block *types.Block) error {
-	return validateBlock(state, block)
+	return ValidateBlock(state, block)
 }
 
 // ApplyBlock validates the block against the state, executes it against the app,
@@ -199,7 +199,7 @@ func (blockExec *BlockExecutor) ApplyBlock(
 	state statetypes.State, blockID types.BlockID, block *types.Block,
 ) (statetypes.State, error) {
 
-	if err := validateBlock(state, block); err != nil {
+	if err := ValidateBlock(state, block); err != nil {
 		return state, ErrInvalidBlock(err)
 	}
 

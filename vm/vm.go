@@ -3,7 +3,12 @@ package vm
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"os"
+	"slices"
+	"sync"
+
 	dbm "github.com/cometbft/cometbft-db"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/config"
@@ -25,12 +30,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"os"
-	"sync/atomic"
 
 	"github.com/consideritdone/landslidevm/database"
 	"github.com/consideritdone/landslidevm/proto/rpcdb"
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
+	vmtypes "github.com/consideritdone/landslidevm/vm/types"
 	"github.com/consideritdone/landslidevm/vm/types/closer"
 	vmstate "github.com/consideritdone/landslidevm/vm/types/state"
 )
@@ -48,6 +52,8 @@ var (
 	dbPrefixBlockIndexer = []byte("block-indexer")
 
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+
+	ErrNotFound = errors.New("not found")
 )
 
 type (
@@ -70,7 +76,7 @@ type (
 	AppCreator func(*AppCreatorOpts) (Application, error)
 
 	LandslideVM struct {
-		allowShutdown atomic.Bool
+		allowShutdown *vmtypes.Atomic[bool]
 
 		processMetrics prometheus.Gatherer
 		serverCloser   closer.ServerCloser
@@ -80,7 +86,6 @@ type (
 		appCreator AppCreator
 		app        proxy.AppConns
 		logger     log.Logger
-		rpcConfig  *config.RPCConfig
 
 		blockStore *store.BlockStore
 		stateStore state.Store
@@ -94,11 +99,24 @@ type (
 		txIndexer      txindex.TxIndexer
 		blockIndexer   indexer.BlockIndexer
 		indexerService *txindex.IndexerService
+
+		vmenabled      *vmtypes.Atomic[bool]
+		vmstate        *vmtypes.Atomic[vmpb.State]
+		vmconnected    *vmtypes.Atomic[bool]
+		verifiedBlocks sync.Map
+		preferred      [32]byte
 	}
 )
 
 func New(creator AppCreator) *LandslideVM {
-	return &LandslideVM{appCreator: creator}
+	return &LandslideVM{
+		appCreator:     creator,
+		allowShutdown:  vmtypes.NewAtomic(true),
+		vmenabled:      vmtypes.NewAtomic(false),
+		vmstate:        vmtypes.NewAtomic(vmpb.State_STATE_UNSPECIFIED),
+		vmconnected:    vmtypes.NewAtomic(false),
+		verifiedBlocks: sync.Map{},
+	}
 }
 
 // Initialize this VM.
@@ -278,121 +296,220 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 }
 
 // SetState communicates to VM its next state it starts
-func (vm *LandslideVM) SetState(context.Context, *vmpb.SetStateRequest) (*vmpb.SetStateResponse, error) {
-	panic("ToDo: implement me")
+func (vm *LandslideVM) SetState(_ context.Context, req *vmpb.SetStateRequest) (*vmpb.SetStateResponse, error) {
+	block := vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
+	if block == nil {
+		return nil, ErrNotFound
+	}
+	res := vmpb.SetStateResponse{
+		LastAcceptedId:       block.Hash(),
+		LastAcceptedParentId: block.LastBlockID.Hash,
+		Height:               uint64(block.Height),
+		Bytes:                vm.state.Bytes(),
+		Timestamp:            timestamppb.New(block.Time),
+	}
+	vm.vmstate.Set(req.State)
+	return &res, nil
 }
 
 // CanShutdown lets known when vm ready to shutting down
 func (vm *LandslideVM) CanShutdown() bool {
-	return vm.allowShutdown.Load()
+	return vm.allowShutdown.Get()
 }
 
 // Shutdown is called when the node is shutting down.
 func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+	vm.allowShutdown.Set(true)
+	vm.serverCloser.Stop()
+	if err := vm.connCloser.Close(); err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
 }
 
 // CreateHandlers creates the HTTP handlers for custom chain network calls.
 func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.CreateHandlersResponse, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
 func (vm *LandslideVM) Connected(context.Context, *vmpb.ConnectedRequest) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+	vm.vmconnected.Set(true)
+	return &emptypb.Empty{}, nil
 }
 
 func (vm *LandslideVM) Disconnected(context.Context, *vmpb.DisconnectedRequest) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+	vm.vmconnected.Set(true)
+	return &emptypb.Empty{}, nil
 }
 
 // BuildBlock attempt to create a new block from data contained in the VM.
 func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vmpb.BuildBlockResponse, error) {
-	panic("ToDo: implement me")
+	executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
+	executor.SetEventBus(vm.eventBus)
+
+	block, err := executor.CreateProposalBlock(context.Background(), 1, vm.state, &types.ExtendedCommit{}, proposerAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := block.ToProto()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := b.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	vm.verifiedBlocks.Store(block.Hash(), block)
+	return &vmpb.BuildBlockResponse{
+		Id:                block.Hash(),
+		ParentId:          block.LastBlockID.Hash,
+		Bytes:             data,
+		Height:            uint64(block.Height),
+		Timestamp:         timestamppb.New(block.Time),
+		VerifyWithContext: false,
+	}, nil
 }
 
 // ParseBlock attempt to create a block from a stream of bytes.
-func (vm *LandslideVM) ParseBlock(context.Context, *vmpb.ParseBlockRequest) (*vmpb.ParseBlockResponse, error) {
-	panic("ToDo: implement me")
+func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest) (*vmpb.ParseBlockResponse, error) {
+	block, err := vmstate.ParseBlock(req.GetBytes())
+	if err != nil {
+		return nil, err
+	}
+
+	if _, ok := vm.verifiedBlocks.Load(block.Hash()); !ok {
+		vm.verifiedBlocks.Store(block.Hash(), block)
+	}
+
+	return &vmpb.ParseBlockResponse{
+		Id:                block.Hash(),
+		ParentId:          block.LastBlockID.Hash,
+		Status:            vmpb.Status_STATUS_UNSPECIFIED,
+		Height:            uint64(block.Height),
+		Timestamp:         timestamppb.New(block.Time),
+		VerifyWithContext: false,
+	}, nil
 }
 
 // GetBlock attempt to load a block.
-func (vm *LandslideVM) GetBlock(context.Context, *vmpb.GetBlockRequest) (*vmpb.GetBlockResponse, error) {
-	panic("ToDo: implement me")
+func (vm *LandslideVM) GetBlock(_ context.Context, req *vmpb.GetBlockRequest) (*vmpb.GetBlockResponse, error) {
+	block := vm.blockStore.LoadBlockByHash(req.GetId())
+	if block == nil {
+		return &vmpb.GetBlockResponse{
+			Err: vmpb.Error_ERROR_NOT_FOUND,
+		}, nil
+	}
+
+	b, err := block.ToProto()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := b.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	return &vmpb.GetBlockResponse{
+		ParentId:  block.LastBlockID.Hash,
+		Bytes:     data,
+		Status:    vmpb.Status_STATUS_UNSPECIFIED,
+		Height:    uint64(block.Height),
+		Timestamp: timestamppb.New(block.Time),
+	}, nil
 }
 
 // SetPreference notify the VM of the currently preferred block.
-func (vm *LandslideVM) SetPreference(context.Context, *vmpb.SetPreferenceRequest) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+func (vm *LandslideVM) SetPreference(_ context.Context, req *vmpb.SetPreferenceRequest) (*emptypb.Empty, error) {
+	vm.preferred = [32]byte(req.GetId())
+	return &emptypb.Empty{}, nil
 }
 
 // Health attempt to verify the health of the VM.
 func (vm *LandslideVM) Health(context.Context, *emptypb.Empty) (*vmpb.HealthResponse, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
 // Version returns the version of the VM.
 func (vm *LandslideVM) Version(context.Context, *emptypb.Empty) (*vmpb.VersionResponse, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
 // AppRequest notify this engine of a request for data from [nodeID].
 func (vm *LandslideVM) AppRequest(context.Context, *vmpb.AppRequestMsg) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
 // AppRequestFailed notify this engine that an AppRequest message it sent to [nodeID] with
 // request ID [requestID] failed.
 func (vm *LandslideVM) AppRequestFailed(context.Context, *vmpb.AppRequestFailedMsg) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
 // AppResponse notify this engine of a response to the AppRequest message it sent to
 // [nodeID] with request ID [requestID].
 func (vm *LandslideVM) AppResponse(context.Context, *vmpb.AppResponseMsg) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
 // AppGossip notify this engine of a gossip message from [nodeID].
 func (vm *LandslideVM) AppGossip(context.Context, *vmpb.AppGossipMsg) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
 // Gather attempts to gather metrics from a VM.
 func (vm *LandslideVM) Gather(context.Context, *emptypb.Empty) (*vmpb.GatherResponse, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
 func (vm *LandslideVM) CrossChainAppRequest(context.Context, *vmpb.CrossChainAppRequestMsg) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
 func (vm *LandslideVM) CrossChainAppRequestFailed(context.Context, *vmpb.CrossChainAppRequestFailedMsg) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
 func (vm *LandslideVM) CrossChainAppResponse(context.Context, *vmpb.CrossChainAppResponseMsg) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
 func (vm *LandslideVM) GetAncestors(context.Context, *vmpb.GetAncestorsRequest) (*vmpb.GetAncestorsResponse, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
-func (vm *LandslideVM) BatchedParseBlock(context.Context, *vmpb.BatchedParseBlockRequest) (*vmpb.BatchedParseBlockResponse, error) {
-	panic("ToDo: implement me")
+func (vm *LandslideVM) BatchedParseBlock(ctx context.Context, req *vmpb.BatchedParseBlockRequest) (*vmpb.BatchedParseBlockResponse, error) {
+	responses := make([]*vmpb.ParseBlockResponse, len(req.Request))
+	var err error
+	for i := range req.Request {
+		responses[i], err = vm.ParseBlock(ctx, &vmpb.ParseBlockRequest{Bytes: slices.Clone(req.Request[i])})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &vmpb.BatchedParseBlockResponse{Response: responses}, nil
 }
 
 func (vm *LandslideVM) VerifyHeightIndex(context.Context, *emptypb.Empty) (*vmpb.VerifyHeightIndexResponse, error) {
 	panic("ToDo: implement me")
 }
 
-func (vm *LandslideVM) GetBlockIDAtHeight(context.Context, *vmpb.GetBlockIDAtHeightRequest) (*vmpb.GetBlockIDAtHeightResponse, error) {
-	panic("ToDo: implement me")
+func (vm *LandslideVM) GetBlockIDAtHeight(_ context.Context, req *vmpb.GetBlockIDAtHeightRequest) (*vmpb.GetBlockIDAtHeightResponse, error) {
+	block := vm.blockStore.LoadBlock(int64(req.GetHeight()))
+	if block == nil {
+		return &vmpb.GetBlockIDAtHeightResponse{
+			Err: vmpb.Error_ERROR_NOT_FOUND,
+		}, nil
+	}
+	return &vmpb.GetBlockIDAtHeightResponse{BlkId: block.Hash()}, nil
 }
 
 // StateSyncEnabled indicates whether the state sync is enabled for this VM.
 func (vm *LandslideVM) StateSyncEnabled(context.Context, *emptypb.Empty) (*vmpb.StateSyncEnabledResponse, error) {
-	panic("ToDo: implement me")
+	return &vmpb.StateSyncEnabledResponse{Enabled: vm.vmenabled.Get()}, nil
 }
 
 // GetOngoingSyncStateSummary returns an in-progress state summary if it exists.
@@ -407,27 +524,65 @@ func (vm *LandslideVM) GetLastStateSummary(context.Context, *emptypb.Empty) (*vm
 
 // ParseStateSummary parses a state summary out of [summaryBytes].
 func (vm *LandslideVM) ParseStateSummary(context.Context, *vmpb.ParseStateSummaryRequest) (*vmpb.ParseStateSummaryResponse, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
 // GetStateSummary retrieves the state summary that was generated at height
 // [summaryHeight].
 func (vm *LandslideVM) GetStateSummary(context.Context, *vmpb.GetStateSummaryRequest) (*vmpb.GetStateSummaryResponse, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }
 
-func (vm *LandslideVM) BlockVerify(context.Context, *vmpb.BlockVerifyRequest) (*vmpb.BlockVerifyResponse, error) {
-	panic("ToDo: implement me")
+func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyRequest) (*vmpb.BlockVerifyResponse, error) {
+	block, err := vmstate.ParseBlock(req.GetBytes())
+	if err != nil {
+		return nil, err
+	}
+
+	err = vmstate.ValidateBlock(vm.state, block)
+	if err != nil {
+		return nil, err
+	}
+
+	return &vmpb.BlockVerifyResponse{Timestamp: timestamppb.New(block.Time)}, nil
 }
 
-func (vm *LandslideVM) BlockAccept(context.Context, *vmpb.BlockAcceptRequest) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptRequest) (*emptypb.Empty, error) {
+	rawBlock, exist := vm.verifiedBlocks.Load(req.GetId())
+	if !exist {
+		return nil, ErrNotFound
+	}
+	block, ok := rawBlock.(*types.Block)
+	if !ok {
+		return nil, ErrNotFound
+	}
+
+	executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
+	executor.SetEventBus(vm.eventBus)
+
+	bps, err := block.MakePartSet(types.BlockPartSizeBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	vm.state, err = executor.ApplyBlock(vm.state, types.BlockID{
+		Hash:          block.Hash(),
+		PartSetHeader: bps.Header(),
+	}, block)
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
 }
 
-func (vm *LandslideVM) BlockReject(context.Context, *vmpb.BlockRejectRequest) (*emptypb.Empty, error) {
-	panic("ToDo: implement me")
+func (vm *LandslideVM) BlockReject(_ context.Context, req *vmpb.BlockRejectRequest) (*emptypb.Empty, error) {
+	_, exist := vm.verifiedBlocks.LoadAndDelete(req.GetId())
+	if !exist {
+		return nil, ErrNotFound
+	}
+	return &emptypb.Empty{}, nil
 }
 
 func (vm *LandslideVM) StateSummaryAccept(context.Context, *vmpb.StateSummaryAcceptRequest) (*vmpb.StateSummaryAcceptResponse, error) {
-	panic("ToDo: implement me")
+	return nil, errors.New("TODO: implement me")
 }

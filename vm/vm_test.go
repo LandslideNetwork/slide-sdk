@@ -16,13 +16,7 @@ var (
 	countervmGenesis []byte
 )
 
-func TestVmCreation(t *testing.T) {
-	require.NotNil(t, New(func(*AppCreatorOpts) (Application, error) {
-		return kvstore.NewInMemoryApplication(), nil
-	}))
-}
-
-func TestVmInitialize(t *testing.T) {
+func newKvApp(t *testing.T) vmpb.VMServer {
 	vm := New(func(*AppCreatorOpts) (Application, error) {
 		return kvstore.NewInMemoryApplication(), nil
 	})
@@ -34,4 +28,15 @@ func TestVmInitialize(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
+
+	return vm
+}
+
+func TestCreation(t *testing.T) {
+	newKvApp(t)
+}
+
+func TestBlockMethods(t *testing.T) {
+	vm := newKvApp(t)
+	_ = vm
 }

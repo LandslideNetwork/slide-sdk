@@ -5,11 +5,20 @@ import (
 	"fmt"
 
 	"github.com/cometbft/cometbft/crypto"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/state"
 	"github.com/cometbft/cometbft/types"
 )
 
-func validateBlock(state state.State, block *types.Block) error {
+func ParseBlock(data []byte) (*types.Block, error) {
+	protoBlock := new(cmtproto.Block)
+	if err := protoBlock.Unmarshal(data); err != nil {
+		return nil, err
+	}
+	return types.BlockFromProto(protoBlock)
+}
+
+func ValidateBlock(state state.State, block *types.Block) error {
 	// Validate internal consistency.
 	if err := block.ValidateBasic(); err != nil {
 		return err
