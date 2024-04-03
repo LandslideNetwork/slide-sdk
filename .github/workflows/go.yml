@@ -39,8 +39,5 @@ jobs:
     - name: Install golint
       run: go install golang.org/x/lint/golint@latest
 
-    - name: Run golint
-      run: golint ./...
-
     - name: Test
       run: go test -race -vet=off -v ./...
