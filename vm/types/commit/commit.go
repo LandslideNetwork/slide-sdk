@@ -15,8 +15,8 @@ func NewCommit(height int64, round int32, blockID types.BlockID, commitSigs []ty
 	}
 }
 
-func MakeCommit(height int64, timestamp time.Time, validator []byte) *types.Commit {
-	commitSig := []types.CommitSig(nil)
+func MakeCommit(height int64, timestamp time.Time, validator []byte, bps types.PartSetHeader) *types.Commit {
+	commitSig := []types.CommitSig{}
 	if height > 1 {
 		commitSig = []types.CommitSig{{
 			BlockIDFlag:      types.BlockIDFlagNil,
@@ -26,11 +26,8 @@ func MakeCommit(height int64, timestamp time.Time, validator []byte) *types.Comm
 		}}
 	}
 	blockID := types.BlockID{
-		Hash: []byte(""),
-		PartSetHeader: types.PartSetHeader{
-			Hash:  []byte(""),
-			Total: 1,
-		},
+		Hash:          []byte(""),
+		PartSetHeader: bps,
 	}
 	return NewCommit(height, 0, blockID, commitSig)
 }

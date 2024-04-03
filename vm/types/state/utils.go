@@ -10,7 +10,15 @@ import (
 	"github.com/cometbft/cometbft/types"
 )
 
-func ParseBlock(data []byte) (*types.Block, error) {
+func EncodeBlock(block *types.Block) ([]byte, error) {
+	proto, err := block.ToProto()
+	if err != nil {
+		return nil, err
+	}
+	return proto.Marshal()
+}
+
+func DecodeBlock(data []byte) (*types.Block, error) {
 	protoBlock := new(cmtproto.Block)
 	if err := protoBlock.Unmarshal(data); err != nil {
 		return nil, err
