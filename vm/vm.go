@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/consideritdone/landslidevm/utils/snow"
+	"github.com/consideritdone/landslidevm/utils/wrappers"
 	"os"
 	"slices"
 	"sync"
@@ -95,6 +97,8 @@ type (
 
 		mempool  *mempool.CListMempool
 		eventBus *types.EventBus
+
+		bootstrapped *vmtypes.Atomic[bool]
 
 		txIndexer      txindex.TxIndexer
 		blockIndexer   indexer.BlockIndexer
@@ -297,6 +301,15 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 // SetState communicates to VM its next state it starts
 func (vm *LandslideVM) SetState(_ context.Context, req *vmpb.SetStateRequest) (*vmpb.SetStateResponse, error) {
+	reqState := snow.State(req.State)
+	switch reqState {
+	case snow.Bootstrapping:
+		vm.bootstrapped.Set(false)
+	case snow.NormalOp:
+		vm.bootstrapped.Set(true)
+	default:
+		return nil, snow.ErrUnknownState
+	}
 	block := vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
 	if block == nil {
 		return nil, ErrNotFound
@@ -320,11 +333,15 @@ func (vm *LandslideVM) CanShutdown() bool {
 // Shutdown is called when the node is shutting down.
 func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	vm.allowShutdown.Set(true)
+	errs := wrappers.Errs{}
+	errs.Add(vm.indexerService.Stop())
+	errs.Add(vm.eventBus.Stop())
+	errs.Add(vm.app.Stop())
+	errs.Add(vm.stateStore.Close())
+	errs.Add(vm.blockStore.Close())
 	vm.serverCloser.Stop()
-	if err := vm.connCloser.Close(); err != nil {
-		return nil, err
-	}
-	return &emptypb.Empty{}, nil
+	errs.Add(vm.connCloser.Close())
+	return &emptypb.Empty{}, errs.Err
 }
 
 // CreateHandlers creates the HTTP handlers for custom chain network calls.
