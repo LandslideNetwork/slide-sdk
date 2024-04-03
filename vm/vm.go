@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/consideritdone/landslidevm/utils/snow"
+	"github.com/consideritdone/landslidevm/utils/version"
 	"github.com/consideritdone/landslidevm/utils/wrappers"
 	"os"
 	"slices"
@@ -49,6 +50,12 @@ const (
 
 var (
 	_ vmpb.VMServer = (*LandslideVM)(nil)
+
+	Version = &version.Semantic{
+		Major: 1,
+		Minor: 0,
+		Patch: 0,
+	}
 
 	dbPrefixBlockStore   = []byte("block-store")
 	dbPrefixStateStore   = []byte("state-store")
@@ -453,7 +460,9 @@ func (vm *LandslideVM) Health(context.Context, *emptypb.Empty) (*vmpb.HealthResp
 
 // Version returns the version of the VM.
 func (vm *LandslideVM) Version(context.Context, *emptypb.Empty) (*vmpb.VersionResponse, error) {
-	return nil, errors.New("TODO: implement me")
+	return &vmpb.VersionResponse{
+		Version: Version.String(),
+	}, nil
 }
 
 // AppRequest notify this engine of a request for data from [nodeID].
