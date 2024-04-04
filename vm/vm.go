@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/consideritdone/landslidevm/utils/peer"
 	"github.com/consideritdone/landslidevm/utils/snow"
 	"github.com/consideritdone/landslidevm/utils/version"
 	"github.com/consideritdone/landslidevm/utils/wrappers"
@@ -111,6 +112,10 @@ type (
 		blockIndexer   indexer.BlockIndexer
 		indexerService *txindex.IndexerService
 
+		peers *peer.Tracker // tracking of peers & bandwidth
+
+		nodeID string
+
 		vmenabled      *vmtypes.Atomic[bool]
 		vmstate        *vmtypes.Atomic[vmpb.State]
 		vmconnected    *vmtypes.Atomic[bool]
@@ -171,6 +176,10 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		vm.database = database.New(rpcdb.NewDatabaseClient(dbClientConn))
 	}
 	vm.logger = log.NewTMLogger(os.Stdout)
+
+	vm.peers = peer.NewPeerTracker(vm.logger)
+
+	vm.nodeID = string(req.NodeId)
 
 	dbBlockStore := dbm.NewPrefixDB(vm.database, dbPrefixBlockStore)
 	vm.blockStore = store.NewBlockStore(dbBlockStore)
@@ -356,13 +365,29 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 	return nil, errors.New("TODO: implement me")
 }
 
-func (vm *LandslideVM) Connected(context.Context, *vmpb.ConnectedRequest) (*emptypb.Empty, error) {
+func (vm *LandslideVM) Connected(_ context.Context, req *vmpb.ConnectedRequest) (*emptypb.Empty, error) {
 	vm.vmconnected.Set(true)
+	nodeID := string(req.NodeId)
+	vm.logger.Debug("adding new peer", "nodeID", nodeID)
+
+	if nodeID == vm.nodeID {
+		vm.logger.Debug("skipping registering self as peer")
+		return &emptypb.Empty{}, nil
+	}
+
+	vm.peers.Connected(nodeID, &version.Application{
+		Major: req.Major,
+		Minor: req.Minor,
+		Patch: req.Patch,
+	})
 	return &emptypb.Empty{}, nil
 }
 
-func (vm *LandslideVM) Disconnected(context.Context, *vmpb.DisconnectedRequest) (*emptypb.Empty, error) {
-	vm.vmconnected.Set(true)
+func (vm *LandslideVM) Disconnected(_ context.Context, req *vmpb.DisconnectedRequest) (*emptypb.Empty, error) {
+	vm.vmconnected.Set(false)
+	vm.logger.Debug("disconnecting peer", "nodeID", string(req.NodeId))
+
+	vm.peers.Disconnected(string(req.NodeId))
 	return &emptypb.Empty{}, nil
 }
 
