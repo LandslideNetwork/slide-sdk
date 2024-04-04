@@ -362,7 +362,7 @@ func (vm *LandslideVM) Connected(context.Context, *vmpb.ConnectedRequest) (*empt
 }
 
 func (vm *LandslideVM) Disconnected(context.Context, *vmpb.DisconnectedRequest) (*emptypb.Empty, error) {
-	vm.vmconnected.Set(true)
+	vm.vmconnected.Set(false)
 	return &emptypb.Empty{}, nil
 }
 
