@@ -1,4 +1,4 @@
-package closer
+package grpcutils
 
 import (
 	"sync"

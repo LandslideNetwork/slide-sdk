@@ -33,6 +33,10 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/consideritdone/landslidevm/database"
+	"github.com/consideritdone/landslidevm/grpcutils"
+	"github.com/consideritdone/landslidevm/http"
+	"github.com/consideritdone/landslidevm/jsonrpc"
+	httppb "github.com/consideritdone/landslidevm/proto/http"
 	"github.com/consideritdone/landslidevm/proto/rpcdb"
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
 	vmtypes "github.com/consideritdone/landslidevm/vm/types"
@@ -81,7 +85,7 @@ type (
 		allowShutdown *vmtypes.Atomic[bool]
 
 		processMetrics prometheus.Gatherer
-		serverCloser   closer.ServerCloser
+		serverCloser   grpcutils.ServerCloser
 		connCloser     closer.Closer
 
 		database   dbm.DB
@@ -335,8 +339,57 @@ func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty
 
 // CreateHandlers creates the HTTP handlers for custom chain network calls.
 func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.CreateHandlersResponse, error) {
-	return nil, errors.New("TODO: implement me")
+	server := grpcutils.NewServer()
+	vm.serverCloser.Add(server)
+	httppb.RegisterHTTPServer(server, http.NewServer(
+		jsonrpc.NewServer(NewRPC(vm).Routes()),
+	))
+
+	listener, err := grpcutils.NewListener()
+	if err != nil {
+		return nil, err
+	}
+
+	go grpcutils.Serve(listener, server)
+
+	return &vmpb.CreateHandlersResponse{
+		Handlers: []*vmpb.Handler{
+			{
+				Prefix:     "/rpc",
+				ServerAddr: listener.Addr().String(),
+			},
+		},
+	}, nil
 }
+
+/*
+func (vm *VMServer) CreateHandlers(ctx context.Context, _ *emptypb.Empty) (*vmpb.CreateHandlersResponse, error) {
+	handlers, err := vm.vm.CreateHandlers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	resp := &vmpb.CreateHandlersResponse{}
+	for prefix, handler := range handlers {
+		serverListener, err := grpcutils.NewListener()
+		if err != nil {
+			return nil, err
+		}
+		server := grpcutils.NewServer()
+		vm.serverCloser.Add(server)
+		httppb.RegisterHTTPServer(server, ghttp.NewServer(handler))
+
+		// Start HTTP service
+		go grpcutils.Serve(serverListener, server)
+
+		resp.Handlers = append(resp.Handlers, &vmpb.Handler{
+			Prefix:     prefix,
+			ServerAddr: serverListener.Addr().String(),
+		})
+	}
+	return resp, nil
+}
+
+*/
 
 func (vm *LandslideVM) Connected(context.Context, *vmpb.ConnectedRequest) (*emptypb.Empty, error) {
 	vm.vmconnected.Set(true)
