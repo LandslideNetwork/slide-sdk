@@ -5,9 +5,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/consideritdone/landslidevm/utils/snow"
-	"github.com/consideritdone/landslidevm/utils/version"
-	"github.com/consideritdone/landslidevm/utils/wrappers"
 	"os"
 	"slices"
 	"sync"
@@ -51,12 +48,6 @@ const (
 var (
 	_ vmpb.VMServer = (*LandslideVM)(nil)
 
-	Version = &version.Semantic{
-		Major: 1,
-		Minor: 0,
-		Patch: 0,
-	}
-
 	dbPrefixBlockStore   = []byte("block-store")
 	dbPrefixStateStore   = []byte("state-store")
 	dbPrefixTxIndexer    = []byte("tx-indexer")
@@ -64,7 +55,10 @@ var (
 
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
-	ErrNotFound = errors.New("not found")
+	Version = "0.0.0"
+
+	ErrNotFound     = errors.New("not found")
+	ErrUnknownState = errors.New("unknown state")
 )
 
 type (
@@ -314,14 +308,13 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 // SetState communicates to VM its next state it starts
 func (vm *LandslideVM) SetState(_ context.Context, req *vmpb.SetStateRequest) (*vmpb.SetStateResponse, error) {
-	reqState := snow.State(req.State)
-	switch reqState {
-	case snow.Bootstrapping:
+	switch req.State {
+	case vmpb.State_STATE_BOOTSTRAPPING:
 		vm.bootstrapped.Set(false)
-	case snow.NormalOp:
+	case vmpb.State_STATE_NORMAL_OP:
 		vm.bootstrapped.Set(true)
 	default:
-		return nil, snow.ErrUnknownState
+		return nil, ErrUnknownState
 	}
 	block := vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
 	if block == nil {
@@ -346,15 +339,14 @@ func (vm *LandslideVM) CanShutdown() bool {
 // Shutdown is called when the node is shutting down.
 func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	vm.allowShutdown.Set(true)
-	errs := wrappers.Errs{}
-	errs.Add(vm.indexerService.Stop())
-	errs.Add(vm.eventBus.Stop())
-	errs.Add(vm.app.Stop())
-	errs.Add(vm.stateStore.Close())
-	errs.Add(vm.blockStore.Close())
+	err := vm.indexerService.Stop()
+	err = errors.Join(err, vm.eventBus.Stop())
+	err = errors.Join(err, vm.app.Stop())
+	err = errors.Join(err, vm.stateStore.Close())
+	err = errors.Join(err, vm.blockStore.Close())
 	vm.serverCloser.Stop()
-	errs.Add(vm.connCloser.Close())
-	return &emptypb.Empty{}, errs.Err
+	err = errors.Join(err, vm.connCloser.Close())
+	return &emptypb.Empty{}, err
 }
 
 // CreateHandlers creates the HTTP handlers for custom chain network calls.
@@ -461,7 +453,7 @@ func (vm *LandslideVM) Health(context.Context, *emptypb.Empty) (*vmpb.HealthResp
 // Version returns the version of the VM.
 func (vm *LandslideVM) Version(context.Context, *emptypb.Empty) (*vmpb.VersionResponse, error) {
 	return &vmpb.VersionResponse{
-		Version: Version.String(),
+		Version: Version,
 	}, nil
 }
 
