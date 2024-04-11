@@ -55,7 +55,10 @@ var (
 
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
-	ErrNotFound = errors.New("not found")
+	Version = "0.0.0"
+
+	ErrNotFound     = errors.New("not found")
+	ErrUnknownState = errors.New("unknown state")
 )
 
 type (
@@ -97,6 +100,8 @@ type (
 
 		mempool  *mempool.CListMempool
 		eventBus *types.EventBus
+
+		bootstrapped *vmtypes.Atomic[bool]
 
 		txIndexer      txindex.TxIndexer
 		blockIndexer   indexer.BlockIndexer
@@ -303,6 +308,14 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 // SetState communicates to VM its next state it starts
 func (vm *LandslideVM) SetState(_ context.Context, req *vmpb.SetStateRequest) (*vmpb.SetStateResponse, error) {
+	switch req.State {
+	case vmpb.State_STATE_BOOTSTRAPPING:
+		vm.bootstrapped.Set(false)
+	case vmpb.State_STATE_NORMAL_OP:
+		vm.bootstrapped.Set(true)
+	default:
+		return nil, ErrUnknownState
+	}
 	block := vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
 	if block == nil {
 		return nil, ErrNotFound
@@ -326,11 +339,14 @@ func (vm *LandslideVM) CanShutdown() bool {
 // Shutdown is called when the node is shutting down.
 func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	vm.allowShutdown.Set(true)
+	err := vm.indexerService.Stop()
+	err = errors.Join(err, vm.eventBus.Stop())
+	err = errors.Join(err, vm.app.Stop())
+	err = errors.Join(err, vm.stateStore.Close())
+	err = errors.Join(err, vm.blockStore.Close())
 	vm.serverCloser.Stop()
-	if err := vm.connCloser.Close(); err != nil {
-		return nil, err
-	}
-	return &emptypb.Empty{}, nil
+	err = errors.Join(err, vm.connCloser.Close())
+	return &emptypb.Empty{}, err
 }
 
 // CreateHandlers creates the HTTP handlers for custom chain network calls.
@@ -344,7 +360,7 @@ func (vm *LandslideVM) Connected(context.Context, *vmpb.ConnectedRequest) (*empt
 }
 
 func (vm *LandslideVM) Disconnected(context.Context, *vmpb.DisconnectedRequest) (*emptypb.Empty, error) {
-	vm.vmconnected.Set(true)
+	vm.vmconnected.Set(false)
 	return &emptypb.Empty{}, nil
 }
 
@@ -436,7 +452,9 @@ func (vm *LandslideVM) Health(context.Context, *emptypb.Empty) (*vmpb.HealthResp
 
 // Version returns the version of the VM.
 func (vm *LandslideVM) Version(context.Context, *emptypb.Empty) (*vmpb.VersionResponse, error) {
-	return nil, errors.New("TODO: implement me")
+	return &vmpb.VersionResponse{
+		Version: Version,
+	}, nil
 }
 
 // AppRequest notify this engine of a request for data from [nodeID].
