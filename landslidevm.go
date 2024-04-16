@@ -10,13 +10,15 @@ import (
 	"syscall"
 	"time"
 
-	vmpb "github.com/consideritdone/landslidevm/proto/vm"
-	runtimepb "github.com/consideritdone/landslidevm/proto/vm/runtime"
-	"github.com/consideritdone/landslidevm/vm"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/keepalive"
+
+	vmpb "github.com/consideritdone/landslidevm/proto/vm"
+	runtimepb "github.com/consideritdone/landslidevm/proto/vm/runtime"
+	"github.com/consideritdone/landslidevm/vm"
 )
 
 const (
@@ -83,7 +85,7 @@ func Serve[T interface {
 		lvm = v
 	}
 
-	if len(options) > 0 {
+	if len(options) == 0 {
 		options = DefaultServerOptions
 	}
 	server := grpc.NewServer(options...)
@@ -129,7 +131,7 @@ func Serve[T interface {
 		return fmt.Errorf("required env var missing: %q", EngineAddressKey)
 	}
 
-	clientConn, err := grpc.Dial("passthrough:///" + runtimeAddr)
+	clientConn, err := grpc.Dial("passthrough:///"+runtimeAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("failed to create client conn: %w", err)
 	}
