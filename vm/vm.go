@@ -29,6 +29,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -162,6 +163,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			"passthrough:///"+req.DbServerAddr,
 			grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
 			grpc.WithChainStreamInterceptor(grpcClientMetrics.StreamClientInterceptor()),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
 			return nil, err
@@ -291,12 +293,14 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		vm.stateStore.Save(newstate)
 		vm.state = newstate
 	}
-	vm.logger.Info("vm initialization completed")
 
 	blockBytes, err := vmstate.EncodeBlock(block)
 	if err != nil {
 		return nil, err
 	}
+
+	vm.logger.Info("vm initialization completed")
+
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       block.Hash(),
 		LastAcceptedParentId: block.LastBlockID.Hash,
