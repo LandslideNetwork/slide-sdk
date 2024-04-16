@@ -34,10 +34,10 @@ SUBNET_EVM_PATH=$(
 )
 
 # Load the versions
-#source "$SUBNET_EVM_PATH"/scripts/versions.sh
+source "$SUBNET_EVM_PATH"/scripts/versions.sh
 
 # Load the constants
-#source "$SUBNET_EVM_PATH"/scripts/constants.sh
+source "$SUBNET_EVM_PATH"/scripts/constants.sh
 
 if [[ $# -eq 1 ]]; then
     BINARY_PATH=$1
