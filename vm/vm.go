@@ -37,6 +37,7 @@ import (
 	"github.com/consideritdone/landslidevm/proto/rpcdb"
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
 	vmtypes "github.com/consideritdone/landslidevm/vm/types"
+	"github.com/consideritdone/landslidevm/vm/types/block"
 	"github.com/consideritdone/landslidevm/vm/types/closer"
 	"github.com/consideritdone/landslidevm/vm/types/commit"
 	vmstate "github.com/consideritdone/landslidevm/vm/types/state"
@@ -128,6 +129,7 @@ func NewViaDB(database dbm.DB, creator AppCreator) *LandslideVM {
 		vmenabled:      vmtypes.NewAtomic(false),
 		vmstate:        vmtypes.NewAtomic(vmpb.State_STATE_UNSPECIFIED),
 		vmconnected:    vmtypes.NewAtomic(false),
+		bootstrapped:   vmtypes.NewAtomic(false),
 		verifiedBlocks: sync.Map{},
 	}
 }
@@ -264,49 +266,51 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	vm.mempool.SetLogger(vm.logger.With("module", "mempool"))
 	vm.mempool.EnableTxsAvailable()
 
-	var block *types.Block
+	var blk *types.Block
 	if vm.state.LastBlockHeight > 0 {
-		block = vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
+		blk = vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
 	} else {
 		executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
 		executor.SetEventBus(vm.eventBus)
 
-		block, err = executor.CreateProposalBlock(context.Background(), vm.state.LastBlockHeight+1, vm.state, &types.ExtendedCommit{}, proposerAddress)
+		blk, err = executor.CreateProposalBlock(context.Background(), vm.state.LastBlockHeight+1, vm.state, &types.ExtendedCommit{}, proposerAddress)
 		if err != nil {
 			return nil, err
 		}
 
-		bps, err := block.MakePartSet(types.BlockPartSizeBytes)
+		bps, err := blk.MakePartSet(types.BlockPartSizeBytes)
 		if err != nil {
 			return nil, err
 		}
 
 		newstate, err := executor.ApplyBlock(vm.state, types.BlockID{
-			Hash:          block.Hash(),
+			Hash:          blk.Hash(),
 			PartSetHeader: bps.Header(),
-		}, block)
+		}, blk)
 		if err != nil {
 			return nil, err
 		}
 
-		vm.blockStore.SaveBlock(block, bps, commit.MakeCommit(block.Height, block.Time, block.ProposerAddress, bps.Header()))
+		vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, blk.ProposerAddress, bps.Header()))
 		vm.stateStore.Save(newstate)
 		vm.state = newstate
 	}
 
-	blockBytes, err := vmstate.EncodeBlock(block)
+	blockBytes, err := vmstate.EncodeBlock(blk)
 	if err != nil {
 		return nil, err
 	}
 
 	vm.logger.Info("vm initialization completed")
 
+	parentHash := block.BlockParentHash(blk)
+
 	return &vmpb.InitializeResponse{
-		LastAcceptedId:       block.Hash(),
-		LastAcceptedParentId: block.LastBlockID.Hash,
-		Height:               uint64(block.Height),
+		LastAcceptedId:       blk.Hash(),
+		LastAcceptedParentId: parentHash[:],
+		Height:               uint64(blk.Height),
 		Bytes:                blockBytes,
-		Timestamp:            timestamppb.New(block.Time),
+		Timestamp:            timestamppb.New(blk.Time),
 	}, nil
 }
 
@@ -320,16 +324,18 @@ func (vm *LandslideVM) SetState(_ context.Context, req *vmpb.SetStateRequest) (*
 	default:
 		return nil, ErrUnknownState
 	}
-	block := vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
-	if block == nil {
+	blk := vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
+	if blk == nil {
 		return nil, ErrNotFound
 	}
+
+	parentHash := block.BlockParentHash(blk)
 	res := vmpb.SetStateResponse{
-		LastAcceptedId:       block.Hash(),
-		LastAcceptedParentId: block.LastBlockID.Hash,
-		Height:               uint64(block.Height),
+		LastAcceptedId:       blk.Hash(),
+		LastAcceptedParentId: parentHash[:],
+		Height:               uint64(blk.Height),
 		Bytes:                vm.state.Bytes(),
-		Timestamp:            timestamppb.New(block.Time),
+		Timestamp:            timestamppb.New(blk.Time),
 	}
 	vm.vmstate.Set(req.State)
 	return &res, nil
@@ -366,7 +372,7 @@ func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty
 
 // CreateHandlers creates the HTTP handlers for custom chain network calls.
 func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.CreateHandlersResponse, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, nil
 }
 
 func (vm *LandslideVM) Connected(context.Context, *vmpb.ConnectedRequest) (*emptypb.Empty, error) {
@@ -462,7 +468,7 @@ func (vm *LandslideVM) SetPreference(_ context.Context, req *vmpb.SetPreferenceR
 
 // Health attempt to verify the health of the VM.
 func (vm *LandslideVM) Health(context.Context, *emptypb.Empty) (*vmpb.HealthResponse, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, nil
 }
 
 // Version returns the version of the VM.
@@ -474,45 +480,45 @@ func (vm *LandslideVM) Version(context.Context, *emptypb.Empty) (*vmpb.VersionRe
 
 // AppRequest notify this engine of a request for data from [nodeID].
 func (vm *LandslideVM) AppRequest(context.Context, *vmpb.AppRequestMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, errors.New("TODO: implement me 3")
 }
 
 // AppRequestFailed notify this engine that an AppRequest message it sent to [nodeID] with
 // request ID [requestID] failed.
 func (vm *LandslideVM) AppRequestFailed(context.Context, *vmpb.AppRequestFailedMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, errors.New("TODO: implement me 4")
 }
 
 // AppResponse notify this engine of a response to the AppRequest message it sent to
 // [nodeID] with request ID [requestID].
 func (vm *LandslideVM) AppResponse(context.Context, *vmpb.AppResponseMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, errors.New("TODO: implement me 5")
 }
 
 // AppGossip notify this engine of a gossip message from [nodeID].
 func (vm *LandslideVM) AppGossip(context.Context, *vmpb.AppGossipMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, errors.New("TODO: implement me 6")
 }
 
 // Gather attempts to gather metrics from a VM.
 func (vm *LandslideVM) Gather(context.Context, *emptypb.Empty) (*vmpb.GatherResponse, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, errors.New("TODO: implement me 7")
 }
 
 func (vm *LandslideVM) CrossChainAppRequest(context.Context, *vmpb.CrossChainAppRequestMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, errors.New("TODO: implement me 8")
 }
 
 func (vm *LandslideVM) CrossChainAppRequestFailed(context.Context, *vmpb.CrossChainAppRequestFailedMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, errors.New("TODO: implement me 9")
 }
 
 func (vm *LandslideVM) CrossChainAppResponse(context.Context, *vmpb.CrossChainAppResponseMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, errors.New("TODO: implement me 10")
 }
 
 func (vm *LandslideVM) GetAncestors(context.Context, *vmpb.GetAncestorsRequest) (*vmpb.GetAncestorsResponse, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, errors.New("TODO: implement me 11")
 }
 
 func (vm *LandslideVM) BatchedParseBlock(ctx context.Context, req *vmpb.BatchedParseBlockRequest) (*vmpb.BatchedParseBlockResponse, error) {
@@ -528,7 +534,7 @@ func (vm *LandslideVM) BatchedParseBlock(ctx context.Context, req *vmpb.BatchedP
 }
 
 func (vm *LandslideVM) VerifyHeightIndex(context.Context, *emptypb.Empty) (*vmpb.VerifyHeightIndexResponse, error) {
-	panic("ToDo: implement me")
+	return &vmpb.VerifyHeightIndexResponse{Err: vmpb.Error_ERROR_UNSPECIFIED}, nil
 }
 
 func (vm *LandslideVM) GetBlockIDAtHeight(_ context.Context, req *vmpb.GetBlockIDAtHeightRequest) (*vmpb.GetBlockIDAtHeightResponse, error) {
@@ -548,23 +554,23 @@ func (vm *LandslideVM) StateSyncEnabled(context.Context, *emptypb.Empty) (*vmpb.
 
 // GetOngoingSyncStateSummary returns an in-progress state summary if it exists.
 func (vm *LandslideVM) GetOngoingSyncStateSummary(context.Context, *emptypb.Empty) (*vmpb.GetOngoingSyncStateSummaryResponse, error) {
-	panic("ToDo: implement me")
+	panic("ToDo: implement me 12")
 }
 
 // GetLastStateSummary returns the latest state summary.
 func (vm *LandslideVM) GetLastStateSummary(context.Context, *emptypb.Empty) (*vmpb.GetLastStateSummaryResponse, error) {
-	panic("ToDo: implement me")
+	panic("ToDo: implement me 13")
 }
 
 // ParseStateSummary parses a state summary out of [summaryBytes].
 func (vm *LandslideVM) ParseStateSummary(context.Context, *vmpb.ParseStateSummaryRequest) (*vmpb.ParseStateSummaryResponse, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, errors.New("TODO: implement me 14")
 }
 
 // GetStateSummary retrieves the state summary that was generated at height
 // [summaryHeight].
 func (vm *LandslideVM) GetStateSummary(context.Context, *vmpb.GetStateSummaryRequest) (*vmpb.GetStateSummaryResponse, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, errors.New("TODO: implement me 15")
 }
 
 func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyRequest) (*vmpb.BlockVerifyResponse, error) {
@@ -623,5 +629,5 @@ func (vm *LandslideVM) BlockReject(_ context.Context, req *vmpb.BlockRejectReque
 }
 
 func (vm *LandslideVM) StateSummaryAccept(context.Context, *vmpb.StateSummaryAcceptRequest) (*vmpb.StateSummaryAcceptResponse, error) {
-	return nil, errors.New("TODO: implement me")
+	return nil, errors.New("TODO: implement me 16")
 }
