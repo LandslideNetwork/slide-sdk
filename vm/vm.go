@@ -339,11 +339,22 @@ func (vm *LandslideVM) CanShutdown() bool {
 // Shutdown is called when the node is shutting down.
 func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	vm.allowShutdown.Set(true)
-	err := vm.indexerService.Stop()
-	err = errors.Join(err, vm.eventBus.Stop())
-	err = errors.Join(err, vm.app.Stop())
-	err = errors.Join(err, vm.stateStore.Close())
-	err = errors.Join(err, vm.blockStore.Close())
+	var err error
+	if vm.indexerService != nil {
+		err = vm.indexerService.Stop()
+	}
+	if vm.eventBus != nil {
+		err = errors.Join(err, vm.eventBus.Stop())
+	}
+	if vm.app != nil {
+		err = errors.Join(err, vm.app.Stop())
+	}
+	if vm.stateStore != nil {
+		err = errors.Join(err, vm.stateStore.Close())
+	}
+	if vm.blockStore != nil {
+		err = errors.Join(err, vm.blockStore.Close())
+	}
 	vm.serverCloser.Stop()
 	err = errors.Join(err, vm.connCloser.Close())
 	return &emptypb.Empty{}, err
