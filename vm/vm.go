@@ -502,7 +502,14 @@ func (vm *LandslideVM) AppGossip(context.Context, *vmpb.AppGossipMsg) (*emptypb.
 
 // Gather attempts to gather metrics from a VM.
 func (vm *LandslideVM) Gather(context.Context, *emptypb.Empty) (*vmpb.GatherResponse, error) {
-	return nil, errors.New("TODO: implement me 7")
+	// Gather metrics registered by rpcchainvm server Gatherer. These
+	// metrics are collected for each Go plugin process.
+	pluginMetrics, err := vm.processMetrics.Gather()
+	if err != nil {
+		return nil, err
+	}
+
+	return &vmpb.GatherResponse{MetricFamilies: pluginMetrics}, err
 }
 
 func (vm *LandslideVM) CrossChainAppRequest(context.Context, *vmpb.CrossChainAppRequestMsg) (*emptypb.Empty, error) {
