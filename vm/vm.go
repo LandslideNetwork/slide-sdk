@@ -3,6 +3,7 @@ package vm
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -89,10 +90,11 @@ type (
 		serverCloser   closer.ServerCloser
 		connCloser     closer.Closer
 
-		database   dbm.DB
-		appCreator AppCreator
-		app        proxy.AppConns
-		logger     log.Logger
+		database       dbm.DB
+		databaseClient rpcdb.DatabaseClient
+		appCreator     AppCreator
+		app            proxy.AppConns
+		logger         log.Logger
 
 		blockStore *store.BlockStore
 		stateStore state.Store
@@ -171,7 +173,8 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			return nil, err
 		}
 		vm.connCloser.Add(dbClientConn)
-		vm.database = database.New(rpcdb.NewDatabaseClient(dbClientConn))
+		vm.databaseClient = rpcdb.NewDatabaseClient(dbClientConn)
+		vm.database = database.New(vm.databaseClient)
 	}
 	vm.logger = log.NewTMLogger(os.Stdout)
 
@@ -467,8 +470,19 @@ func (vm *LandslideVM) SetPreference(_ context.Context, req *vmpb.SetPreferenceR
 }
 
 // Health attempt to verify the health of the VM.
-func (vm *LandslideVM) Health(context.Context, *emptypb.Empty) (*vmpb.HealthResponse, error) {
-	return nil, nil
+func (vm *LandslideVM) Health(ctx context.Context, in *emptypb.Empty) (*vmpb.HealthResponse, error) {
+	dbHealth, err := vm.databaseClient.HealthCheck(ctx, in)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check db health: %w", err)
+	}
+	report := map[string]interface{}{
+		"database": dbHealth,
+	}
+
+	details, err := json.Marshal(report)
+	return &vmpb.HealthResponse{
+		Details: details,
+	}, err
 }
 
 // Version returns the version of the VM.
@@ -502,7 +516,14 @@ func (vm *LandslideVM) AppGossip(context.Context, *vmpb.AppGossipMsg) (*emptypb.
 
 // Gather attempts to gather metrics from a VM.
 func (vm *LandslideVM) Gather(context.Context, *emptypb.Empty) (*vmpb.GatherResponse, error) {
-	return nil, errors.New("TODO: implement me 7")
+	// Gather metrics registered by rpcchainvm server Gatherer. These
+	// metrics are collected for each Go plugin process.
+	pluginMetrics, err := vm.processMetrics.Gather()
+	if err != nil {
+		return nil, err
+	}
+
+	return &vmpb.GatherResponse{MetricFamilies: pluginMetrics}, err
 }
 
 func (vm *LandslideVM) CrossChainAppRequest(context.Context, *vmpb.CrossChainAppRequestMsg) (*emptypb.Empty, error) {
