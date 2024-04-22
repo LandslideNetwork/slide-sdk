@@ -50,4 +50,4 @@ fi
 
 # Build Subnet EVM, which is run as a subprocess
 echo "Building Landslide VM at $BINARY_PATH"
-go build -o "$BINARY_PATH" "example/countervm/"*.go
+go build -o "$BINARY_PATH" "example/kvstore/"*.go
