@@ -4,18 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cometbft/cometbft/p2p"
 	"net/http"
 	"sort"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	tmbytes "github.com/cometbft/cometbft/libs/bytes"
+	tmmath "github.com/cometbft/cometbft/libs/math"
+	tmquery "github.com/cometbft/cometbft/libs/pubsub/query"
 	mempl "github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/proxy"
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/store"
 	"github.com/cometbft/cometbft/types"
-	tmbytes "github.com/consideritdone/landslidecore/libs/bytes"
-	tmmath "github.com/consideritdone/landslidecore/libs/math"
-	tmquery "github.com/cometbft/cometbft/libs/pubsub/query"
 	"github.com/consideritdone/landslidevm/jsonrpc"
 )
 
@@ -304,7 +306,6 @@ func (rpc *RPC) BlockResults(_ *http.Request, args *BlockHeightArgs, reply *ctyp
 	// 	return err
 	// }
 
-
 	// TODO make IBC reply it realised in landslidevm, but not realised in comet bft
 	// results, err := rpc.vm.stateStore.
 	// if err != nil {
@@ -319,37 +320,39 @@ func (rpc *RPC) BlockResults(_ *http.Request, args *BlockHeightArgs, reply *ctyp
 	// reply.ConsensusParamUpdates = results.EndBlock.ConsensusParamUpdates
 	return nil
 }
+
 type (
-CommitArgs struct {
-	Height *int64 `json:"height"`
-}
+	CommitArgs struct {
+		Height *int64 `json:"height"`
+	}
 
-ValidatorsArgs struct {
-	Height  *int64 `json:"height"`
-	Page    *int   `json:"page"`
-	PerPage *int   `json:"perPage"`
-}
+	ValidatorsArgs struct {
+		Height  *int64 `json:"height"`
+		Page    *int   `json:"page"`
+		PerPage *int   `json:"perPage"`
+	}
 
-TxArgs struct {
-	Hash  []byte `json:"hash"`
-	Prove bool   `json:"prove"`
-}
+	TxArgs struct {
+		Hash  []byte `json:"hash"`
+		Prove bool   `json:"prove"`
+	}
 
-TxSearchArgs struct {
-	Query   string `json:"query"`
-	Prove   bool   `json:"prove"`
-	Page    *int   `json:"page"`
-	PerPage *int   `json:"perPage"`
-	OrderBy string `json:"orderBy"`
-}
+	TxSearchArgs struct {
+		Query   string `json:"query"`
+		Prove   bool   `json:"prove"`
+		Page    *int   `json:"page"`
+		PerPage *int   `json:"perPage"`
+		OrderBy string `json:"orderBy"`
+	}
 
-BlockSearchArgs struct {
-	Query   string `json:"query"`
-	Page    *int   `json:"page"`
-	PerPage *int   `json:"perPage"`
-	OrderBy string `json:"orderBy"`
-}
+	BlockSearchArgs struct {
+		Query   string `json:"query"`
+		Page    *int   `json:"page"`
+		PerPage *int   `json:"perPage"`
+		OrderBy string `json:"orderBy"`
+	}
 )
+
 func (rpc *RPC) Commit(_ *http.Request, args *CommitArgs, reply *ctypes.ResultCommit) error {
 	height, err := getHeight(rpc.vm.blockStore, args.Height)
 	if err != nil {
@@ -375,6 +378,7 @@ var (
 	defaultPerPage = 30
 	maxPerPage     = 100
 )
+
 func validatePerPage(perPagePtr *int) int {
 	if perPagePtr == nil { // no per_page parameter
 		return defaultPerPage
@@ -606,5 +610,63 @@ func (rpc *RPC) BlockSearch(req *http.Request, args *BlockSearchArgs, reply *cty
 
 	reply.Blocks = apiResults
 	reply.TotalCount = totalCount
+	return nil
+}
+
+func (rpc *RPC) Status(_ *http.Request, _ *struct{}, reply *ctypes.ResultStatus) error {
+	var (
+		earliestBlockHeight   int64
+		earliestBlockHash     tmbytes.HexBytes
+		earliestAppHash       tmbytes.HexBytes
+		earliestBlockTimeNano int64
+	)
+
+	if earliestBlockMeta := rpc.vm.blockStore.LoadBaseMeta(); earliestBlockMeta != nil {
+		earliestBlockHeight = earliestBlockMeta.Header.Height
+		earliestAppHash = earliestBlockMeta.Header.AppHash
+		earliestBlockHash = earliestBlockMeta.BlockID.Hash
+		earliestBlockTimeNano = earliestBlockMeta.Header.Time.UnixNano()
+	}
+
+	var (
+		latestBlockHash     tmbytes.HexBytes
+		latestAppHash       tmbytes.HexBytes
+		latestBlockTimeNano int64
+
+		latestHeight = rpc.vm.blockStore.Height()
+	)
+
+	if latestHeight != 0 {
+		if latestBlockMeta := rpc.vm.blockStore.LoadBlockMeta(latestHeight); latestBlockMeta != nil {
+			latestBlockHash = latestBlockMeta.BlockID.Hash
+			latestAppHash = latestBlockMeta.Header.AppHash
+			latestBlockTimeNano = latestBlockMeta.Header.Time.UnixNano()
+		}
+	}
+
+	reply = &ctypes.ResultStatus{
+		NodeInfo: p2p.DefaultNodeInfo{
+			DefaultNodeID: p2p.ID(rpc.vm.appOpts.NodeId),
+			Network:       fmt.Sprintf("%d", rpc.vm.appOpts.NetworkId),
+		},
+		SyncInfo: ctypes.SyncInfo{
+			LatestBlockHash:     latestBlockHash,
+			LatestAppHash:       latestAppHash,
+			LatestBlockHeight:   latestHeight,
+			LatestBlockTime:     time.Unix(0, latestBlockTimeNano),
+			EarliestBlockHash:   earliestBlockHash,
+			EarliestAppHash:     earliestAppHash,
+			EarliestBlockHeight: earliestBlockHeight,
+			EarliestBlockTime:   time.Unix(0, earliestBlockTimeNano),
+			CatchingUp:          false,
+		},
+		//TODO: use internal app validators instead
+		ValidatorInfo: ctypes.ValidatorInfo{
+			Address:     proposerPubKey.Address(),
+			PubKey:      proposerPubKey,
+			VotingPower: 0,
+		},
+	}
+
 	return nil
 }
