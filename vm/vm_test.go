@@ -7,14 +7,15 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/abci/example/kvstore"
-	vmpb "github.com/consideritdone/landslidevm/proto/vm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	vmpb "github.com/consideritdone/landslidevm/proto/vm"
 )
 
 var (
 	//go:embed testdata/genesis.json
-	countervmGenesis []byte
+	kvstorevmGenesis []byte
 )
 
 func newKvApp(t *testing.T, vmdb, appdb dbm.DB) vmpb.VMServer {
@@ -24,7 +25,7 @@ func newKvApp(t *testing.T, vmdb, appdb dbm.DB) vmpb.VMServer {
 	require.NotNil(t, vm)
 	initRes, err := vm.Initialize(context.TODO(), &vmpb.InitializeRequest{
 		DbServerAddr: "inmemory",
-		GenesisBytes: countervmGenesis,
+		GenesisBytes: kvstorevmGenesis,
 	})
 	assert.NoError(t, err)
 	assert.NotNil(t, initRes)

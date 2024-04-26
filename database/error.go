@@ -11,6 +11,6 @@ var (
 	ErrNotFound    = errors.New("not found")
 	ErrEnumToError = map[rpcdb.Error]error{
 		rpcdb.Error_ERROR_CLOSED:    ErrClosed,
-		rpcdb.Error_ERROR_NOT_FOUND: ErrNotFound,
+		rpcdb.Error_ERROR_NOT_FOUND: nil,
 	}
 )
