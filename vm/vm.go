@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	http2 "net/http"
 	"os"
 	"slices"
 	"sync"
@@ -15,6 +16,7 @@ import (
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/consensus"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/node"
@@ -60,7 +62,9 @@ var (
 	dbPrefixTxIndexer    = []byte("tx-indexer")
 	dbPrefixBlockIndexer = []byte("block-indexer")
 
+	//TODO: use internal app validators instead
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	proposerPubKey  = secp256k1.PubKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 	Version = "0.0.0"
 
@@ -98,6 +102,7 @@ type (
 		databaseClient rpcdb.DatabaseClient
 		appCreator     AppCreator
 		app            proxy.AppConns
+		appOpts        *AppCreatorOpts
 		logger         log.Logger
 
 		blockStore *store.BlockStore
@@ -187,7 +192,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	dbStateStore := dbm.NewPrefixDB(vm.database, dbPrefixStateStore)
 	vm.stateStore = state.NewStore(dbStateStore, state.StoreOptions{DiscardABCIResponses: false})
 
-	app, err := vm.appCreator(&AppCreatorOpts{
+	vm.appOpts = &AppCreatorOpts{
 		NetworkId:    req.NetworkId,
 		SubnetId:     req.SubnetId,
 		ChainId:      req.CChainId,
@@ -199,7 +204,8 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		GenesisBytes: req.GenesisBytes,
 		UpgradeBytes: req.UpgradeBytes,
 		ConfigBytes:  req.ConfigBytes,
-	})
+	}
+	app, err := vm.appCreator(vm.appOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -381,9 +387,11 @@ func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty
 func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.CreateHandlersResponse, error) {
 	server := grpcutils.NewServer()
 	vm.serverCloser.Add(server)
-	httppb.RegisterHTTPServer(server, http.NewServer(
-		jsonrpc.NewServer(NewRPC(vm).Routes()),
-	))
+
+	mux := http2.NewServeMux()
+	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vm).Routes(), vm.logger)
+
+	httppb.RegisterHTTPServer(server, http.NewServer(mux))
 
 	listener, err := grpcutils.NewListener()
 	if err != nil {
