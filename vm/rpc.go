@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cometbft/cometbft/p2p"
 	"net/http"
 	"sort"
 	"time"
@@ -14,10 +13,13 @@ import (
 	tmmath "github.com/cometbft/cometbft/libs/math"
 	tmquery "github.com/cometbft/cometbft/libs/pubsub/query"
 	mempl "github.com/cometbft/cometbft/mempool"
+	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/proxy"
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
+	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/cometbft/cometbft/store"
 	"github.com/cometbft/cometbft/types"
+
 	"github.com/consideritdone/landslidevm/jsonrpc"
 )
 
@@ -29,19 +31,18 @@ func NewRPC(vm *LandslideVM) *RPC {
 	return &RPC{vm}
 }
 
-func (rpc *RPC) Routes() map[string]jsonrpc.Handler {
-	return map[string]jsonrpc.Handler{
-		"broadcast_tx_commit": jsonrpc.TypedHandlerFunc(rpc.BroadcastTxSync),
+func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
+	return map[string]*jsonrpc.RPCFunc{
+		"status": jsonrpc.NewRPCFunc(rpc.Status, ""),
 	}
 }
 
-func (rpc *RPC) ABCIInfo(_ *http.Request, _ *struct{}, reply *ctypes.ResultABCIInfo) error {
+func (rpc *RPC) ABCIInfo(ctx context.Context, tx1 types.Tx, tx2 types.Tx) (*ctypes.ResultABCIInfo, error) {
 	resInfo, err := rpc.vm.app.Query().Info(context.Background(), proxy.RequestInfo)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	reply.Response = *resInfo
-	return nil
+	return &ctypes.ResultABCIInfo{Response: *resInfo}, nil
 }
 
 type ABCIQueryArgs struct {
@@ -613,7 +614,7 @@ func (rpc *RPC) BlockSearch(req *http.Request, args *BlockSearchArgs, reply *cty
 	return nil
 }
 
-func (rpc *RPC) Status(_ *http.Request, _ *struct{}, reply *ctypes.ResultStatus) error {
+func (rpc *RPC) Status(ctx *rpctypes.Context) (*ctypes.ResultStatus, error) {
 	var (
 		earliestBlockHeight   int64
 		earliestBlockHash     tmbytes.HexBytes
@@ -644,7 +645,7 @@ func (rpc *RPC) Status(_ *http.Request, _ *struct{}, reply *ctypes.ResultStatus)
 		}
 	}
 
-	reply = &ctypes.ResultStatus{
+	result := &ctypes.ResultStatus{
 		NodeInfo: p2p.DefaultNodeInfo{
 			DefaultNodeID: p2p.ID(rpc.vm.appOpts.NodeId),
 			Network:       fmt.Sprintf("%d", rpc.vm.appOpts.NetworkId),
@@ -668,5 +669,5 @@ func (rpc *RPC) Status(_ *http.Request, _ *struct{}, reply *ctypes.ResultStatus)
 		},
 	}
 
-	return nil
+	return result, nil
 }

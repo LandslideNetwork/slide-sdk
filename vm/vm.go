@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cometbft/cometbft/crypto/secp256k1"
+	http2 "net/http"
 	"os"
 	"slices"
 	"sync"
@@ -16,6 +16,7 @@ import (
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/consensus"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/node"
@@ -386,9 +387,11 @@ func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty
 func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.CreateHandlersResponse, error) {
 	server := grpcutils.NewServer()
 	vm.serverCloser.Add(server)
-	httppb.RegisterHTTPServer(server, http.NewServer(
-		jsonrpc.NewServer(NewRPC(vm).Routes()),
-	))
+
+	mux := http2.NewServeMux()
+	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vm).Routes(), vm.logger)
+
+	httppb.RegisterHTTPServer(server, http.NewServer(mux))
 
 	listener, err := grpcutils.NewListener()
 	if err != nil {
