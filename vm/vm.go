@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"os"
 	"slices"
 	"sync"
@@ -57,7 +58,9 @@ var (
 	dbPrefixTxIndexer    = []byte("tx-indexer")
 	dbPrefixBlockIndexer = []byte("block-indexer")
 
+	//TODO: use internal app validators instead
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	proposerPubKey  = secp256k1.PubKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 	ErrNotFound = errors.New("not found")
 )
@@ -91,6 +94,7 @@ type (
 		database   dbm.DB
 		appCreator AppCreator
 		app        proxy.AppConns
+		appOpts    *AppCreatorOpts
 		logger     log.Logger
 
 		blockStore *store.BlockStore
@@ -175,7 +179,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	dbStateStore := dbm.NewPrefixDB(vm.database, dbPrefixStateStore)
 	vm.stateStore = state.NewStore(dbStateStore, state.StoreOptions{DiscardABCIResponses: false})
 
-	app, err := vm.appCreator(&AppCreatorOpts{
+	vm.appOpts = &AppCreatorOpts{
 		NetworkId:    req.NetworkId,
 		SubnetId:     req.SubnetId,
 		ChainId:      req.CChainId,
@@ -187,7 +191,8 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		GenesisBytes: req.GenesisBytes,
 		UpgradeBytes: req.UpgradeBytes,
 		ConfigBytes:  req.ConfigBytes,
-	})
+	}
+	app, err := vm.appCreator(vm.appOpts)
 	if err != nil {
 		return nil, err
 	}
