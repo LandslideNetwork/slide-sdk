@@ -19,6 +19,7 @@ import (
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/cometbft/cometbft/store"
 	"github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/version"
 
 	"github.com/consideritdone/landslidevm/jsonrpc"
 )
@@ -34,10 +35,14 @@ func NewRPC(vm *LandslideVM) *RPC {
 func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 	return map[string]*jsonrpc.RPCFunc{
 		"status": jsonrpc.NewRPCFunc(rpc.Status, ""),
+
+		// abci API
+		"abci_query": jsonrpc.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
+		"abci_info":  jsonrpc.NewRPCFunc(rpc.ABCIInfo, "", jsonrpc.Cacheable()),
 	}
 }
 
-func (rpc *RPC) ABCIInfo(ctx context.Context, tx1 types.Tx, tx2 types.Tx) (*ctypes.ResultABCIInfo, error) {
+func (rpc *RPC) ABCIInfo(ctx context.Context) (*ctypes.ResultABCIInfo, error) {
 	resInfo, err := rpc.vm.app.Query().Info(context.Background(), proxy.RequestInfo)
 	if err != nil {
 		return nil, err
@@ -647,8 +652,18 @@ func (rpc *RPC) Status(ctx *rpctypes.Context) (*ctypes.ResultStatus, error) {
 
 	result := &ctypes.ResultStatus{
 		NodeInfo: p2p.DefaultNodeInfo{
+			ProtocolVersion: p2p.NewProtocolVersion(
+				version.P2PProtocol,
+				version.BlockProtocol,
+				0,
+			),
 			DefaultNodeID: p2p.ID(rpc.vm.appOpts.NodeId),
+			ListenAddr:    "",
 			Network:       fmt.Sprintf("%d", rpc.vm.appOpts.NetworkId),
+			Version:       version.TMCoreSemVer,
+			Channels:      nil,
+			Moniker:       "",
+			Other:         p2p.DefaultNodeInfoOther{},
 		},
 		SyncInfo: ctypes.SyncInfo{
 			LatestBlockHash:     latestBlockHash,
