@@ -1,0 +1,35 @@
+name: Buf
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  buf-lint:
+    name: Protobuf Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bufbuild/buf-setup-action@v1.31.0
+        with:
+          github_token: ${{ github.token }}
+      - uses: bufbuild/buf-lint-action@v1
+        with:
+          input: "proto"
+  check_generated_protobuf:
+    name: Up-to-date protobuf
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.go_version }}
+          check-latest: true
+      - uses: bufbuild/buf-setup-action@v1.31.0
+      - shell: bash
+        run: scripts/protobuf_codegen.sh
+      - shell: bash
+        run: .github/workflows/check-clean-branch.sh
+
