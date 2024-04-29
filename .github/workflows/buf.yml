@@ -32,6 +32,8 @@ jobs:
         run: chmod +x scripts/protobuf_codegen.sh
       - shell: bash
         run: scripts/protobuf_codegen.sh
+      - name: Set execute permissions on the script check-clean-branch.sh
+        run: chmod +x .github/workflows/check-clean-branch.sh
       - shell: bash
         run: .github/workflows/check-clean-branch.sh
 
