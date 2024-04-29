@@ -1,7 +1,6 @@
 #!/bin/bash
 # Exits if any uncommitted changes are found.
 
-set -x
 set -o errexit
 set -o nounset
 set -o pipefail
