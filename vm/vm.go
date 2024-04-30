@@ -6,7 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	http2 "net/http"
+	messengerpb "github.com/consideritdone/landslidevm/proto/messenger"
+	"github.com/consideritdone/landslidevm/vm/types/messenger"
 	"os"
 	"slices"
 	"sync"
@@ -105,6 +106,9 @@ type (
 		appOpts        *AppCreatorOpts
 		logger         log.Logger
 
+		toEngine chan messengerpb.Message
+		closed   chan struct{}
+
 		blockStore *store.BlockStore
 		stateStore state.Store
 		state      state.State
@@ -169,6 +173,38 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 	// Register metrics for each Go plugin processes
 	vm.processMetrics = registerer
+
+	clientConn, err := grpc.Dial(
+		"passthrough:///"+req.ServerAddr,
+		grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
+		grpc.WithChainStreamInterceptor(grpcClientMetrics.StreamClientInterceptor()),
+	)
+	if err != nil {
+		// Ignore closing errors to return the original error
+		_ = vm.connCloser.Close()
+		return nil, err
+	}
+
+	vm.connCloser.Add(clientConn)
+
+	msgClient := messenger.NewClient(messengerpb.NewMessengerClient(clientConn))
+
+	vm.toEngine = make(chan messengerpb.Message, 1)
+	vm.closed = make(chan struct{})
+	go func() {
+		for {
+			select {
+			case msg, ok := <-vm.toEngine:
+				if !ok {
+					return
+				}
+				// Nothing to do with the error within the goroutine
+				_ = msgClient.Notify(msg)
+			case <-vm.closed:
+				return
+			}
+		}
+	}()
 
 	// Dial the database
 	if vm.database == nil {
