@@ -34,11 +34,46 @@ func NewRPC(vm *LandslideVM) *RPC {
 
 func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 	return map[string]*jsonrpc.RPCFunc{
-		"status": jsonrpc.NewRPCFunc(rpc.Status, ""),
+		// subscribe/unsubscribe are reserved for websocket events.
+		// "subscribe":       jsonrpc.NewWSRPCFunc(rpc.Subscribe, "query"),
+		// "unsubscribe":     jsonrpc.NewWSRPCFunc(rpc.Unsubscribe, "query"),
+		// "unsubscribe_all": jsonrpc.NewWSRPCFunc(rpc.UnsubscribeAll, ""),
+
+		// info AP
+		"health":          jsonrpc.NewRPCFunc(rpc.Health, ""),
+		"status":          jsonrpc.NewRPCFunc(rpc.Status, ""),
+		"net_info":        jsonrpc.NewRPCFunc(rpc.NetInfo, ""),
+		"blockchain":      jsonrpc.NewRPCFunc(rpc.BlockchainInfo, "minHeight,maxHeight", jsonrpc.Cacheable()),
+		"genesis":         jsonrpc.NewRPCFunc(rpc.Genesis, "", jsonrpc.Cacheable()),
+		"genesis_chunked": jsonrpc.NewRPCFunc(rpc.GenesisChunked, "chunk", jsonrpc.Cacheable()),
+		"block":           jsonrpc.NewRPCFunc(rpc.Block, "height", jsonrpc.Cacheable("height")),
+		"block_by_hash":   jsonrpc.NewRPCFunc(rpc.BlockByHash, "hash", jsonrpc.Cacheable()),
+		"block_results":   jsonrpc.NewRPCFunc(rpc.BlockResults, "height", jsonrpc.Cacheable("height")),
+		"commit":          jsonrpc.NewRPCFunc(rpc.Commit, "height", jsonrpc.Cacheable("height")),
+		// "header":              jsonrpc.NewRPCFunc(rpc.Header, "height", jsonrpc.Cacheable("height")),
+		// "header_by_hash":      jsonrpc.NewRPCFunc(rpc.HeaderByHash, "hash", jsonrpc.Cacheable()),
+		// "check_tx":            jsonrpc.NewRPCFunc(rpc.CheckTx, "tx"),
+		"tx": jsonrpc.NewRPCFunc(rpc.Tx, "hash,prove", jsonrpc.Cacheable()),
+		// "consensus_state":     jsonrpc.NewRPCFunc(rpc.GetConsensusState, ""),
+		// "unconfirmed_txs":     jsonrpc.NewRPCFunc(rpc.UnconfirmedTxs, "limit"),
+		// "num_unconfirmed_txs": jsonrpc.NewRPCFunc(rpc.NumUnconfirmedTxs, ""),
+		"tx_search":            jsonrpc.NewRPCFunc(rpc.TxSearch, "query,prove,page,per_page,order_by"),
+		"block_search":         jsonrpc.NewRPCFunc(rpc.BlockSearch, "query,page,per_page,order_by"),
+		"validators":           jsonrpc.NewRPCFunc(rpc.Validators, "height,page,per_page", jsonrpc.Cacheable("height")),
+		"dump_consensus_state": jsonrpc.NewRPCFunc(rpc.DumpConsensusState, ""),
+		"consensus_params":     jsonrpc.NewRPCFunc(rpc.ConsensusParams, "height", jsonrpc.Cacheable("height")),
+
+		// tx broadcast API
+		// "broadcast_tx_commit": jsonrpc.NewRPCFunc(rpc.BroadcastTxCommit, "tx"),
+		"broadcast_tx_sync":  jsonrpc.NewRPCFunc(rpc.BroadcastTxSync, "tx"),
+		"broadcast_tx_async": jsonrpc.NewRPCFunc(rpc.BroadcastTxAsync, "tx"),
 
 		// abci API
 		"abci_query": jsonrpc.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
 		"abci_info":  jsonrpc.NewRPCFunc(rpc.ABCIInfo, "", jsonrpc.Cacheable()),
+
+		// evidence API
+		// "broadcast_evidence": jsonrpc.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
 	}
 }
 
@@ -257,7 +292,6 @@ type BlockHeightArgs struct {
 // bsHeight can be either latest committed or uncommitted (+1) height.
 func getHeight(bs *store.BlockStore, heightPtr *int64) (int64, error) {
 	bsHeight := bs.Height()
-	bsBase := bs.Base()
 	if heightPtr != nil {
 		height := *heightPtr
 		if height <= 0 {
@@ -266,6 +300,7 @@ func getHeight(bs *store.BlockStore, heightPtr *int64) (int64, error) {
 		if height > bsHeight {
 			return 0, fmt.Errorf("height %d must be less than or equal to the current blockchain height %d", height, bsHeight)
 		}
+		bsBase := bs.Base()
 		if height < bsBase {
 			return 0, fmt.Errorf("height %d is not available, lowest height is %d", height, bsBase)
 		}
@@ -676,7 +711,7 @@ func (rpc *RPC) Status(ctx *rpctypes.Context) (*ctypes.ResultStatus, error) {
 			EarliestBlockTime:   time.Unix(0, earliestBlockTimeNano),
 			CatchingUp:          false,
 		},
-		//TODO: use internal app validators instead
+		// TODO: use internal app validators instead
 		ValidatorInfo: ctypes.ValidatorInfo{
 			Address:     proposerPubKey.Address(),
 			PubKey:      proposerPubKey,
