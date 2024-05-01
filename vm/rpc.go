@@ -51,11 +51,11 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 		"commit":          jsonrpc.NewRPCFunc(rpc.Commit, "height", jsonrpc.Cacheable("height")),
 		// "header":              jsonrpc.NewRPCFunc(rpc.Header, "height", jsonrpc.Cacheable("height")),
 		// "header_by_hash":      jsonrpc.NewRPCFunc(rpc.HeaderByHash, "hash", jsonrpc.Cacheable()),
-		// "check_tx":            jsonrpc.NewRPCFunc(rpc.CheckTx, "tx"),
-		"tx": jsonrpc.NewRPCFunc(rpc.Tx, "hash,prove", jsonrpc.Cacheable()),
+		"check_tx": jsonrpc.NewRPCFunc(rpc.CheckTx, "tx"),
+		"tx":       jsonrpc.NewRPCFunc(rpc.Tx, "hash,prove", jsonrpc.Cacheable()),
 		// "consensus_state":     jsonrpc.NewRPCFunc(rpc.GetConsensusState, ""),
-		// "unconfirmed_txs":     jsonrpc.NewRPCFunc(rpc.UnconfirmedTxs, "limit"),
-		// "num_unconfirmed_txs": jsonrpc.NewRPCFunc(rpc.NumUnconfirmedTxs, ""),
+		"unconfirmed_txs":      jsonrpc.NewRPCFunc(rpc.UnconfirmedTxs, "limit"),
+		"num_unconfirmed_txs":  jsonrpc.NewRPCFunc(rpc.NumUnconfirmedTxs, ""),
 		"tx_search":            jsonrpc.NewRPCFunc(rpc.TxSearch, "query,prove,page,per_page,order_by"),
 		"block_search":         jsonrpc.NewRPCFunc(rpc.BlockSearch, "query,page,per_page,order_by"),
 		"validators":           jsonrpc.NewRPCFunc(rpc.Validators, "height,page,per_page", jsonrpc.Cacheable("height")),
@@ -74,6 +74,39 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 		// evidence API
 		// "broadcast_evidence": jsonrpc.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
 	}
+}
+
+// UnconfirmedTxs gets unconfirmed transactions (maximum ?limit entries)
+// including their number.
+func (rpc *RPC) UnconfirmedTxs(_ *rpctypes.Context, limitPtr *int) (*ctypes.ResultUnconfirmedTxs, error) {
+	// reuse per_page validator
+	limit := validatePerPage(limitPtr)
+	txs := rpc.vm.mempool.ReapMaxTxs(limit)
+	return &ctypes.ResultUnconfirmedTxs{
+		Count:      len(txs),
+		Total:      rpc.vm.mempool.Size(),
+		TotalBytes: rpc.vm.mempool.SizeBytes(),
+		Txs:        txs,
+	}, nil
+}
+
+// NumUnconfirmedTxs gets number of unconfirmed transactions.
+func (rpc *RPC) NumUnconfirmedTxs(*rpctypes.Context) (*ctypes.ResultUnconfirmedTxs, error) {
+	return &ctypes.ResultUnconfirmedTxs{
+		Count:      rpc.vm.mempool.Size(),
+		Total:      rpc.vm.mempool.Size(),
+		TotalBytes: rpc.vm.mempool.SizeBytes(),
+	}, nil
+}
+
+// CheckTx checks the transaction without executing it. The transaction won't
+// be added to the mempool either.
+func (rpc *RPC) CheckTx(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultCheckTx, error) {
+	res, err := rpc.vm.app.Mempool().CheckTx(context.TODO(), &abci.RequestCheckTx{Tx: tx})
+	if err != nil {
+		return nil, err
+	}
+	return &ctypes.ResultCheckTx{ResponseCheckTx: *res}, nil
 }
 
 func (rpc *RPC) ABCIInfo(_ context.Context) (*ctypes.ResultABCIInfo, error) {
