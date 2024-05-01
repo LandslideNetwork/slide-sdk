@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"sort"
 	"time"
 
@@ -77,57 +76,35 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 	}
 }
 
-func (rpc *RPC) ABCIInfo(ctx context.Context) (*ctypes.ResultABCIInfo, error) {
-	resInfo, err := rpc.vm.app.Query().Info(context.Background(), proxy.RequestInfo)
+func (rpc *RPC) ABCIInfo(_ context.Context) (*ctypes.ResultABCIInfo, error) {
+	resInfo, err := rpc.vm.app.Query().Info(context.TODO(), proxy.RequestInfo)
 	if err != nil {
 		return nil, err
 	}
 	return &ctypes.ResultABCIInfo{Response: *resInfo}, nil
 }
 
-type ABCIQueryArgs struct {
-	Path string           `json:"path"`
-	Data tmbytes.HexBytes `json:"data"`
-}
-
-type ABCIQueryWithOptionsArgs struct {
-	Path string           `json:"path"`
-	Data tmbytes.HexBytes `json:"data"`
-	Opts ABCIQueryOptions `json:"opts"`
-}
-
-type ABCIQueryOptions struct {
-	Height int64 `json:"height"`
-	Prove  bool  `json:"prove"`
-}
-
-var (
-	DefaultABCIQueryOptions = ABCIQueryOptions{Height: 0, Prove: false}
-)
-
-func (rpc *RPC) ABCIQuery(req *http.Request, args *ABCIQueryArgs, reply *ctypes.ResultABCIQuery) error {
-	return rpc.ABCIQueryWithOptions(req, &ABCIQueryWithOptionsArgs{args.Path, args.Data, DefaultABCIQueryOptions}, reply)
-}
-
-func (rpc *RPC) ABCIQueryWithOptions(
-	_ *http.Request,
-	args *ABCIQueryWithOptionsArgs,
-	reply *ctypes.ResultABCIQuery,
-) error {
-	resQuery, err := rpc.vm.app.Query().Query(context.Background(), &abci.RequestQuery{
-		Path:   args.Path,
-		Data:   args.Data,
-		Height: args.Opts.Height,
-		Prove:  args.Opts.Prove,
+func (rpc *RPC) ABCIQuery(
+	_ *rpctypes.Context,
+	path string,
+	data tmbytes.HexBytes,
+	height int64,
+	prove bool,
+) (*ctypes.ResultABCIQuery, error) {
+	resQuery, err := rpc.vm.app.Query().Query(context.TODO(), &abci.RequestQuery{
+		Path:   path,
+		Data:   data,
+		Height: height,
+		Prove:  prove,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	reply.Response = *resQuery
-	return nil
+
+	return &ctypes.ResultABCIQuery{Response: *resQuery}, nil
 }
 
-func (rpc *RPC) BroadcastTxAsync(ctx context.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
+func (rpc *RPC) BroadcastTxAsync(_ context.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
 	err := rpc.vm.mempool.CheckTx(tx, nil, mempl.TxInfo{})
 	if err != nil {
 		return nil, err
@@ -135,7 +112,7 @@ func (rpc *RPC) BroadcastTxAsync(ctx context.Context, tx types.Tx) (*ctypes.Resu
 	return &ctypes.ResultBroadcastTx{Hash: tx.Hash()}, nil
 }
 
-func (rpc *RPC) BroadcastTxSync(ctx context.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
+func (rpc *RPC) BroadcastTxSync(_ context.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
 	resCh := make(chan *abci.ResponseCheckTx, 1)
 	err := rpc.vm.mempool.CheckTx(tx, func(res *abci.ResponseCheckTx) {
 		resCh <- res
@@ -151,11 +128,6 @@ func (rpc *RPC) BroadcastTxSync(ctx context.Context, tx types.Tx) (*ctypes.Resul
 		Codespace: res.GetCodespace(),
 		Hash:      tx.Hash(),
 	}, nil
-}
-
-type BlockchainInfoArgs struct {
-	MinHeight int64 `json:"minHeight"`
-	MaxHeight int64 `json:"maxHeight"`
 }
 
 // filterMinMax returns error if either min or max are negative or min > max
@@ -192,101 +164,92 @@ func filterMinMax(base, height, min, max, limit int64) (int64, int64, error) {
 }
 
 func (rpc *RPC) BlockchainInfo(
-	_ *http.Request,
-	args *BlockchainInfoArgs,
-	reply *ctypes.ResultBlockchainInfo,
-) error {
+	_ *rpctypes.Context,
+	minHeight, maxHeight int64,
+) (*ctypes.ResultBlockchainInfo, error) {
 	// maximum 20 block metas
 	const limit int64 = 20
 	var err error
-	args.MinHeight, args.MaxHeight, err = filterMinMax(
+	minHeight, maxHeight, err = filterMinMax(
 		rpc.vm.blockStore.Base(),
 		rpc.vm.blockStore.Height(),
-		args.MinHeight,
-		args.MaxHeight,
+		minHeight,
+		maxHeight,
 		limit)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	rpc.vm.logger.Debug("BlockchainInfoHandler", "maxHeight", args.MaxHeight, "minHeight", args.MinHeight)
+	rpc.vm.logger.Debug("BlockchainInfoHandler", "maxHeight", maxHeight, "minHeight", minHeight)
 
 	var blockMetas []*types.BlockMeta
-	for height := args.MaxHeight; height >= args.MinHeight; height-- {
+	for height := maxHeight; height >= minHeight; height-- {
 		blockMeta := rpc.vm.blockStore.LoadBlockMeta(height)
 		blockMetas = append(blockMetas, blockMeta)
 	}
 
-	reply.LastHeight = rpc.vm.blockStore.Height()
-	reply.BlockMetas = blockMetas
-	return nil
+	return &ctypes.ResultBlockchainInfo{
+		LastHeight: rpc.vm.blockStore.Height(),
+		BlockMetas: blockMetas,
+	}, nil
 }
 
-func (rpc *RPC) Genesis(_ *http.Request, _ *struct{}, reply *ctypes.ResultGenesis) error {
+func (rpc *RPC) Genesis(_ *rpctypes.Context) (*ctypes.ResultGenesis, error) {
 	if len(rpc.vm.genChunks) > 1 {
-		return errors.New("genesis response is large, please use the genesis_chunked API instead")
+		return nil, errors.New("genesis response is large, please use the genesis_chunked API instead")
 	}
 
-	reply.Genesis = rpc.vm.genesis
-	return nil
+	return &ctypes.ResultGenesis{Genesis: rpc.vm.genesis}, nil
 }
 
-type GenesisChunkedArgs struct {
-	Chunk uint `json:"chunk"`
-}
-
-func (rpc *RPC) GenesisChunked(_ *http.Request, args *GenesisChunkedArgs, reply *ctypes.ResultGenesisChunk) error {
+func (rpc *RPC) GenesisChunked(_ *rpctypes.Context, chunk uint) (*ctypes.ResultGenesisChunk, error) {
 	if rpc.vm.genChunks == nil {
-		return fmt.Errorf("service configuration error, genesis chunks are not initialized")
+		return nil, fmt.Errorf("service configuration error, genesis chunks are not initialized")
 	}
 
 	if len(rpc.vm.genChunks) == 0 {
-		return fmt.Errorf("service configuration error, there are no chunks")
+		return nil, fmt.Errorf("service configuration error, there are no chunks")
 	}
 
-	id := int(args.Chunk)
+	id := int(chunk)
 
 	if id > len(rpc.vm.genChunks)-1 {
-		return fmt.Errorf("there are %d chunks, %d is invalid", len(rpc.vm.genChunks)-1, id)
+		return nil, fmt.Errorf("there are %d chunks, %d is invalid", len(rpc.vm.genChunks)-1, id)
 	}
 
-	reply.TotalChunks = len(rpc.vm.genChunks)
-	reply.ChunkNumber = id
-	reply.Data = rpc.vm.genChunks[id]
-	return nil
+	return &ctypes.ResultGenesisChunk{
+		TotalChunks: len(rpc.vm.genChunks),
+		ChunkNumber: id,
+		Data:        rpc.vm.genChunks[id],
+	}, nil
 }
 
 // ToDo: no peers, because it's vm
-func (rpc *RPC) NetInfo(_ *http.Request, _ *struct{}, reply *ctypes.ResultNetInfo) error {
-	return nil
+func (rpc *RPC) NetInfo(_ *rpctypes.Context) (*ctypes.ResultNetInfo, error) {
+	return nil, nil
 }
 
 // ToDo: we doesn't have consensusState
-func (rpc *RPC) DumpConsensusState(_ *http.Request, _ *struct{}, reply *ctypes.ResultDumpConsensusState) error {
-	return nil
+func (rpc *RPC) DumpConsensusState(_ *rpctypes.Context) (*ctypes.ResultDumpConsensusState, error) {
+	return nil, nil
 }
 
 // ToDo: we doesn't have consensusState
-func (rpc *RPC) ConsensusState(_ *http.Request, _ *struct{}, reply *ctypes.ResultConsensusState) error {
-	return nil
+func (rpc *RPC) GetConsensusState(_ *rpctypes.Context) (*ctypes.ResultConsensusState, error) {
+	return nil, nil
 }
 
-type ConsensusParamsArgs struct {
-	Height *int64 `json:"height"`
+func (rpc *RPC) ConsensusParams(
+	_ *rpctypes.Context,
+	heightPtr *int64,
+) (*ctypes.ResultConsensusParams, error) {
+	return &ctypes.ResultConsensusParams{
+		BlockHeight:     rpc.vm.blockStore.Height(),
+		ConsensusParams: *rpc.vm.genesis.ConsensusParams,
+	}, nil
 }
 
-func (rpc *RPC) ConsensusParams(_ *http.Request, args *ConsensusParamsArgs, reply *ctypes.ResultConsensusParams) error {
-	reply.BlockHeight = rpc.vm.blockStore.Height()
-	reply.ConsensusParams = *rpc.vm.genesis.ConsensusParams
-	return nil
-}
-
-func (rpc *RPC) Health(_ *http.Request, _ *struct{}, reply *ctypes.ResultHealth) error {
-	*reply = ctypes.ResultHealth{}
-	return nil
-}
-
-type BlockHeightArgs struct {
-	Height *int64 `json:"height"`
+func (rpc *RPC) Health(*rpctypes.Context) (*ctypes.ResultHealth, error) {
+	return &ctypes.ResultHealth{}, nil
 }
 
 // bsHeight can be either latest committed or uncommitted (+1) height.
@@ -309,39 +272,30 @@ func getHeight(bs *store.BlockStore, heightPtr *int64) (int64, error) {
 	return bsHeight, nil
 }
 
-func (rpc *RPC) Block(_ *http.Request, args *BlockHeightArgs, reply *ctypes.ResultBlock) error {
-	height, err := getHeight(rpc.vm.blockStore, args.Height)
+func (rpc *RPC) Block(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBlock, error) {
+	height, err := getHeight(rpc.vm.blockStore, heightPtr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	block := rpc.vm.blockStore.LoadBlock(height)
 	blockMeta := rpc.vm.blockStore.LoadBlockMeta(height)
 
-	if blockMeta != nil {
-		reply.BlockID = blockMeta.BlockID
+	if blockMeta == nil {
+		return &ctypes.ResultBlock{BlockID: types.BlockID{}, Block: block}, nil
 	}
-	reply.Block = block
-	return nil
+	return &ctypes.ResultBlock{BlockID: blockMeta.BlockID, Block: block}, nil
 }
 
-type BlockHashArgs struct {
-	Hash []byte `json:"hash"`
-}
-
-func (rpc *RPC) BlockByHash(_ *http.Request, args *BlockHashArgs, reply *ctypes.ResultBlock) error {
-	block := rpc.vm.blockStore.LoadBlockByHash(args.Hash)
+func (rpc *RPC) BlockByHash(_ *rpctypes.Context, hash []byte) (*ctypes.ResultBlock, error) {
+	block := rpc.vm.blockStore.LoadBlockByHash(hash)
 	if block == nil {
-		reply.BlockID = types.BlockID{}
-		reply.Block = nil
-		return nil
+		return &ctypes.ResultBlock{BlockID: types.BlockID{}, Block: nil}, nil
 	}
 	blockMeta := rpc.vm.blockStore.LoadBlockMeta(block.Height)
-	reply.BlockID = blockMeta.BlockID
-	reply.Block = block
-	return nil
+	return &ctypes.ResultBlock{BlockID: blockMeta.BlockID, Block: block}, nil
 }
 
-func (rpc *RPC) BlockResults(_ *http.Request, args *BlockHeightArgs, reply *ctypes.ResultBlockResults) error {
+func (rpc *RPC) BlockResults(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBlockResults, error) {
 	// height, err := getHeight(rpc.vm.blockStore, args.Height)
 	// if err != nil {
 	// 	return err
@@ -359,59 +313,24 @@ func (rpc *RPC) BlockResults(_ *http.Request, args *BlockHeightArgs, reply *ctyp
 	// reply.EndBlockEvents = results.EndBlock.Events
 	// reply.ValidatorUpdates = results.EndBlock.ValidatorUpdates
 	// reply.ConsensusParamUpdates = results.EndBlock.ConsensusParamUpdates
-	return nil
+	return nil, nil
 }
 
-type (
-	CommitArgs struct {
-		Height *int64 `json:"height"`
-	}
-
-	ValidatorsArgs struct {
-		Height  *int64 `json:"height"`
-		Page    *int   `json:"page"`
-		PerPage *int   `json:"perPage"`
-	}
-
-	TxArgs struct {
-		Hash  []byte `json:"hash"`
-		Prove bool   `json:"prove"`
-	}
-
-	TxSearchArgs struct {
-		Query   string `json:"query"`
-		Prove   bool   `json:"prove"`
-		Page    *int   `json:"page"`
-		PerPage *int   `json:"perPage"`
-		OrderBy string `json:"orderBy"`
-	}
-
-	BlockSearchArgs struct {
-		Query   string `json:"query"`
-		Page    *int   `json:"page"`
-		PerPage *int   `json:"perPage"`
-		OrderBy string `json:"orderBy"`
-	}
-)
-
-func (rpc *RPC) Commit(_ *http.Request, args *CommitArgs, reply *ctypes.ResultCommit) error {
-	height, err := getHeight(rpc.vm.blockStore, args.Height)
+func (rpc *RPC) Commit(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultCommit, error) {
+	height, err := getHeight(rpc.vm.blockStore, heightPtr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	blockMeta := rpc.vm.blockStore.LoadBlockMeta(height)
 	if blockMeta == nil {
-		return nil
+		return nil, nil
 	}
 
 	header := blockMeta.Header
 	commit := rpc.vm.blockStore.LoadBlockCommit(height)
-	res := ctypes.NewResultCommit(&header, commit, !(height == rpc.vm.blockStore.Height()))
 
-	reply.SignedHeader = res.SignedHeader
-	reply.CanonicalCommit = res.CanonicalCommit
-	return nil
+	return ctypes.NewResultCommit(&header, commit, !(height == rpc.vm.blockStore.Height())), nil
 }
 
 var (
@@ -463,81 +382,88 @@ func validateSkipCount(page, perPage int) int {
 	return skipCount
 }
 
-func (rpc *RPC) Validators(_ *http.Request, args *ValidatorsArgs, reply *ctypes.ResultValidators) error {
-	height, err := getHeight(rpc.vm.blockStore, args.Height)
+func (rpc *RPC) Validators(
+	_ *rpctypes.Context,
+	heightPtr *int64,
+	pagePtr, perPagePtr *int,
+) (*ctypes.ResultValidators, error) {
+	height, err := getHeight(rpc.vm.blockStore, heightPtr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	validators, err := rpc.vm.stateStore.LoadValidators(height)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	totalCount := len(validators.Validators)
-	perPage := validatePerPage(args.PerPage)
-	page, err := validatePage(args.Page, perPage, totalCount)
+	perPage := validatePerPage(perPagePtr)
+	page, err := validatePage(pagePtr, perPage, totalCount)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	skipCount := validateSkipCount(page, perPage)
 
-	reply.BlockHeight = height
-	reply.Validators = validators.Validators[skipCount : skipCount+tmmath.MinInt(perPage, totalCount-skipCount)]
-	reply.Count = len(reply.Validators)
-	reply.Total = totalCount
-	return nil
+	v := validators.Validators[skipCount : skipCount+tmmath.MinInt(perPage, totalCount-skipCount)]
+
+	return &ctypes.ResultValidators{
+		BlockHeight: height,
+		Validators:  v,
+		Count:       len(v),
+		Total:       totalCount,
+	}, nil
 }
 
-func (rpc *RPC) Tx(_ *http.Request, args *TxArgs, reply *ctypes.ResultTx) error {
-	r, err := rpc.vm.txIndexer.Get(args.Hash)
+func (rpc *RPC) Tx(_ *rpctypes.Context, hash []byte, prove bool) (*ctypes.ResultTx, error) {
+	r, err := rpc.vm.txIndexer.Get(hash)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if r == nil {
-		return fmt.Errorf("tx (%X) not found", args.Hash)
+		return nil, fmt.Errorf("tx (%X) not found", hash)
 	}
 
 	height := r.Height
 	index := r.Index
 
 	var proof types.TxProof
-	if args.Prove {
+	if prove {
 		block := rpc.vm.blockStore.LoadBlock(height)
 		proof = block.Data.Txs.Proof(int(index)) // XXX: overflow on 32-bit machines
 	}
 
-	reply.Hash = args.Hash
-	reply.Height = height
-	reply.Index = index
-	reply.TxResult = r.Result
-	reply.Tx = r.Tx
-	reply.Proof = proof
-	return nil
+	return &ctypes.ResultTx{
+		Hash:     hash,
+		Height:   r.Height,
+		Index:    r.Index,
+		TxResult: r.Result,
+		Tx:       r.Tx,
+		Proof:    proof,
+	}, nil
 }
 
-func (rpc *RPC) TxSearch(req *http.Request, args *TxSearchArgs, reply *ctypes.ResultTxSearch) error {
-	q, err := tmquery.New(args.Query)
+func (rpc *RPC) TxSearch(
+	ctx *rpctypes.Context,
+	query string,
+	prove bool,
+	pagePtr, perPagePtr *int,
+	orderBy string,
+) (*ctypes.ResultTxSearch, error) {
+	q, err := tmquery.New(query)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	var ctx context.Context
-	if req != nil {
-		ctx = req.Context()
-	} else {
-		ctx = context.Background()
-	}
-
-	results, err := rpc.vm.txIndexer.Search(ctx, q)
+	results, err := rpc.vm.txIndexer.Search(ctx.Context(), q)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// sort results (must be done before pagination)
-	switch args.OrderBy {
+	switch orderBy {
 	case "desc":
 		sort.Slice(results, func(i, j int) bool {
 			if results[i].Height == results[j].Height {
@@ -553,16 +479,16 @@ func (rpc *RPC) TxSearch(req *http.Request, args *TxSearchArgs, reply *ctypes.Re
 			return results[i].Height < results[j].Height
 		})
 	default:
-		return errors.New("expected order_by to be either `asc` or `desc` or empty")
+		return nil, errors.New("expected order_by to be either `asc` or `desc` or empty")
 	}
 
 	// paginate results
 	totalCount := len(results)
-	perPage := validatePerPage(args.PerPage)
+	perPage := validatePerPage(perPagePtr)
 
-	page, err := validatePage(args.Page, perPage, totalCount)
+	page, err := validatePage(pagePtr, perPage, totalCount)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	skipCount := validateSkipCount(page, perPage)
@@ -573,7 +499,7 @@ func (rpc *RPC) TxSearch(req *http.Request, args *TxSearchArgs, reply *ctypes.Re
 		r := results[i]
 
 		var proof types.TxProof
-		if args.Prove {
+		if prove {
 			block := rpc.vm.blockStore.LoadBlock(r.Height)
 			proof = block.Data.Txs.Proof(int(r.Index)) // XXX: overflow on 32-bit machines
 		}
@@ -588,31 +514,27 @@ func (rpc *RPC) TxSearch(req *http.Request, args *TxSearchArgs, reply *ctypes.Re
 		})
 	}
 
-	reply.Txs = apiResults
-	reply.TotalCount = totalCount
-	return nil
+	return &ctypes.ResultTxSearch{Txs: apiResults, TotalCount: totalCount}, nil
 }
 
-func (rpc *RPC) BlockSearch(req *http.Request, args *BlockSearchArgs, reply *ctypes.ResultBlockSearch) error {
-	q, err := tmquery.New(args.Query)
+func (rpc *RPC) BlockSearch(
+	ctx *rpctypes.Context,
+	query string,
+	pagePtr, perPagePtr *int,
+	orderBy string,
+) (*ctypes.ResultBlockSearch, error) {
+	q, err := tmquery.New(query)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	var ctx context.Context
-	if req != nil {
-		ctx = req.Context()
-	} else {
-		ctx = context.Background()
-	}
-
-	results, err := rpc.vm.blockIndexer.Search(ctx, q)
+	results, err := rpc.vm.blockIndexer.Search(ctx.Context(), q)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// sort results (must be done before pagination)
-	switch args.OrderBy {
+	switch orderBy {
 	case "desc", "":
 		sort.Slice(results, func(i, j int) bool { return results[i] > results[j] })
 
@@ -620,16 +542,16 @@ func (rpc *RPC) BlockSearch(req *http.Request, args *BlockSearchArgs, reply *cty
 		sort.Slice(results, func(i, j int) bool { return results[i] < results[j] })
 
 	default:
-		return errors.New("expected order_by to be either `asc` or `desc` or empty")
+		return nil, errors.New("expected order_by to be either `asc` or `desc` or empty")
 	}
 
 	// paginate results
 	totalCount := len(results)
-	perPage := validatePerPage(args.PerPage)
+	perPage := validatePerPage(perPagePtr)
 
-	page, err := validatePage(args.Page, perPage, totalCount)
+	page, err := validatePage(pagePtr, perPage, totalCount)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	skipCount := validateSkipCount(page, perPage)
@@ -649,12 +571,10 @@ func (rpc *RPC) BlockSearch(req *http.Request, args *BlockSearchArgs, reply *cty
 		}
 	}
 
-	reply.Blocks = apiResults
-	reply.TotalCount = totalCount
-	return nil
+	return &ctypes.ResultBlockSearch{Blocks: apiResults, TotalCount: totalCount}, nil
 }
 
-func (rpc *RPC) Status(ctx *rpctypes.Context) (*ctypes.ResultStatus, error) {
+func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 	var (
 		earliestBlockHeight   int64
 		earliestBlockHash     tmbytes.HexBytes
