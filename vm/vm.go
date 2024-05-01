@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	http2 "net/http"
 	"os"
 	"slices"
 	"sync"
@@ -15,6 +16,7 @@ import (
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/consensus"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/node"
@@ -35,6 +37,10 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/consideritdone/landslidevm/database"
+	"github.com/consideritdone/landslidevm/grpcutils"
+	"github.com/consideritdone/landslidevm/http"
+	"github.com/consideritdone/landslidevm/jsonrpc"
+	httppb "github.com/consideritdone/landslidevm/proto/http"
 	"github.com/consideritdone/landslidevm/proto/rpcdb"
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
 	vmtypes "github.com/consideritdone/landslidevm/vm/types"
@@ -56,7 +62,9 @@ var (
 	dbPrefixTxIndexer    = []byte("tx-indexer")
 	dbPrefixBlockIndexer = []byte("block-indexer")
 
+	//TODO: use internal app validators instead
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	proposerPubKey  = secp256k1.PubKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 	Version = "0.0.0"
 
@@ -87,13 +95,14 @@ type (
 		allowShutdown *vmtypes.Atomic[bool]
 
 		processMetrics prometheus.Gatherer
-		serverCloser   closer.ServerCloser
+		serverCloser   grpcutils.ServerCloser
 		connCloser     closer.Closer
 
 		database       dbm.DB
 		databaseClient rpcdb.DatabaseClient
 		appCreator     AppCreator
 		app            proxy.AppConns
+		appOpts        *AppCreatorOpts
 		logger         log.Logger
 
 		blockStore *store.BlockStore
@@ -183,7 +192,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	dbStateStore := dbm.NewPrefixDB(vm.database, dbPrefixStateStore)
 	vm.stateStore = state.NewStore(dbStateStore, state.StoreOptions{DiscardABCIResponses: false})
 
-	app, err := vm.appCreator(&AppCreatorOpts{
+	vm.appOpts = &AppCreatorOpts{
 		NetworkId:    req.NetworkId,
 		SubnetId:     req.SubnetId,
 		ChainId:      req.CChainId,
@@ -195,7 +204,8 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		GenesisBytes: req.GenesisBytes,
 		UpgradeBytes: req.UpgradeBytes,
 		ConfigBytes:  req.ConfigBytes,
-	})
+	}
+	app, err := vm.appCreator(vm.appOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -375,7 +385,29 @@ func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty
 
 // CreateHandlers creates the HTTP handlers for custom chain network calls.
 func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.CreateHandlersResponse, error) {
-	return nil, nil
+	server := grpcutils.NewServer()
+	vm.serverCloser.Add(server)
+
+	mux := http2.NewServeMux()
+	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vm).Routes(), vm.logger)
+
+	httppb.RegisterHTTPServer(server, http.NewServer(mux))
+
+	listener, err := grpcutils.NewListener()
+	if err != nil {
+		return nil, err
+	}
+
+	go grpcutils.Serve(listener, server)
+
+	return &vmpb.CreateHandlersResponse{
+		Handlers: []*vmpb.Handler{
+			{
+				Prefix:     "/rpc",
+				ServerAddr: listener.Addr().String(),
+			},
+		},
+	}, nil
 }
 
 func (vm *LandslideVM) Connected(context.Context, *vmpb.ConnectedRequest) (*emptypb.Empty, error) {
