@@ -410,35 +410,6 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 	}, nil
 }
 
-/*
-func (vm *VMServer) CreateHandlers(ctx context.Context, _ *emptypb.Empty) (*vmpb.CreateHandlersResponse, error) {
-	handlers, err := vm.vm.CreateHandlers(ctx)
-	if err != nil {
-		return nil, err
-	}
-	resp := &vmpb.CreateHandlersResponse{}
-	for prefix, handler := range handlers {
-		serverListener, err := grpcutils.NewListener()
-		if err != nil {
-			return nil, err
-		}
-		server := grpcutils.NewServer()
-		vm.serverCloser.Add(server)
-		httppb.RegisterHTTPServer(server, ghttp.NewServer(handler))
-
-		// Start HTTP service
-		go grpcutils.Serve(serverListener, server)
-
-		resp.Handlers = append(resp.Handlers, &vmpb.Handler{
-			Prefix:     prefix,
-			ServerAddr: serverListener.Addr().String(),
-		})
-	}
-	return resp, nil
-}
-
-*/
-
 func (vm *LandslideVM) Connected(context.Context, *vmpb.ConnectedRequest) (*emptypb.Empty, error) {
 	vm.vmconnected.Set(true)
 	return &emptypb.Empty{}, nil
