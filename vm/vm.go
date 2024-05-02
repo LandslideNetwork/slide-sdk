@@ -6,13 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	messengerpb "github.com/consideritdone/landslidevm/proto/messenger"
-	"github.com/consideritdone/landslidevm/vm/types/messenger"
 	http2 "net/http"
 	"os"
 	"slices"
 	"sync"
 	"time"
+
+	messengerpb "github.com/consideritdone/landslidevm/proto/messenger"
 
 	dbm "github.com/cometbft/cometbft-db"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
@@ -130,6 +130,8 @@ type (
 		vmconnected    *vmtypes.Atomic[bool]
 		verifiedBlocks sync.Map
 		preferred      [32]byte
+
+		clientConn grpc.ClientConnInterface
 	}
 )
 
@@ -137,8 +139,8 @@ func New(creator AppCreator) *LandslideVM {
 	return NewViaDB(nil, creator)
 }
 
-func NewViaDB(database dbm.DB, creator AppCreator) *LandslideVM {
-	return &LandslideVM{
+func NewViaDB(database dbm.DB, creator AppCreator, options ...func(*LandslideVM)) *LandslideVM {
+	vm := &LandslideVM{
 		appCreator:     creator,
 		database:       database,
 		allowShutdown:  vmtypes.NewAtomic(true),
@@ -147,6 +149,18 @@ func NewViaDB(database dbm.DB, creator AppCreator) *LandslideVM {
 		vmconnected:    vmtypes.NewAtomic(false),
 		bootstrapped:   vmtypes.NewAtomic(false),
 		verifiedBlocks: sync.Map{},
+	}
+
+	for _, o := range options {
+		o(vm)
+	}
+
+	return vm
+}
+
+func WithClientConn(clientConn grpc.ClientConnInterface) func(vm *LandslideVM) {
+	return func(vm *LandslideVM) {
+		vm.clientConn = clientConn
 	}
 }
 
@@ -175,21 +189,25 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	// Register metrics for each Go plugin processes
 	vm.processMetrics = registerer
 
-	clientConn, err := grpc.Dial(
-		"passthrough:///"+req.ServerAddr,
-		grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
-		grpc.WithChainStreamInterceptor(grpcClientMetrics.StreamClientInterceptor()),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		// Ignore closing errors to return the original error
-		_ = vm.connCloser.Close()
-		return nil, err
+	if vm.clientConn == nil {
+		clientConn, err := grpc.Dial(
+			"passthrough:///"+req.ServerAddr,
+			grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
+			grpc.WithChainStreamInterceptor(grpcClientMetrics.StreamClientInterceptor()),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
+		if err != nil {
+			// Ignore closing errors to return the original error
+			_ = vm.connCloser.Close()
+			return nil, err
+		}
+
+		// TODO: add to connCloser even we have defined vm.clientConn via Option
+		vm.connCloser.Add(clientConn)
+		vm.clientConn = clientConn
 	}
 
-	vm.connCloser.Add(clientConn)
-
-	msgClient := messenger.NewClient(messengerpb.NewMessengerClient(clientConn))
+	msgClient := messengerpb.NewMessengerClient(vm.clientConn)
 
 	vm.toEngine = make(chan messengerpb.Message, 1)
 	vm.closed = make(chan struct{})
@@ -201,7 +219,9 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 					return
 				}
 				// Nothing to do with the error within the goroutine
-				_ = msgClient.Notify(msg)
+				_, _ = msgClient.Notify(context.Background(), &messengerpb.NotifyRequest{
+					Message: msg,
+				})
 			case <-vm.closed:
 				return
 			}
@@ -400,7 +420,9 @@ func (vm *LandslideVM) CanShutdown() bool {
 // Shutdown is called when the node is shutting down.
 func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	vm.allowShutdown.Set(true)
-	close(vm.closed)
+	if vm.closed != nil {
+		close(vm.closed)
+	}
 	var err error
 	if vm.indexerService != nil {
 		err = vm.indexerService.Stop()
