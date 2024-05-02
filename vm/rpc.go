@@ -109,7 +109,7 @@ func (rpc *RPC) CheckTx(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultCheckTx
 	return &ctypes.ResultCheckTx{ResponseCheckTx: *res}, nil
 }
 
-func (rpc *RPC) ABCIInfo(_ context.Context) (*ctypes.ResultABCIInfo, error) {
+func (rpc *RPC) ABCIInfo(_ *rpctypes.Context) (*ctypes.ResultABCIInfo, error) {
 	resInfo, err := rpc.vm.app.Query().Info(context.TODO(), proxy.RequestInfo)
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func (rpc *RPC) ABCIQuery(
 	return &ctypes.ResultABCIQuery{Response: *resQuery}, nil
 }
 
-func (rpc *RPC) BroadcastTxAsync(_ context.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
+func (rpc *RPC) BroadcastTxAsync(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
 	err := rpc.vm.mempool.CheckTx(tx, nil, mempl.TxInfo{})
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func (rpc *RPC) BroadcastTxAsync(_ context.Context, tx types.Tx) (*ctypes.Result
 	return &ctypes.ResultBroadcastTx{Hash: tx.Hash()}, nil
 }
 
-func (rpc *RPC) BroadcastTxSync(_ context.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
+func (rpc *RPC) BroadcastTxSync(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
 	resCh := make(chan *abci.ResponseCheckTx, 1)
 	err := rpc.vm.mempool.CheckTx(tx, func(res *abci.ResponseCheckTx) {
 		resCh <- res
