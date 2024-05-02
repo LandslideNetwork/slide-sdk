@@ -337,6 +337,15 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	vm.mempool.SetLogger(vm.logger.With("module", "mempool"))
 	vm.mempool.EnableTxsAvailable()
 
+	go func() {
+		for {
+			select {
+			case <-vm.mempool.TxsAvailable():
+				vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK
+			}
+		}
+	}()
+
 	var blk *types.Block
 	if vm.state.LastBlockHeight > 0 {
 		blk = vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
