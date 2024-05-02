@@ -339,10 +339,8 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 	go func() {
 		for {
-			select {
-			case <-vm.mempool.TxsAvailable():
-				vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK
-			}
+			<-vm.mempool.TxsAvailable()
+			vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK
 		}
 	}()
 
