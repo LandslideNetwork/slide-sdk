@@ -178,6 +178,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		"passthrough:///"+req.ServerAddr,
 		grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
 		grpc.WithChainStreamInterceptor(grpcClientMetrics.StreamClientInterceptor()),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
 		// Ignore closing errors to return the original error
