@@ -281,7 +281,7 @@ func (rpc *RPC) ConsensusParams(
 	}, nil
 }
 
-func (rpc *RPC) Health(*rpctypes.Context) (*ctypes.ResultHealth, error) {
+func (rpc *RPC) Health(ctx *rpctypes.Context) (*ctypes.ResultHealth, error) {
 	return &ctypes.ResultHealth{}, nil
 }
 

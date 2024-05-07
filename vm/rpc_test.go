@@ -102,7 +102,8 @@ func TestRPC(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := client.Call(context.Background(), tt.method, tt.params, tt.response)
 			require.NoError(t, err)
-			require.Equal(t, tt.expected, tt.response)
+			require.NotNil(t, tt.response)
+			require.EqualValues(t, tt.expected, tt.response)
 		})
 	}
 }
