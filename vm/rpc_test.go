@@ -2,6 +2,9 @@ package vm
 
 import (
 	"context"
+	"github.com/cometbft/cometbft/libs/rand"
+	vmpb "github.com/consideritdone/landslidevm/proto/vm"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 	"time"
@@ -36,6 +39,94 @@ func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
 	return server, vmLnd, client
 }
 
+// MakeTxKV returns a text transaction, allong with expected key, value pair
+func MakeTxKV() ([]byte, []byte, []byte) {
+	k := []byte(rand.Str(2))
+	v := []byte(rand.Str(2))
+	return k, v, append(k, append([]byte("="), v...)...)
+}
+
+func testABCIInfo(t *testing.T, client *client.Client, expected *ctypes.ResultABCIInfo) {
+	result := new(ctypes.ResultABCIInfo)
+	_, err := client.Call(context.Background(), "abci_info", map[string]interface{}{}, result)
+	require.NoError(t, err)
+	require.Equal(t, expected.Response.AppVersion, result.Response.AppVersion)
+	require.Equal(t, expected.Response.LastBlockHeight, result.Response.LastBlockHeight)
+	require.Equal(t, expected.Response.LastBlockHeight, result.Response.LastBlockAppHash)
+	//TODO: deepEqual
+}
+
+func testABCIQuery(t *testing.T, client *client.Client, expected *ctypes.ResultABCIQuery) {
+	result := new(ctypes.ResultABCIInfo)
+	_, err := client.Call(context.Background(), "abci_query", map[string]interface{}{}, result)
+	require.NoError(t, err)
+	//t.Logf("%+v", reply)
+	//require.Equal(t, expected.Response.AppVersion, result.Response.AppVersion)
+	//require.Equal(t, expected.Response.LastBlockHeight, result.Response.LastBlockHeight)
+	//require.Equal(t, expected.Response.LastBlockHeight, result.Response.LastBlockAppHash)
+	//TODO: deepEqual
+	//reply, err := service.ABCIQuery(&rpctypes.Context{}, "/key", k, 0, false)
+	//if assert.Nil(t, err) && assert.True(t, reply.Response.IsOK()) {
+	//	assert.EqualValues(t, v, reply.Response.Value)
+	//}
+	//spew.Dump(vm.mempool.Size())
+}
+
+func testBroadcastTxCommit(t *testing.T, client *client.Client, vm *LandslideVM, expected *ctypes.ResultBroadcastTxCommit) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func(ctx context.Context) {
+		end := false
+		for !end {
+			select {
+			case <-ctx.Done():
+				end = true
+			default:
+				if vm.mempool.Size() > 0 {
+					block, err := vm.BuildBlock(ctx, &vmpb.BuildBlockRequest{})
+					t.Logf("new block: %#v", block)
+					require.NoError(t, err)
+					_, err = vm.BlockAccept(ctx, &vmpb.BlockAcceptRequest{})
+					require.NoError(t, err)
+				} else {
+					time.Sleep(500 * time.Millisecond)
+				}
+			}
+		}
+	}(ctx)
+
+	result := new(ctypes.ResultABCIInfo)
+	_, err := client.Call(context.Background(), "broadcast_tx_commit", map[string]interface{}{}, result)
+	assert.NoError(t, err)
+	//TODO: deep equal
+	//assert.True(t, reply.CheckTx.IsOK())
+	//assert.True(t, reply.DeliverTx.IsOK())
+	//assert.Equal(t, 0, vm.mempool.Size())
+}
+
+func TestABCIService(t *testing.T) {
+	server, vm, client := setupRPC(t)
+	defer server.Close()
+
+	t.Run("ABCIInfo", func(t *testing.T) {
+		for i := 0; i < 5; i++ {
+			k, v, tx := MakeTxKV()
+			t.Logf("%+v %+v %+v", k, v, tx)
+			testBroadcastTxCommit(t, client, vm, &ctypes.ResultBroadcastTxCommit{})
+			testABCIInfo(t, client, &ctypes.ResultABCIInfo{})
+		}
+	})
+
+	t.Run("ABCIQuery", func(t *testing.T) {
+		for i := 0; i < 5; i++ {
+			k, v, tx := MakeTxKV()
+			t.Logf("%+v %+v %+v", k, v, tx)
+			testBroadcastTxCommit(t, client, vm, &ctypes.ResultBroadcastTxCommit{})
+			testABCIQuery(t, client, &ctypes.ResultABCIQuery{})
+		}
+	})
+}
+
 func TestHealth(t *testing.T) {
 	server, _, client := setupRPC(t)
 	defer server.Close()
@@ -59,6 +150,7 @@ func TestStatus(t *testing.T) {
 }
 
 func TestRPC(t *testing.T) {
+	//TODO: complicated combinations
 	server, _, client := setupRPC(t)
 	defer server.Close()
 
