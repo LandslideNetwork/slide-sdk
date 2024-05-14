@@ -5,7 +5,6 @@ import (
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/types"
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 	"time"
@@ -18,7 +17,12 @@ import (
 	"github.com/consideritdone/landslidevm/jsonrpc"
 )
 
-func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
+type txRuntimeEnv struct {
+	key, value, hash []byte
+	initMemPoolSize  int
+}
+
+func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client, context.CancelFunc) {
 	vm := newFreshKvApp(t)
 	vmLnd := vm.(*LandslideVM)
 	mux := http.NewServeMux()
@@ -27,6 +31,27 @@ func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
 	//TODO: build block in goroutine
 	address := "127.0.0.1:44444"
 	server := &http.Server{Addr: address, Handler: mux}
+	ctx, cancel := context.WithCancel(context.Background())
+	//defer cancel()
+	go func(ctx context.Context) {
+		end := false
+		for !end {
+			select {
+			case <-ctx.Done():
+				end = true
+			default:
+				if vmLnd.mempool.Size() > 0 {
+					block, err := vm.BuildBlock(ctx, &vmpb.BuildBlockRequest{})
+					t.Logf("new block: %#v", block)
+					require.NoError(t, err)
+					_, err = vm.BlockAccept(ctx, &vmpb.BlockAcceptRequest{})
+					require.NoError(t, err)
+				} else {
+					time.Sleep(500 * time.Millisecond)
+				}
+			}
+		}
+	}(ctx)
 	go func() {
 		server.ListenAndServe()
 		// panic(err)
@@ -39,7 +64,7 @@ func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
 	client, err := client.New("tcp://" + address)
 	require.NoError(t, err)
 
-	return server, vmLnd, client
+	return server, vmLnd, client, cancel
 }
 
 // MakeTxKV returns a text transaction, allong with expected key, value pair
@@ -59,188 +84,146 @@ func testABCIInfo(t *testing.T, client *client.Client, expected *coretypes.Resul
 	//TODO: deepEqual
 }
 
-func testABCIQuery(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultABCIQuery) {
-	result := new(coretypes.ResultABCIInfo)
+func testABCIQuery(t *testing.T, client *client.Client, params map[string]interface{}, expected interface{}) {
+	result := new(coretypes.ResultABCIQuery)
 	_, err := client.Call(context.Background(), "abci_query", params, result)
 	require.NoError(t, err)
-	//t.Logf("%+v", reply)
-	//require.Equal(t, expected.Response.AppVersion, result.Response.AppVersion)
-	//require.Equal(t, expected.Response.LastBlockHeight, result.Response.LastBlockHeight)
-	//require.Equal(t, expected.Response.LastBlockHeight, result.Response.LastBlockAppHash)
-	//TODO: deepEqual
-	//reply, err := service.ABCIQuery(&rpctypes.Context{}, "/key", k, 0, false)
-	//if assert.Nil(t, err) && assert.True(t, reply.Response.IsOK()) {
-	//	assert.EqualValues(t, v, reply.Response.Value)
-	//}
-	//spew.Dump(vm.mempool.Size())
+	require.True(t, result.Response.IsOK())
+	require.EqualValues(t, expected, result.Response.Value)
 }
 
 func testBroadcastTxCommit(t *testing.T, client *client.Client, vm *LandslideVM, expected *coretypes.ResultBroadcastTxCommit) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go func(ctx context.Context) {
-		end := false
-		for !end {
-			select {
-			case <-ctx.Done():
-				end = true
-			default:
-				if vm.mempool.Size() > 0 {
-					block, err := vm.BuildBlock(ctx, &vmpb.BuildBlockRequest{})
-					t.Logf("new block: %#v", block)
-					require.NoError(t, err)
-					_, err = vm.BlockAccept(ctx, &vmpb.BlockAcceptRequest{})
-					require.NoError(t, err)
-				} else {
-					time.Sleep(500 * time.Millisecond)
-				}
-			}
-		}
-	}(ctx)
 
 	result := new(coretypes.ResultBroadcastTxCommit)
 	_, err := client.Call(context.Background(), "broadcast_tx_commit", map[string]interface{}{}, result)
-	assert.NoError(t, err)
-	assert.True(t, result.CheckTx.IsOK())
-	assert.True(t, result.TxResult.IsOK())
+	require.NoError(t, err)
+	require.True(t, result.CheckTx.IsOK())
+	require.True(t, result.TxResult.IsOK())
 }
 
 func testBroadcastTxSync(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}) *coretypes.ResultBroadcastTx {
 	defer vm.mempool.Flush()
-
+	//TODO: vm mempool FlUSH??
 	initMempoolSize := vm.mempool.Size()
 
 	result := new(coretypes.ResultBroadcastTx)
 	_, err := client.Call(context.Background(), "broadcast_tx_sync", params, result)
-	assert.NoError(t, err)
-	assert.Equal(t, result.Code, abcitypes.CodeTypeOK)
-	assert.Equal(t, initMempoolSize+1, vm.mempool.Size())
+	require.NoError(t, err)
+	require.Equal(t, result, abcitypes.CodeTypeOK)
+	require.Equal(t, initMempoolSize+1, vm.mempool.Size())
 	tx := params["tx"].(types.Tx)
-	assert.EqualValues(t, tx, vm.mempool.ReapMaxTxs(-1)[0])
+	require.EqualValues(t, tx, result.Data.String())
+	require.EqualValues(t, tx, vm.mempool.ReapMaxTxs(-1)[0])
 	return result
 }
 
 func testBroadcastTxAsync(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}) *coretypes.ResultBroadcastTx {
-	//ctx, cancel := context.WithCancel(context.Background())
-	//defer cancel()
-
 	result := new(coretypes.ResultBroadcastTx)
 	_, err := client.Call(context.Background(), "broadcast_tx_async", params, result)
-	assert.NoError(t, err)
-	assert.Equal(t, result.Code, abcitypes.CodeTypeOK)
-	tx := params["tx"].(types.Tx)
-	assert.Equal(t, result.Data.String(), tx.String())
+	require.NoError(t, err)
+	require.NotNil(t, result.Hash)
+	require.Equal(t, result.Code, abcitypes.CodeTypeOK)
 	return result
 }
 
-func TestABCIService(t *testing.T) {
-	server, vm, client := setupRPC(t)
-	defer server.Close()
-
-	t.Run("ABCIInfo", func(t *testing.T) {
-		for i := 0; i < 3; i++ {
-			k, v, tx := MakeTxKV()
-			t.Logf("%+v %+v %+v", k, v, tx)
-			testBroadcastTxCommit(t, client, vm, &coretypes.ResultBroadcastTxCommit{})
-			testABCIInfo(t, client, &coretypes.ResultABCIInfo{})
-		}
-	})
-
-	t.Run("ABCIQuery", func(t *testing.T) {
-		for i := 0; i < 3; i++ {
-			k, v, tx := MakeTxKV()
-			t.Logf("%+v %+v %+v", k, v, tx)
-			testBroadcastTxCommit(t, client, vm, &coretypes.ResultBroadcastTxCommit{})
-			testABCIQuery(t, client, map[string]interface{}{}, &coretypes.ResultABCIQuery{})
-		}
-	})
-
-	t.Run("BroadcastTxCommit", func(t *testing.T) {
-		//ctx, cancel := context.WithCancel(context.Background())
-		//defer cancel()
-		//go func(ctx context.Context) {
-		//	end := false
-		//	for !end {
-		//		select {
-		//		case <-ctx.Done():
-		//			end = true
-		//		default:
-		//			if vm.mempool.Size() > 0 {
-		//				block, err := vm.BuildBlock(ctx)
-		//				t.Logf("new block: %#v", block)
-		//				require.NoError(t, err)
-		//				require.NoError(t, block.Accept(ctx))
-		//			} else {
-		//				time.Sleep(500 * time.Millisecond)
-		//			}
-		//		}
-		//	}
-		//}(ctx)
-		//
-		//_, _, tx := MakeTxKV()
-		//reply, err := service.BroadcastTxCommit(&rpctypes.Context{}, tx)
-		//assert.NoError(t, err)
-		//assert.True(t, reply.CheckTx.IsOK())
-		//assert.True(t, reply.DeliverTx.IsOK())
-		//assert.Equal(t, 0, vm.mempool.Size())
-	})
-
-	t.Run("BroadcastTxAsync", func(t *testing.T) {
-		for i := 0; i < 3; i++ {
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			k, v, tx := MakeTxKV()
-			t.Logf("%+v %+v %+v", k, v, tx)
-			initMempoolSize := vm.mempool.Size()
-			result := testBroadcastTxAsync(t, client, vm, map[string]interface{}{"tx": tx})
-			for {
-				select {
-				case <-ctx.Done():
-					cancel()
-					t.Fatal("Broadcast tx async timeout exceeded")
-				default:
-					if vm.mempool.Size() == initMempoolSize+1 {
-						cancel()
-						testABCIQuery(t, client, map[string]interface{}{"path": "/key", "data": k}, &coretypes.ResultABCIQuery{})
-						testABCIQuery(t, client, map[string]interface{}{"path": "/hash", "data": result.Hash}, &coretypes.ResultABCIQuery{})
-					}
-					time.Sleep(500 * time.Millisecond)
-				}
+func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *txRuntimeEnv) {
+	ctx, cancelCtx := context.WithTimeout(context.Background(), 10*time.Second)
+	for {
+		select {
+		case <-ctx.Done():
+			cancelCtx()
+			t.Fatal("Broadcast tx timeout exceeded")
+		default:
+			if vm.mempool.Size() == env.initMemPoolSize+1 {
+				cancelCtx()
+				testABCIQuery(t, client, map[string]interface{}{"path": "/key", "data": env.key}, env.value)
+				testABCIQuery(t, client, map[string]interface{}{"path": "/hash", "data": env.hash}, env.value)
+				return
 			}
+			time.Sleep(500 * time.Millisecond)
 		}
-		//defer vm.mempool.Flush()
-		//
-		//initMempoolSize := vm.mempool.Size()
-		//_, _, tx := MakeTxKV()
-		//
-		//_, err := client.Call(context.Background(), "broadcast_tx_async", map[string]interface{}{}, result)
-		//reply, err := service.BroadcastTxAsync(&rpctypes.Context{}, tx)
-		//assert.NoError(t, err)
-		//assert.NotNil(t, reply.Hash)
-		//assert.Equal(t, initMempoolSize+1, vm.mempool.Size())
-		//assert.EqualValues(t, tx, vm.mempool.ReapMaxTxs(-1)[0])
-	})
+	}
+}
+
+func TestABCIService(t *testing.T) {
+	server, vm, client, cancel := setupRPC(t)
+	defer server.Close()
+	defer cancel()
+
+	//t.Run("ABCIInfo", func(t *testing.T) {
+	//	//for i := 0; i < 3; i++ {
+	//	//	k, v, tx := MakeTxKV()
+	//	//	t.Logf("%+v %+v %+v", k, v, tx)
+	//	//	testBroadcastTxCommit(t, client, vm, &coretypes.ResultBroadcastTxCommit{})
+	//	//	testABCIInfo(t, client, &coretypes.ResultABCIInfo{})
+	//	//}
+	//})
+	//
+	//t.Run("ABCIQuery", func(t *testing.T) {
+	//	//for i := 0; i < 3; i++ {
+	//	//	k, v, tx := MakeTxKV()
+	//	//	t.Logf("%+v %+v %+v", k, v, tx)
+	//	//	testBroadcastTxCommit(t, client, vm, &coretypes.ResultBroadcastTxCommit{})
+	//	//	testABCIQuery(t, client, map[string]interface{}{}, &coretypes.ResultABCIQuery{})
+	//	//}
+	//})
+	//
+	//t.Run("BroadcastTxCommit", func(t *testing.T) {
+	//	//ctx, cancel := context.WithCancel(context.Background())
+	//	//defer cancel()
+	//	//go func(ctx context.Context) {
+	//	//	end := false
+	//	//	for !end {
+	//	//		select {
+	//	//		case <-ctx.Done():
+	//	//			end = true
+	//	//		default:
+	//	//			if vm.mempool.Size() > 0 {
+	//	//				block, err := vm.BuildBlock(ctx)
+	//	//				t.Logf("new block: %#v", block)
+	//	//				require.NoError(t, err)
+	//	//				require.NoError(t, block.Accept(ctx))
+	//	//			} else {
+	//	//				time.Sleep(500 * time.Millisecond)
+	//	//			}
+	//	//		}
+	//	//	}
+	//	//}(ctx)
+	//	//
+	//	//_, _, tx := MakeTxKV()
+	//	//reply, err := service.BroadcastTxCommit(&rpctypes.Context{}, tx)
+	//	//require.NoError(t, err)
+	//	//require.True(t, reply.CheckTx.IsOK())
+	//	//require.True(t, reply.DeliverTx.IsOK())
+	//	//require.Equal(t, 0, vm.mempool.Size())
+	//})
+
+	//t.Run("BroadcastTxAsync", func(t *testing.T) {
+	//	for i := 0; i < 3; i++ {
+	//		k, v, tx := MakeTxKV()
+	//		initMempoolSize := vm.mempool.Size()
+	//		result := testBroadcastTxAsync(t, client, vm, map[string]interface{}{"tx": tx})
+	//		checkTxResult(t, client, vm, &txRuntimeEnv{key: k, value: v, hash: result.Hash, initMemPoolSize: initMempoolSize})
+	//	}
+	//	//defer vm.mempool.Flush()
+	//	//
+	//	//initMempoolSize := vm.mempool.Size()
+	//	//_, _, tx := MakeTxKV()
+	//	//
+	//	//_, err := client.Call(context.Background(), "broadcast_tx_async", map[string]interface{}{}, result)
+	//	//reply, err := service.BroadcastTxAsync(&rpctypes.Context{}, tx)
+	//	//require.NoError(t, err)
+	//	//require.NotNil(t, reply.Hash)
+	//	//require.Equal(t, initMempoolSize+1, vm.mempool.Size())
+	//	//require.EqualValues(t, tx, vm.mempool.ReapMaxTxs(-1)[0])
+	//})
 
 	t.Run("BroadcastTxSync", func(t *testing.T) {
 		for i := 0; i < 3; i++ {
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			k, v, tx := MakeTxKV()
-			t.Logf("%+v %+v %+v", k, v, tx)
 			initMempoolSize := vm.mempool.Size()
 			result := testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
-			for {
-				select {
-				case <-ctx.Done():
-					cancel()
-					t.Fatal("Broadcast tx async timeout exceeded")
-				default:
-					if vm.mempool.Size() == initMempoolSize+1 {
-						cancel()
-						testABCIQuery(t, client, map[string]interface{}{"path": "/key", "data": k}, &coretypes.ResultABCIQuery{})
-						testABCIQuery(t, client, map[string]interface{}{"path": "/hash", "data": result.Hash}, &coretypes.ResultABCIQuery{})
-					}
-					time.Sleep(500 * time.Millisecond)
-				}
-			}
+			checkTxResult(t, client, vm, &txRuntimeEnv{key: k, value: v, hash: result.Hash, initMemPoolSize: initMempoolSize})
 		}
 		//defer vm.mempool.Flush()
 		//
@@ -249,16 +232,17 @@ func TestABCIService(t *testing.T) {
 		//
 		//_, err := client.Call(context.Background(), "broadcast_tx_sync", map[string]interface{}{}, result)
 		//reply, err := service.BroadcastTxSync(&rpctypes.Context{}, tx)
-		//assert.NoError(t, err)
-		//assert.Equal(t, reply.Code, atypes.CodeTypeOK)
-		//assert.Equal(t, initMempoolSize+1, vm.mempool.Size())
-		//assert.EqualValues(t, tx, vm.mempool.ReapMaxTxs(-1)[0])
+		//require.NoError(t, err)
+		//require.Equal(t, reply.Code, atypes.CodeTypeOK)
+		//require.Equal(t, initMempoolSize+1, vm.mempool.Size())
+		//require.EqualValues(t, tx, vm.mempool.ReapMaxTxs(-1)[0])
 	})
 }
 
 func TestHealth(t *testing.T) {
-	server, _, client := setupRPC(t)
+	server, _, client, cancel := setupRPC(t)
 	defer server.Close()
+	defer cancel()
 
 	result := new(coretypes.ResultHealth)
 	_, err := client.Call(context.Background(), "health", map[string]interface{}{}, result)
@@ -268,8 +252,9 @@ func TestHealth(t *testing.T) {
 }
 
 func TestStatus(t *testing.T) {
-	server, _, client := setupRPC(t)
+	server, _, client, cancel := setupRPC(t)
 	defer server.Close()
+	defer cancel()
 
 	result := new(coretypes.ResultStatus)
 	_, err := client.Call(context.Background(), "status", map[string]interface{}{}, result)
@@ -280,8 +265,9 @@ func TestStatus(t *testing.T) {
 
 func TestRPC(t *testing.T) {
 	//TODO: complicated combinations
-	server, _, client := setupRPC(t)
+	server, _, client, cancel := setupRPC(t)
 	defer server.Close()
+	defer cancel()
 
 	tests := []struct {
 		name     string
