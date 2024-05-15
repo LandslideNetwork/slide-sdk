@@ -2,14 +2,16 @@ package vm
 
 import (
 	"context"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/cometbft/cometbft/abci/example/kvstore"
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/types"
 	"github.com/cometbft/cometbft/version"
+
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
-	"net/http"
-	"testing"
-	"time"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -44,7 +46,9 @@ func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client, context
 					block, err := vm.BuildBlock(ctx, &vmpb.BuildBlockRequest{})
 					t.Logf("new block: %#v", block)
 					require.NoError(t, err)
-					_, err = vm.BlockAccept(ctx, &vmpb.BlockAcceptRequest{})
+					_, err = vm.BlockAccept(ctx, &vmpb.BlockAcceptRequest{
+						Id: block.Id,
+					})
 					require.NoError(t, err)
 				} else {
 					time.Sleep(500 * time.Millisecond)
@@ -237,7 +241,7 @@ func TestStatus(t *testing.T) {
 }
 
 func TestRPC(t *testing.T) {
-	//TODO: complicated combinations
+	// TODO: complicated combinations
 	server, _, client, cancel := setupRPC(t)
 	defer server.Close()
 	defer cancel()
@@ -248,29 +252,29 @@ func TestRPC(t *testing.T) {
 		params   map[string]interface{}
 		response interface{}
 	}{
-		//{"Health", "health", map[string]interface{}{}, new(ctypes.ResultHealth)},
-		//{"Status", "status", map[string]interface{}{}, new(ctypes.ResultStatus)},
-		//{"NetInfo", "net_info", map[string]interface{}{}, new(ctypes.ResultNetInfo)},
-		//{"Blockchain", "blockchain", map[string]interface{}{}, new(ctypes.ResultBlockchainInfo)},
-		//{"Genesis", "genesis", map[string]interface{}{}, new(ctypes.ResultGenesis)},
-		//{"GenesisChunk", "genesis_chunked", map[string]interface{}{}, new(ctypes.ResultGenesisChunk)},
-		//{"Block", "block", map[string]interface{}{}, new(ctypes.ResultBlock)},
-		//{"BlockResults", "block_results", map[string]interface{}{}, new(ctypes.ResultBlockResults)},
-		//{"Commit", "commit", map[string]interface{}{}, new(ctypes.ResultCommit)},
-		//{"Header", "header", map[string]interface{}{}, new(ctypes.ResultHeader)},
-		//{"HeaderByHash", "header_by_hash", map[string]interface{}{}, new(ctypes.ResultHeader)},
-		//{"CheckTx", "check_tx", map[string]interface{}{}, new(ctypes.ResultCheckTx)},
-		//{"Tx", "tx", map[string]interface{}{}, new(ctypes.ResultTx)},
-		//{"TxSearch", "tx_search", map[string]interface{}{}, new(ctypes.ResultTxSearch)},
-		//{"BlockSearch", "block_search", map[string]interface{}{}, new(ctypes.ResultBlockSearch)},
-		//{"Validators", "validators", map[string]interface{}{}, new(ctypes.ResultValidators)},
-		//{"DumpConsensusState", "dump_consensus_state", map[string]interface{}{}, new(ctypes.ResultDumpConsensusState)},
-		//{"ConsensusState", "consensus_state", map[string]interface{}{}, new(ctypes.ResultConsensusState)},
-		//{"ConsensusParams", "consensus_params", map[string]interface{}{}, new(ctypes.ResultConsensusParams)},
-		//{"UnconfirmedTxs", "unconfirmed_txs", map[string]interface{}{}, new(ctypes.ResultUnconfirmedTxs)},
-		//{"NumUnconfirmedTxs", "num_unconfirmed_txs", map[string]interface{}{}, new(ctypes.ResultUnconfirmedTxs)},
-		//+{"BroadcastTxSync", "broadcast_tx_sync", map[string]interface{}{}, new(ctypes.ResultBroadcastTx)},
-		//+{"BroadcastTxAsync", "broadcast_tx_async", map[string]interface{}{}, new(ctypes.ResultBroadcastTx)},
+		// {"Health", "health", map[string]interface{}{}, new(ctypes.ResultHealth)},
+		// {"Status", "status", map[string]interface{}{}, new(ctypes.ResultStatus)},
+		// {"NetInfo", "net_info", map[string]interface{}{}, new(ctypes.ResultNetInfo)},
+		// {"Blockchain", "blockchain", map[string]interface{}{}, new(ctypes.ResultBlockchainInfo)},
+		// {"Genesis", "genesis", map[string]interface{}{}, new(ctypes.ResultGenesis)},
+		// {"GenesisChunk", "genesis_chunked", map[string]interface{}{}, new(ctypes.ResultGenesisChunk)},
+		// {"Block", "block", map[string]interface{}{}, new(ctypes.ResultBlock)},
+		// {"BlockResults", "block_results", map[string]interface{}{}, new(ctypes.ResultBlockResults)},
+		// {"Commit", "commit", map[string]interface{}{}, new(ctypes.ResultCommit)},
+		// {"Header", "header", map[string]interface{}{}, new(ctypes.ResultHeader)},
+		// {"HeaderByHash", "header_by_hash", map[string]interface{}{}, new(ctypes.ResultHeader)},
+		// {"CheckTx", "check_tx", map[string]interface{}{}, new(ctypes.ResultCheckTx)},
+		// {"Tx", "tx", map[string]interface{}{}, new(ctypes.ResultTx)},
+		// {"TxSearch", "tx_search", map[string]interface{}{}, new(ctypes.ResultTxSearch)},
+		// {"BlockSearch", "block_search", map[string]interface{}{}, new(ctypes.ResultBlockSearch)},
+		// {"Validators", "validators", map[string]interface{}{}, new(ctypes.ResultValidators)},
+		// {"DumpConsensusState", "dump_consensus_state", map[string]interface{}{}, new(ctypes.ResultDumpConsensusState)},
+		// {"ConsensusState", "consensus_state", map[string]interface{}{}, new(ctypes.ResultConsensusState)},
+		// {"ConsensusParams", "consensus_params", map[string]interface{}{}, new(ctypes.ResultConsensusParams)},
+		// {"UnconfirmedTxs", "unconfirmed_txs", map[string]interface{}{}, new(ctypes.ResultUnconfirmedTxs)},
+		// {"NumUnconfirmedTxs", "num_unconfirmed_txs", map[string]interface{}{}, new(ctypes.ResultUnconfirmedTxs)},
+		// +{"BroadcastTxSync", "broadcast_tx_sync", map[string]interface{}{}, new(ctypes.ResultBroadcastTx)},
+		// +{"BroadcastTxAsync", "broadcast_tx_async", map[string]interface{}{}, new(ctypes.ResultBroadcastTx)},
 	}
 
 	for _, tt := range tests {
