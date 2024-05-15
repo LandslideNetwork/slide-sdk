@@ -17,7 +17,7 @@ import (
 	"github.com/cometbft/cometbft/types"
 )
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // BlockExecutor handles block execution and state updates.
 // It exposes ApplyBlock(), which validates & executes the block, updates state w/ ABCI responses,
 // then commits and updates the mempool atomically, then saves statetypes.
@@ -104,23 +104,23 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 	proposerAddr []byte,
 ) (*types.Block, error) {
 
-	//maxBytes := state.ConsensusParams.Block.MaxBytes
-	//emptyMaxBytes := maxBytes == -1
-	//if emptyMaxBytes {
+	// maxBytes := state.ConsensusParams.Block.MaxBytes
+	// emptyMaxBytes := maxBytes == -1
+	// if emptyMaxBytes {
 	//	maxBytes = int64(types.MaxBlockSizeBytes)
-	//}
+	// }
 
-	//maxGas := state.ConsensusParams.Block.MaxGas
+	// maxGas := state.ConsensusParams.Block.MaxGas
 
 	// Fetch a limited amount of valid txs
-	//maxDataBytes := types.MaxDataBytes(maxBytes, 0, state.Validators.Size())
-	//maxReapBytes := maxDataBytes
-	//if emptyMaxBytes {
+	// maxDataBytes := types.MaxDataBytes(maxBytes, 0, state.Validators.Size())
+	// maxReapBytes := maxDataBytes
+	// if emptyMaxBytes {
 	//	maxReapBytes = -1
-	//}
+	// }
 	maxDataBytes := int64(-1)
 
-	//txs := blockExec.mempool.ReapMaxBytesMaxGas(maxReapBytes, maxGas)
+	// txs := blockExec.mempool.ReapMaxBytesMaxGas(maxReapBytes, maxGas)
 	txs := blockExec.mempool.ReapMaxBytesMaxGas(-1, -1)
 	commit := lastExtCommit.ToCommit()
 	block := state.MakeBlock(height, txs, commit, nil, proposerAddr)
@@ -149,8 +149,11 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 		return nil, err
 	}
 
+	// TODO: get maxTxSizeBytes from the app config
+	maxTxSizeBytes := int64(types.MaxBlockSizeBytes)
+
 	txl := types.ToTxs(rpp.Txs)
-	if err := txl.Validate(maxDataBytes); err != nil {
+	if err := txl.Validate(maxTxSizeBytes); err != nil {
 		return nil, err
 	}
 
@@ -406,7 +409,7 @@ func (blockExec *BlockExecutor) Commit(
 	return res.RetainHeight, err
 }
 
-//---------------------------------------------------------
+// ---------------------------------------------------------
 // Helper functions for executing blocks and updating state
 
 func buildLastCommitInfoFromStore(block *types.Block, store statetypes.Store, initialHeight int64) abci.CommitInfo {
@@ -703,7 +706,7 @@ func fireEvents(
 	}
 }
 
-//----------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------
 // Execute block without statetypes. TODO: eliminate
 
 // ExecCommitBlock executes and commits a block on the proxyApp without validating or mutating the state.
