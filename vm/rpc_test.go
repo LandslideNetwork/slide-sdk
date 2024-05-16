@@ -24,7 +24,27 @@ type txRuntimeEnv struct {
 	initMemPoolSize  int
 }
 
-func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client, context.CancelFunc) {
+func buildAccept(t *testing.T, ctx context.Context, vm *LandslideVM) {
+	end := false
+	for !end {
+		select {
+		case <-ctx.Done():
+			end = true
+		default:
+			if vm.mempool.Size() > 0 {
+				block, err := vm.BuildBlock(ctx, &vmpb.BuildBlockRequest{})
+				t.Logf("new block: %#v", block)
+				require.NoError(t, err)
+				_, err = vm.BlockAccept(ctx, &vmpb.BlockAcceptRequest{})
+				require.NoError(t, err)
+			} else {
+				time.Sleep(500 * time.Millisecond)
+			}
+		}
+	}
+}
+
+func setupRPC(t *testing.T, blockBuilder func(*testing.T, context.Context, *LandslideVM)) (*http.Server, *LandslideVM, *client.Client, context.CancelFunc) {
 	vm := newFreshKvApp(t)
 	vmLnd := vm.(*LandslideVM)
 	mux := http.NewServeMux()
@@ -33,25 +53,7 @@ func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client, context
 	address := "127.0.0.1:44444"
 	server := &http.Server{Addr: address, Handler: mux}
 	ctx, cancel := context.WithCancel(context.Background())
-	go func(ctx context.Context) {
-		end := false
-		for !end {
-			select {
-			case <-ctx.Done():
-				end = true
-			default:
-				if vmLnd.mempool.Size() > 0 {
-					block, err := vm.BuildBlock(ctx, &vmpb.BuildBlockRequest{})
-					t.Logf("new block: %#v", block)
-					require.NoError(t, err)
-					_, err = vm.BlockAccept(ctx, &vmpb.BlockAcceptRequest{})
-					require.NoError(t, err)
-				} else {
-					time.Sleep(500 * time.Millisecond)
-				}
-			}
-		}
-	}(ctx)
+	go blockBuilder(t, ctx, vmLnd)
 	go func() {
 		err := server.ListenAndServe()
 		require.NoError(t, err)
@@ -150,7 +152,7 @@ func checkCommittedTxResult(t *testing.T, client *client.Client, env *txRuntimeE
 }
 
 func TestABCIService(t *testing.T) {
-	server, vm, client, cancel := setupRPC(t)
+	server, vm, client, cancel := setupRPC(t, buildAccept)
 	defer server.Close()
 	defer vm.mempool.Flush()
 	defer cancel()
@@ -213,7 +215,7 @@ func TestABCIService(t *testing.T) {
 }
 
 func TestHealth(t *testing.T) {
-	server, _, client, cancel := setupRPC(t)
+	server, _, client, cancel := setupRPC(t, buildAccept)
 	defer server.Close()
 	defer cancel()
 
@@ -225,7 +227,7 @@ func TestHealth(t *testing.T) {
 }
 
 func TestStatus(t *testing.T) {
-	server, _, client, cancel := setupRPC(t)
+	server, _, client, cancel := setupRPC(t, buildAccept)
 	defer server.Close()
 	defer cancel()
 
@@ -238,7 +240,7 @@ func TestStatus(t *testing.T) {
 
 func TestRPC(t *testing.T) {
 	//TODO: complicated combinations
-	server, _, client, cancel := setupRPC(t)
+	server, _, client, cancel := setupRPC(t, buildAccept)
 	defer server.Close()
 	defer cancel()
 
