@@ -35,7 +35,9 @@ func buildAccept(t *testing.T, ctx context.Context, vm *LandslideVM) {
 				block, err := vm.BuildBlock(ctx, &vmpb.BuildBlockRequest{})
 				t.Logf("new block: %#v", block)
 				require.NoError(t, err)
-				_, err = vm.BlockAccept(ctx, &vmpb.BlockAcceptRequest{})
+				_, err = vm.BlockAccept(ctx, &vmpb.BlockAcceptRequest{
+					Id: block.Id,
+				})
 				require.NoError(t, err)
 			} else {
 				time.Sleep(500 * time.Millisecond)
