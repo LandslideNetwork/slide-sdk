@@ -64,7 +64,7 @@ var (
 	dbPrefixTxIndexer    = []byte("tx-indexer")
 	dbPrefixBlockIndexer = []byte("block-indexer")
 
-	//TODO: use internal app validators instead
+	// TODO: use internal app validators instead
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	proposerPubKey  = secp256k1.PubKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
@@ -490,13 +490,31 @@ func (vm *LandslideVM) Disconnected(context.Context, *vmpb.DisconnectedRequest) 
 
 // BuildBlock attempt to create a new block from data contained in the VM.
 func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vmpb.BuildBlockResponse, error) {
+	vm.logger.Info("BuildBlock")
 	executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
 	executor.SetEventBus(vm.eventBus)
 
 	signatures := make([]types.ExtendedCommitSig, len(vm.state.Validators.Validators))
+	for i, _ := range signatures {
+		signatures[i] = types.ExtendedCommitSig{
+			CommitSig: types.CommitSig{
+				BlockIDFlag:      types.BlockIDFlagNil,
+				Timestamp:        time.Now(),
+				ValidatorAddress: vm.state.Validators.Validators[i].Address,
+				Signature:        []byte{0x0},
+			},
+			Extension:          nil,
+			ExtensionSignature: nil,
+		}
+	}
+
 	commit := types.ExtendedCommit{
+		Height:             vm.state.LastBlockHeight,
+		Round:              0,
+		BlockID:            types.BlockID{},
 		ExtendedSignatures: signatures,
 	}
+
 	block, err := executor.CreateProposalBlock(context.Background(), vm.state.LastBlockHeight+1, vm.state, &commit, proposerAddress)
 	if err != nil {
 		return nil, err
@@ -507,7 +525,7 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 	if err != nil {
 		return nil, err
 	}
-
+	vm.logger.Info("BuildBlock", "block", block)
 	vm.verifiedBlocks.Store([32]byte(block.Hash()), block)
 	return &vmpb.BuildBlockResponse{
 		Id:                block.Hash(),
@@ -521,8 +539,11 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 
 // ParseBlock attempt to create a block from a stream of bytes.
 func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest) (*vmpb.ParseBlockResponse, error) {
+	vm.logger.Info("ParseBlock")
+	vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
 	block, err := vmstate.DecodeBlock(req.GetBytes())
 	if err != nil {
+		vm.logger.Error("failed to decode block", "err", err)
 		return nil, err
 	}
 
@@ -542,6 +563,7 @@ func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest
 
 // GetBlock attempt to load a block.
 func (vm *LandslideVM) GetBlock(_ context.Context, req *vmpb.GetBlockRequest) (*vmpb.GetBlockResponse, error) {
+	vm.logger.Info("GetBlock", "id", req.GetId())
 	block := vm.blockStore.LoadBlockByHash(req.GetId())
 	if block == nil {
 		return &vmpb.GetBlockResponse{
@@ -566,6 +588,8 @@ func (vm *LandslideVM) GetBlock(_ context.Context, req *vmpb.GetBlockRequest) (*
 // SetPreference notify the VM of the currently preferred block.
 func (vm *LandslideVM) SetPreference(_ context.Context, req *vmpb.SetPreferenceRequest) (*emptypb.Empty, error) {
 	vm.preferred = [32]byte(req.GetId())
+
+	vm.logger.Info("SetPreference", "id", req.GetId())
 	return &emptypb.Empty{}, nil
 }
 
@@ -643,6 +667,7 @@ func (vm *LandslideVM) GetAncestors(context.Context, *vmpb.GetAncestorsRequest) 
 }
 
 func (vm *LandslideVM) BatchedParseBlock(ctx context.Context, req *vmpb.BatchedParseBlockRequest) (*vmpb.BatchedParseBlockResponse, error) {
+	vm.logger.Info("BatchedParseBlock")
 	responses := make([]*vmpb.ParseBlockResponse, len(req.Request))
 	var err error
 	for i := range req.Request {
@@ -659,6 +684,7 @@ func (vm *LandslideVM) VerifyHeightIndex(context.Context, *emptypb.Empty) (*vmpb
 }
 
 func (vm *LandslideVM) GetBlockIDAtHeight(_ context.Context, req *vmpb.GetBlockIDAtHeightRequest) (*vmpb.GetBlockIDAtHeightResponse, error) {
+	vm.logger.Info("GetBlockIDAtHeight")
 	block := vm.blockStore.LoadBlock(int64(req.GetHeight()))
 	if block == nil {
 		return &vmpb.GetBlockIDAtHeightResponse{
@@ -695,13 +721,18 @@ func (vm *LandslideVM) GetStateSummary(context.Context, *vmpb.GetStateSummaryReq
 }
 
 func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyRequest) (*vmpb.BlockVerifyResponse, error) {
+	vm.logger.Info("BlockVerify")
+	vm.logger.Info("block verify", "bytes", req.Bytes)
+
 	block, err := vmstate.DecodeBlock(req.Bytes)
 	if err != nil {
+		vm.logger.Error("failed to decode block", "err", err)
 		return nil, err
 	}
 
 	err = vmstate.ValidateBlock(vm.state, block)
 	if err != nil {
+		vm.logger.Error("failed to validate block", "err", err)
 		return nil, err
 	}
 
@@ -709,12 +740,15 @@ func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyReque
 }
 
 func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptRequest) (*emptypb.Empty, error) {
+	vm.logger.Info("BlockAccept")
 	rawBlock, exist := vm.verifiedBlocks.Load([32]byte(req.GetId()))
 	if !exist {
+		vm.logger.Error("block not found", "id", req.GetId())
 		return nil, ErrNotFound
 	}
 	block, ok := rawBlock.(*types.Block)
 	if !ok {
+		vm.logger.Error("failed to cast block", "id", req.GetId())
 		return nil, ErrNotFound
 	}
 
@@ -723,6 +757,7 @@ func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptReque
 
 	bps, err := block.MakePartSet(types.BlockPartSizeBytes)
 	if err != nil {
+		vm.logger.Error("failed to make part set", "err", err)
 		return nil, err
 	}
 
@@ -731,6 +766,7 @@ func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptReque
 		PartSetHeader: bps.Header(),
 	}, block)
 	if err != nil {
+		vm.logger.Error("failed to apply block", "err", err)
 		return nil, err
 	}
 
@@ -742,6 +778,7 @@ func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptReque
 }
 
 func (vm *LandslideVM) BlockReject(_ context.Context, req *vmpb.BlockRejectRequest) (*emptypb.Empty, error) {
+	vm.logger.Info("BlockReject")
 	_, exist := vm.verifiedBlocks.LoadAndDelete([32]byte(req.GetId()))
 	if !exist {
 		return nil, ErrNotFound
