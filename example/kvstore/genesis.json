@@ -15,7 +15,8 @@
     },
     "validator": {
       "pub_key_types": [
-        "secp256k1"
+        "secp256k1",
+        "ed25519"
       ]
     },
     "version": {}
@@ -23,16 +24,8 @@
   "validators": [
     {
       "pub_key": {
-        "value": "h3hk+QE8c6QLTySp8TcfzclJw/BG79ziGB/pIA+DfPE=",
-        "type": "tendermint/PubKeyEd25519"
-      },
-      "power": "10",
-      "name": ""
-    },
-    {
-      "pub_key": {
-        "value": "l9X9+fjkeBzDfPGbUM7AMIRE6uJN78zN5+lk5OYotek=",
-        "type": "tendermint/PubKeyEd25519"
+        "type": "tendermint/PubKeyEd25519",
+        "value": "eKSVKmN5kmBFYPwBHB957zwWzL9g2zQw4SYKQSmMfCY="
       },
       "power": "10",
       "name": ""
