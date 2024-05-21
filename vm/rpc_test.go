@@ -216,6 +216,17 @@ func TestABCIService(t *testing.T) {
 	})
 }
 
+func TestStatusService(t *testing.T) {
+	server, vm, client, cancel := setupRPC(t, buildAccept)
+	defer server.Close()
+	defer vm.mempool.Flush()
+	defer cancel()
+
+	t.Run("Status", func(t *testing.T) {
+		testStatus(t, client, &coretypes.ResultStatus{})
+	})
+}
+
 func TestHealth(t *testing.T) {
 	server, _, client, cancel := setupRPC(t, buildAccept)
 	defer server.Close()
@@ -228,16 +239,11 @@ func TestHealth(t *testing.T) {
 	t.Logf("Health result %+v", result)
 }
 
-func TestStatus(t *testing.T) {
-	server, _, client, cancel := setupRPC(t, buildAccept)
-	defer server.Close()
-	defer cancel()
-
+func testStatus(t *testing.T, client *client.Client, expected *coretypes.ResultStatus) {
 	result := new(coretypes.ResultStatus)
 	_, err := client.Call(context.Background(), "status", map[string]interface{}{}, result)
 	require.NoError(t, err)
-
-	t.Logf("Status result %+v", result)
+	require.Equal(t, expected.NodeInfo.Moniker, result.NodeInfo.Moniker)
 }
 
 func TestRPC(t *testing.T) {
