@@ -372,7 +372,11 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		}
 
 		vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, blk.ProposerAddress, bps.Header()))
-		vm.stateStore.Save(newstate)
+		err = vm.stateStore.Save(newstate)
+		if err != nil {
+			vm.logger.Error("failed to save state", "err", err)
+			return nil, err
+		}
 		vm.state = newstate
 	}
 
@@ -503,7 +507,7 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 	executor.SetEventBus(vm.eventBus)
 
 	signatures := make([]types.ExtendedCommitSig, len(vm.state.Validators.Validators))
-	for i, _ := range signatures {
+	for i := range signatures {
 		signatures[i] = types.ExtendedCommitSig{
 			CommitSig: types.CommitSig{
 				BlockIDFlag:      types.BlockIDFlagNil,
