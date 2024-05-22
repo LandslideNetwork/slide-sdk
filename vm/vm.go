@@ -64,7 +64,7 @@ var (
 	dbPrefixTxIndexer    = []byte("tx-indexer")
 	dbPrefixBlockIndexer = []byte("block-indexer")
 
-	//TODO: use internal app validators instead
+	// TODO: use internal app validators instead
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	proposerPubKey  = secp256k1.PubKey{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
@@ -346,8 +346,10 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 	var blk *types.Block
 	if vm.state.LastBlockHeight > 0 {
+		vm.logger.Debug("loading last block", "height", vm.state.LastBlockHeight)
 		blk = vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
 	} else {
+		vm.logger.Debug("creating genesis block")
 		executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
 		executor.SetEventBus(vm.eventBus)
 
@@ -370,7 +372,11 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		}
 
 		vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, blk.ProposerAddress, bps.Header()))
-		vm.stateStore.Save(newstate)
+		err = vm.stateStore.Save(newstate)
+		if err != nil {
+			vm.logger.Error("failed to save state", "err", err)
+			return nil, err
+		}
 		vm.state = newstate
 	}
 
@@ -378,7 +384,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-
+	vm.logger.Debug("initialize block", "bytes ", blockBytes)
 	vm.logger.Info("vm initialization completed")
 
 	parentHash := block.BlockParentHash(blk)
@@ -394,12 +400,14 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 // SetState communicates to VM its next state it starts
 func (vm *LandslideVM) SetState(_ context.Context, req *vmpb.SetStateRequest) (*vmpb.SetStateResponse, error) {
+	vm.logger.Info("SetState", "state", req.State)
 	switch req.State {
 	case vmpb.State_STATE_BOOTSTRAPPING:
 		vm.bootstrapped.Set(false)
 	case vmpb.State_STATE_NORMAL_OP:
 		vm.bootstrapped.Set(true)
 	default:
+		vm.logger.Error("SetState", "state", req.State)
 		return nil, ErrUnknownState
 	}
 	blk := vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
@@ -407,6 +415,7 @@ func (vm *LandslideVM) SetState(_ context.Context, req *vmpb.SetStateRequest) (*
 		return nil, ErrNotFound
 	}
 
+	vm.logger.Debug("SetState", "LastAcceptedId", vm.state.LastBlockID.Hash, "block", blk.Hash())
 	parentHash := block.BlockParentHash(blk)
 	res := vmpb.SetStateResponse{
 		LastAcceptedId:       blk.Hash(),
@@ -426,6 +435,7 @@ func (vm *LandslideVM) CanShutdown() bool {
 
 // Shutdown is called when the node is shutting down.
 func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	vm.logger.Info("Shutdown")
 	vm.allowShutdown.Set(true)
 	if vm.closed != nil {
 		close(vm.closed)
@@ -479,93 +489,114 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 }
 
 func (vm *LandslideVM) Connected(context.Context, *vmpb.ConnectedRequest) (*emptypb.Empty, error) {
+	vm.logger.Info("Connected")
 	vm.vmconnected.Set(true)
 	return &emptypb.Empty{}, nil
 }
 
 func (vm *LandslideVM) Disconnected(context.Context, *vmpb.DisconnectedRequest) (*emptypb.Empty, error) {
+	vm.logger.Info("Disconnected")
 	vm.vmconnected.Set(false)
 	return &emptypb.Empty{}, nil
 }
 
 // BuildBlock attempt to create a new block from data contained in the VM.
 func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vmpb.BuildBlockResponse, error) {
+	vm.logger.Info("BuildBlock")
 	executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
 	executor.SetEventBus(vm.eventBus)
 
 	signatures := make([]types.ExtendedCommitSig, len(vm.state.Validators.Validators))
-	commit := types.ExtendedCommit{
+	for i := range signatures {
+		signatures[i] = types.ExtendedCommitSig{
+			CommitSig: types.CommitSig{
+				BlockIDFlag:      types.BlockIDFlagNil,
+				Timestamp:        time.Now(),
+				ValidatorAddress: vm.state.Validators.Validators[i].Address,
+				Signature:        []byte{0x0},
+			},
+		}
+	}
+
+	lastComm := types.ExtendedCommit{
+		Height:             vm.state.LastBlockHeight,
+		Round:              0,
+		BlockID:            vm.state.LastBlockID,
 		ExtendedSignatures: signatures,
 	}
-	block, err := executor.CreateProposalBlock(context.Background(), vm.state.LastBlockHeight+1, vm.state, &commit, proposerAddress)
+
+	blk, err := executor.CreateProposalBlock(context.Background(), vm.state.LastBlockHeight+1, vm.state, &lastComm, proposerAddress)
 	if err != nil {
+		vm.logger.Error("failed to create proposal block", "err", err)
 		return nil, err
 	}
-	block.Time = time.Now()
+	// blk.Time = time.Now()
 
-	blockBytes, err := vmstate.EncodeBlock(block)
+	blockBytes, err := vmstate.EncodeBlock(blk)
 	if err != nil {
+		vm.logger.Error("failed to encode block", "err", err)
 		return nil, err
 	}
 
-	vm.verifiedBlocks.Store([32]byte(block.Hash()), block)
+	vm.verifiedBlocks.Store([32]byte(blk.Hash()), blk)
 	return &vmpb.BuildBlockResponse{
-		Id:                block.Hash(),
-		ParentId:          block.LastBlockID.Hash,
+		Id:                blk.Hash(),
+		ParentId:          blk.LastBlockID.Hash,
 		Bytes:             blockBytes,
-		Height:            uint64(block.Height),
-		Timestamp:         timestamppb.New(block.Time),
+		Height:            uint64(blk.Height),
+		Timestamp:         timestamppb.New(blk.Time),
 		VerifyWithContext: false,
 	}, nil
 }
 
 // ParseBlock attempt to create a block from a stream of bytes.
 func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest) (*vmpb.ParseBlockResponse, error) {
-	block, err := vmstate.DecodeBlock(req.GetBytes())
+	vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
+	blk, err := vmstate.DecodeBlock(req.Bytes)
 	if err != nil {
+		vm.logger.Error("failed to decode block", "err", err)
 		return nil, err
 	}
 
-	if _, ok := vm.verifiedBlocks.Load(block.Hash()); !ok {
-		vm.verifiedBlocks.Store(block.Hash(), block)
-	}
-
 	return &vmpb.ParseBlockResponse{
-		Id:                block.Hash(),
-		ParentId:          block.LastBlockID.Hash,
-		Status:            vmpb.Status_STATUS_UNSPECIFIED,
-		Height:            uint64(block.Height),
-		Timestamp:         timestamppb.New(block.Time),
+		Id:                blk.Hash(),
+		ParentId:          blk.LastBlockID.Hash,
+		Status:            vmpb.Status_STATUS_ACCEPTED, // TODO: get status from block
+		Height:            uint64(blk.Height),
+		Timestamp:         timestamppb.New(blk.Time),
 		VerifyWithContext: false,
 	}, nil
 }
 
 // GetBlock attempt to load a block.
 func (vm *LandslideVM) GetBlock(_ context.Context, req *vmpb.GetBlockRequest) (*vmpb.GetBlockResponse, error) {
-	block := vm.blockStore.LoadBlockByHash(req.GetId())
-	if block == nil {
+	vm.logger.Info("GetBlock", "id", req.GetId())
+	blk := vm.blockStore.LoadBlockByHash(req.GetId())
+	if blk == nil {
 		return &vmpb.GetBlockResponse{
 			Err: vmpb.Error_ERROR_NOT_FOUND,
 		}, nil
 	}
 
-	blockBytes, err := vmstate.EncodeBlock(block)
+	blockBytes, err := vmstate.EncodeBlock(blk)
 	if err != nil {
 		return nil, err
 	}
 
 	return &vmpb.GetBlockResponse{
-		ParentId:  block.LastBlockID.Hash,
+		ParentId:  blk.LastBlockID.Hash,
 		Bytes:     blockBytes,
 		Status:    vmpb.Status_STATUS_UNSPECIFIED,
-		Height:    uint64(block.Height),
-		Timestamp: timestamppb.New(block.Time),
+		Height:    uint64(blk.Height),
+		Timestamp: timestamppb.New(blk.Time),
 	}, nil
 }
 
 // SetPreference notify the VM of the currently preferred block.
 func (vm *LandslideVM) SetPreference(_ context.Context, req *vmpb.SetPreferenceRequest) (*emptypb.Empty, error) {
 	vm.preferred = [32]byte(req.GetId())
+
+	vm.logger.Debug("SetPreference", "id", req.GetId())
 	return &emptypb.Empty{}, nil
 }
 
@@ -643,6 +674,7 @@ func (vm *LandslideVM) GetAncestors(context.Context, *vmpb.GetAncestorsRequest) 
 }
 
 func (vm *LandslideVM) BatchedParseBlock(ctx context.Context, req *vmpb.BatchedParseBlockRequest) (*vmpb.BatchedParseBlockResponse, error) {
+	vm.logger.Info("BatchedParseBlock")
 	responses := make([]*vmpb.ParseBlockResponse, len(req.Request))
 	var err error
 	for i := range req.Request {
@@ -655,21 +687,24 @@ func (vm *LandslideVM) BatchedParseBlock(ctx context.Context, req *vmpb.BatchedP
 }
 
 func (vm *LandslideVM) VerifyHeightIndex(context.Context, *emptypb.Empty) (*vmpb.VerifyHeightIndexResponse, error) {
+	vm.logger.Info("VerifyHeightIndex")
 	return &vmpb.VerifyHeightIndexResponse{Err: vmpb.Error_ERROR_UNSPECIFIED}, nil
 }
 
 func (vm *LandslideVM) GetBlockIDAtHeight(_ context.Context, req *vmpb.GetBlockIDAtHeightRequest) (*vmpb.GetBlockIDAtHeightResponse, error) {
-	block := vm.blockStore.LoadBlock(int64(req.GetHeight()))
-	if block == nil {
+	vm.logger.Info("GetBlockIDAtHeight")
+	blk := vm.blockStore.LoadBlock(int64(req.GetHeight()))
+	if blk == nil {
 		return &vmpb.GetBlockIDAtHeightResponse{
 			Err: vmpb.Error_ERROR_NOT_FOUND,
 		}, nil
 	}
-	return &vmpb.GetBlockIDAtHeightResponse{BlkId: block.Hash()}, nil
+	return &vmpb.GetBlockIDAtHeightResponse{BlkId: blk.Hash()}, nil
 }
 
 // StateSyncEnabled indicates whether the state sync is enabled for this VM.
 func (vm *LandslideVM) StateSyncEnabled(context.Context, *emptypb.Empty) (*vmpb.StateSyncEnabledResponse, error) {
+	vm.logger.Info("StateSyncEnabled")
 	return &vmpb.StateSyncEnabledResponse{Enabled: vm.vmenabled.Get()}, nil
 }
 
@@ -695,53 +730,75 @@ func (vm *LandslideVM) GetStateSummary(context.Context, *vmpb.GetStateSummaryReq
 }
 
 func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyRequest) (*vmpb.BlockVerifyResponse, error) {
-	block, err := vmstate.DecodeBlock(req.Bytes)
+	vm.logger.Info("BlockVerify")
+	vm.logger.Debug("block verify", "bytes", req.Bytes)
+
+	blk, err := vmstate.DecodeBlock(req.Bytes)
 	if err != nil {
+		vm.logger.Error("failed to decode block", "err", err)
 		return nil, err
 	}
 
-	err = vmstate.ValidateBlock(vm.state, block)
+	vm.logger.Info("ValidateBlock")
+	err = vmstate.ValidateBlock(vm.state, blk)
 	if err != nil {
+		vm.logger.Error("failed to validate block", "err", err)
 		return nil, err
 	}
 
-	return &vmpb.BlockVerifyResponse{Timestamp: timestamppb.New(block.Time)}, nil
+	if _, ok := vm.verifiedBlocks.Load([32]byte(blk.Hash())); !ok {
+		vm.logger.Info("Block not found in verified blocks", "block", blk.Hash())
+		vm.verifiedBlocks.Store([32]byte(blk.Hash()), blk)
+	}
+
+	return &vmpb.BlockVerifyResponse{Timestamp: timestamppb.New(blk.Time)}, nil
 }
 
 func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptRequest) (*emptypb.Empty, error) {
+	vm.logger.Info("BlockAccept")
 	rawBlock, exist := vm.verifiedBlocks.Load([32]byte(req.GetId()))
 	if !exist {
+		vm.logger.Error("block not found", "id", req.GetId())
 		return nil, ErrNotFound
 	}
-	block, ok := rawBlock.(*types.Block)
+	blk, ok := rawBlock.(*types.Block)
 	if !ok {
+		vm.logger.Error("failed to cast block", "id", req.GetId())
 		return nil, ErrNotFound
 	}
 
 	executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
 	executor.SetEventBus(vm.eventBus)
 
-	bps, err := block.MakePartSet(types.BlockPartSizeBytes)
+	bps, err := blk.MakePartSet(types.BlockPartSizeBytes)
 	if err != nil {
+		vm.logger.Error("failed to make part set", "err", err)
 		return nil, err
 	}
 
 	newstate, err := executor.ApplyBlock(vm.state, types.BlockID{
-		Hash:          block.Hash(),
+		Hash:          blk.Hash(),
 		PartSetHeader: bps.Header(),
-	}, block)
+	}, blk)
 	if err != nil {
+		vm.logger.Error("failed to apply block", "err", err)
 		return nil, err
 	}
 
-	vm.blockStore.SaveBlock(block, bps, commit.MakeCommit(block.Height, block.Time, block.ProposerAddress, bps.Header()))
-	vm.stateStore.Save(newstate)
+	vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, blk.ProposerAddress, bps.Header()))
+	err = vm.stateStore.Save(newstate)
+	if err != nil {
+		vm.logger.Error("failed to save state", "err", err)
+		return nil, err
+	}
+
 	vm.state = newstate
 	vm.verifiedBlocks.Delete([32]byte(req.GetId()))
 	return &emptypb.Empty{}, nil
 }
 
 func (vm *LandslideVM) BlockReject(_ context.Context, req *vmpb.BlockRejectRequest) (*emptypb.Empty, error) {
+	vm.logger.Info("BlockReject")
 	_, exist := vm.verifiedBlocks.LoadAndDelete([32]byte(req.GetId()))
 	if !exist {
 		return nil, ErrNotFound
