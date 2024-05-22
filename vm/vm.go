@@ -561,7 +561,7 @@ func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest
 	return &vmpb.ParseBlockResponse{
 		Id:                blk.Hash(),
 		ParentId:          blk.LastBlockID.Hash,
-		Status:            vmpb.Status_STATUS_ACCEPTED,
+		Status:            vmpb.Status_STATUS_UNSPECIFIED,
 		Height:            uint64(blk.Height),
 		Timestamp:         timestamppb.New(blk.Time),
 		VerifyWithContext: false,
