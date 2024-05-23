@@ -2,6 +2,7 @@ package vm
 
 import (
 	"context"
+	"fmt"
 	"github.com/cometbft/cometbft/abci/example/kvstore"
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/types"
@@ -58,7 +59,7 @@ func setupRPC(t *testing.T, blockBuilder func(*testing.T, context.Context, *Land
 	go blockBuilder(t, ctx, vmLnd)
 	go func() {
 		err := server.ListenAndServe()
-		require.NoError(t, err)
+		t.Log(err)
 	}()
 
 	// wait for servers to start
@@ -139,8 +140,8 @@ func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *tx
 		default:
 			if vm.mempool.Size() == env.initMemPoolSize+1 {
 				cancelCtx()
-				testABCIQuery(t, client, map[string]interface{}{"path": "/key", "data": env.key}, env.value)
-				testABCIQuery(t, client, map[string]interface{}{"path": "/hash", "data": env.hash}, env.value)
+				testABCIQuery(t, client, map[string]interface{}{"path": "/key", "data": fmt.Sprintf("%x", env.key)}, env.value)
+				testABCIQuery(t, client, map[string]interface{}{"path": "/hash", "data": fmt.Sprintf("%x", env.hash)}, env.value)
 				return
 			}
 			time.Sleep(500 * time.Millisecond)
@@ -149,8 +150,8 @@ func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *tx
 }
 
 func checkCommittedTxResult(t *testing.T, client *client.Client, env *txRuntimeEnv) {
-	testABCIQuery(t, client, map[string]interface{}{"path": "/key", "data": env.key}, env.value)
-	testABCIQuery(t, client, map[string]interface{}{"path": "/hash", "data": env.hash}, env.value)
+	testABCIQuery(t, client, map[string]interface{}{"path": "/key", "data": fmt.Sprintf("%x", env.key)}, env.value)
+	testABCIQuery(t, client, map[string]interface{}{"path": "/hash", "data": fmt.Sprintf("%x", env.hash)}, env.value)
 }
 
 func TestABCIService(t *testing.T) {
@@ -185,7 +186,9 @@ func TestABCIService(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			k, v, tx := MakeTxKV()
 			testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-			testABCIQuery(t, client, map[string]interface{}{"path": "/key", "data": k}, v)
+			path := "/key"
+			params := map[string]interface{}{"path": path, "data": fmt.Sprintf("%x", k)}
+			testABCIQuery(t, client, params, v)
 		}
 	})
 
