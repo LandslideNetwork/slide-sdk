@@ -36,6 +36,9 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	messengerpb "github.com/consideritdone/landslidevm/proto/messenger"
+	"github.com/consideritdone/landslidevm/utils/cache"
+
 	"github.com/consideritdone/landslidevm/database"
 	"github.com/consideritdone/landslidevm/grpcutils"
 	"github.com/consideritdone/landslidevm/http"
@@ -133,6 +136,20 @@ type (
 		wrappedBlocks  *vmstate.WrappedBlocksStorage
 
 		clientConn grpc.ClientConnInterface
+
+		// verifiedBlocks is a map of blocks that have been verified and are
+		// therefore currently in consensus.
+		verifiedBlocks_ map[[32]byte]*types.Block
+		// decidedBlocks is an LRU cache of decided blocks.
+		// the block for which the Accept/Reject function was called
+		decidedBlocks cache.Cacher[[32]byte, *types.Block]
+		// unverifiedBlocks is an LRU cache of blocks with status processing
+		// that have not yet passed verification.
+		unverifiedBlocks cache.Cacher[[32]byte, *types.Block]
+		// missingBlocks is an LRU cache of missing blocks
+		missingBlocks cache.Cacher[[32]byte, struct{}]
+		// string([byte repr. of block]) --> the block's ID
+		bytesToIDCache cache.Cacher[string, [32]byte]
 	}
 )
 
