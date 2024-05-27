@@ -31,19 +31,19 @@ func EncodeBlockWithStatus(blk *types.Block, status vm.Status) ([]byte, error) {
 	return data, nil
 }
 
-func DecodeBlockWithStatus(data []byte) (*types.Block, *vm.Status, error) {
+func DecodeBlockWithStatus(data []byte) (*types.Block, vm.Status, error) {
 	wrappedBlk := new(vm.Block)
 
 	if err := json.Unmarshal(data, wrappedBlk); err != nil {
-		return nil, nil, err
+		return nil, vm.Status_STATUS_UNSPECIFIED, err
 	}
 
 	blk, err := DecodeBlock(wrappedBlk.Block)
 	if err != nil {
-		return nil, nil, err
+		return nil, vm.Status_STATUS_UNSPECIFIED, err
 	}
 
-	return blk, &wrappedBlk.Status, nil
+	return blk, wrappedBlk.Status, nil
 }
 
 func EncodeBlock(block *types.Block) ([]byte, error) {

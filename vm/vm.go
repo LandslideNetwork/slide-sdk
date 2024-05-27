@@ -36,14 +36,12 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	messengerpb "github.com/consideritdone/landslidevm/proto/messenger"
-	"github.com/consideritdone/landslidevm/utils/cache"
-
 	"github.com/consideritdone/landslidevm/database"
 	"github.com/consideritdone/landslidevm/grpcutils"
 	"github.com/consideritdone/landslidevm/http"
 	"github.com/consideritdone/landslidevm/jsonrpc"
 	httppb "github.com/consideritdone/landslidevm/proto/http"
+	messengerpb "github.com/consideritdone/landslidevm/proto/messenger"
 	"github.com/consideritdone/landslidevm/proto/rpcdb"
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
 	vmtypes "github.com/consideritdone/landslidevm/vm/types"
@@ -131,22 +129,9 @@ type (
 		vmconnected    *vmtypes.Atomic[bool]
 		verifiedBlocks sync.Map
 		preferred      [32]byte
+		wrappedBlocks  *vmstate.WrappedBlocksStorage
 
 		clientConn grpc.ClientConnInterface
-
-		// verifiedBlocks is a map of blocks that have been verified and are
-		// therefore currently in consensus.
-		verifiedBlocks_ map[[32]byte]*types.Block
-		// decidedBlocks is an LRU cache of decided blocks.
-		// the block for which the Accept/Reject function was called
-		decidedBlocks cache.Cacher[[32]byte, *types.Block]
-		// unverifiedBlocks is an LRU cache of blocks with status processing
-		// that have not yet passed verification.
-		unverifiedBlocks cache.Cacher[[32]byte, *types.Block]
-		// missingBlocks is an LRU cache of missing blocks
-		missingBlocks cache.Cacher[[32]byte, struct{}]
-		// string([byte repr. of block]) --> the block's ID
-		bytesToIDCache cache.Cacher[string, [32]byte]
 	}
 )
 
@@ -164,6 +149,7 @@ func NewViaDB(database dbm.DB, creator AppCreator, options ...func(*LandslideVM)
 		vmconnected:    vmtypes.NewAtomic(false),
 		bootstrapped:   vmtypes.NewAtomic(false),
 		verifiedBlocks: sync.Map{},
+		wrappedBlocks:  vmstate.NewWrappedBlocksStorage(),
 	}
 
 	for _, o := range options {
@@ -395,7 +381,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		vm.state = newstate
 	}
 
-	blockBytes, err := vmstate.EncodeBlock(blk)
+	blockBytes, err := vmstate.EncodeBlockWithStatus(blk, vmpb.Status_STATUS_ACCEPTED)
 	if err != nil {
 		return nil, err
 	}
@@ -545,9 +531,8 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 		vm.logger.Error("failed to create proposal block", "err", err)
 		return nil, err
 	}
-	// blk.Time = time.Now()
 
-	blockBytes, err := vmstate.EncodeBlock(blk)
+	blockBytes, err := vmstate.EncodeBlockWithStatus(blk, vmpb.Status_STATUS_UNSPECIFIED)
 	if err != nil {
 		vm.logger.Error("failed to encode block", "err", err)
 		return nil, err
@@ -593,6 +578,8 @@ func (vm *LandslideVM) GetBlock(_ context.Context, req *vmpb.GetBlockRequest) (*
 		}, nil
 	}
 
+	// TODO: get from block wrapper
+
 	blockBytes, err := vmstate.EncodeBlock(blk)
 	if err != nil {
 		return nil, err
@@ -601,7 +588,7 @@ func (vm *LandslideVM) GetBlock(_ context.Context, req *vmpb.GetBlockRequest) (*
 	return &vmpb.GetBlockResponse{
 		ParentId:  blk.LastBlockID.Hash,
 		Bytes:     blockBytes,
-		Status:    vmpb.Status_STATUS_UNSPECIFIED,
+		Status:    vmpb.Status_STATUS_UNSPECIFIED, // TODO: get status from block
 		Height:    uint64(blk.Height),
 		Timestamp: timestamppb.New(blk.Time),
 	}, nil
