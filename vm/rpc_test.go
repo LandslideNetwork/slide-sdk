@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cometbft/cometbft/abci/example/kvstore"
 	"github.com/cometbft/cometbft/libs/rand"
+	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/types"
 	"github.com/cometbft/cometbft/version"
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
@@ -137,6 +138,7 @@ func testStatus(t *testing.T, client *client.Client, expected *coretypes.ResultS
 	_, err := client.Call(context.Background(), "status", map[string]interface{}{}, result)
 	require.NoError(t, err)
 	require.Equal(t, expected.NodeInfo.Moniker, result.NodeInfo.Moniker)
+	require.Equal(t, expected.SyncInfo.LatestBlockHeight, result.SyncInfo.LatestBlockHeight)
 }
 
 func testNetInfo(t *testing.T, client *client.Client, expected *coretypes.ResultNetInfo) {
@@ -296,36 +298,21 @@ func TestStatusService(t *testing.T) {
 	defer cancel()
 
 	t.Run("Status", func(t *testing.T) {
-		testStatus(t, client, &coretypes.ResultStatus{})
+		initialHeight := vm.state.LastBlockHeight
+		for i := 0; i < 3; i++ {
+			_, _, tx := MakeTxKV()
+			result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+			require.EqualValues(t, result.Height, initialHeight+int64(1)+int64(i))
+			testStatus(t, client, &coretypes.ResultStatus{
+				NodeInfo: p2p.DefaultNodeInfo{},
+				SyncInfo: coretypes.SyncInfo{
+					LatestBlockHeight: initialHeight + int64(i),
+				},
+				ValidatorInfo: coretypes.ValidatorInfo{},
+			})
+		}
 	})
 }
-
-//func TestStatusService(t *testing.T) {
-//	vm, service, _ := mustNewCounterTestVm(t)
-//
-//	blk0, err := vm.BuildBlock(context.Background())
-//	assert.ErrorIs(t, err, errNoPendingTxs, "expecting error no txs")
-//	assert.Nil(t, blk0)
-//
-//	txReply, err := service.BroadcastTxSync(&rpctypes.Context{}, []byte{0x01})
-//	assert.NoError(t, err)
-//	assert.Equal(t, atypes.CodeTypeOK, txReply.Code)
-//
-//	t.Run("Status", func(t *testing.T) {
-//		reply1, err := service.Status(&rpctypes.Context{})
-//		assert.NoError(t, err)
-//		assert.Equal(t, int64(1), reply1.SyncInfo.LatestBlockHeight)
-//
-//		blk, err := vm.BuildBlock(context.Background())
-//		assert.NoError(t, err)
-//		assert.NotNil(t, blk)
-//		assert.NoError(t, blk.Accept(context.Background()))
-//
-//		reply2, err := service.Status(&rpctypes.Context{})
-//		assert.NoError(t, err)
-//		assert.Equal(t, int64(2), reply2.SyncInfo.LatestBlockHeight)
-//	})
-//}
 
 func TestNetworkService(t *testing.T) {
 	server, vm, client, cancel := setupRPC(t, buildAccept)
