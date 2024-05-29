@@ -533,7 +533,8 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 		return nil, err
 	}
 
-	blockBytes, err := vmstate.EncodeBlockWithStatus(blk, vmpb.Status_STATUS_PROCESSING)
+	blkStatus := vmpb.Status_STATUS_PROCESSING
+	blkBytes, err := vmstate.EncodeBlockWithStatus(blk, blkStatus)
 	if err != nil {
 		vm.logger.Error("failed to encode block", "err", err)
 		return nil, err
@@ -546,14 +547,14 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 	}
 	vm.wrappedBlocks.UnverifiedBlocks.Put(blkID, &vmstate.WrappedBlock{
 		Block:  blk,
-		Status: vmpb.Status_STATUS_PROCESSING,
+		Status: blkStatus,
 	})
 	vm.wrappedBlocks.MissingBlocks.Evict(blkID)
 
 	return &vmpb.BuildBlockResponse{
 		Id:                blk.Hash(),
 		ParentId:          blk.LastBlockID.Hash,
-		Bytes:             blockBytes,
+		Bytes:             blkBytes,
 		Height:            uint64(blk.Height),
 		Timestamp:         timestamppb.New(blk.Time),
 		VerifyWithContext: false,
@@ -563,16 +564,57 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 // ParseBlock attempt to create a block from a stream of bytes.
 func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest) (*vmpb.ParseBlockResponse, error) {
 	vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
-	blk, err := vmstate.DecodeBlock(req.Bytes)
-	if err != nil {
-		vm.logger.Error("failed to decode block", "err", err)
-		return nil, err
+	var (
+		blk       *types.Block
+		blkStatus vmpb.Status
+		blkID     ids.ID
+		err       error
+	)
+
+	// Check if the block is already cached
+	blkID, blkIDCached := vm.wrappedBlocks.BytesToIDCache.Get(string(req.Bytes))
+	if !blkIDCached {
+		blk, blkStatus, err = vmstate.DecodeBlockWithStatus(req.Bytes)
+		if err != nil {
+			vm.logger.Error("failed to decode block", "err", err)
+			return nil, err
+		}
+
+		blkID, err = ids.ToID(blk.Hash())
+		if err != nil {
+			vm.logger.Error("failed to convert block hash to ID", "err", err)
+			return nil, err
+		}
+
+		vm.wrappedBlocks.BytesToIDCache.Put(string(req.Bytes), blkID)
+	}
+
+	wblk, ok := vm.wrappedBlocks.GetCachedBlock(blkID)
+	if !ok {
+		wblk := &vmstate.WrappedBlock{
+			Block:  blk,
+			Status: blkStatus,
+		}
+		switch blkStatus {
+		case vmpb.Status_STATUS_ACCEPTED, vmpb.Status_STATUS_REJECTED:
+			vm.wrappedBlocks.DecidedBlocks.Put(blkID, wblk)
+		case vmpb.Status_STATUS_PROCESSING:
+			vm.wrappedBlocks.UnverifiedBlocks.Put(blkID, wblk)
+		default:
+			vm.logger.Error("found unexpected status for blk", "id", blkID, "status", blkStatus)
+			return nil, fmt.Errorf("found unexpected status for blk %s: %s", blkID, blkStatus)
+		}
+
+		vm.wrappedBlocks.MissingBlocks.Evict(blkID)
+	} else {
+		blk = wblk.Block
+		blkStatus = wblk.Status
 	}
 
 	return &vmpb.ParseBlockResponse{
 		Id:                blk.Hash(),
 		ParentId:          blk.LastBlockID.Hash,
-		Status:            vmpb.Status_STATUS_ACCEPTED, // TODO: get status from block
+		Status:            blkStatus,
 		Height:            uint64(blk.Height),
 		Timestamp:         timestamppb.New(blk.Time),
 		VerifyWithContext: false,
@@ -582,24 +624,62 @@ func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest
 // GetBlock attempt to load a block.
 func (vm *LandslideVM) GetBlock(_ context.Context, req *vmpb.GetBlockRequest) (*vmpb.GetBlockResponse, error) {
 	vm.logger.Info("GetBlock", "id", req.GetId())
-	blk := vm.blockStore.LoadBlockByHash(req.GetId())
-	if blk == nil {
-		return &vmpb.GetBlockResponse{
-			Err: vmpb.Error_ERROR_NOT_FOUND,
-		}, nil
+	var (
+		blk       *types.Block
+		blkStatus vmpb.Status
+	)
+
+	blkID, err := ids.ToID(req.GetId())
+	if err != nil {
+		vm.logger.Error("failed to convert block hash to ID", "err", err)
+		return nil, err
 	}
 
-	// TODO: get from block wrapper
+	wblk, ok := vm.wrappedBlocks.GetCachedBlock(blkID)
+	if !ok {
+		if _, ok := vm.wrappedBlocks.MissingBlocks.Get(blkID); ok {
+			return &vmpb.GetBlockResponse{
+				Err: vmpb.Error_ERROR_NOT_FOUND,
+			}, nil
+		}
 
-	blockBytes, err := vmstate.EncodeBlock(blk)
+		blk = vm.blockStore.LoadBlockByHash(req.GetId())
+		if blk == nil {
+			vm.wrappedBlocks.MissingBlocks.Put(blkID, struct{}{})
+			return &vmpb.GetBlockResponse{
+				Err: vmpb.Error_ERROR_NOT_FOUND,
+			}, nil
+		}
+
+		wblk = &vmstate.WrappedBlock{
+			Block:  blk,
+			Status: vmpb.Status_STATUS_ACCEPTED,
+		}
+	}
+
+	blk = wblk.Block
+	blkStatus = wblk.Status
+
+	switch blkStatus {
+	case vmpb.Status_STATUS_ACCEPTED, vmpb.Status_STATUS_REJECTED:
+		vm.wrappedBlocks.DecidedBlocks.Put(blkID, wblk)
+	case vmpb.Status_STATUS_PROCESSING:
+		vm.wrappedBlocks.UnverifiedBlocks.Put(blkID, wblk)
+	default:
+		vm.logger.Error("found unexpected status for blk", "id", blkID, "status", blkStatus)
+		return nil, fmt.Errorf("found unexpected status for blk %s: %s", blkID, blkStatus)
+	}
+
+	blockBytes, err := vmstate.EncodeBlockWithStatus(blk, blkStatus)
 	if err != nil {
+		vm.logger.Error("failed to encode block", "err", err)
 		return nil, err
 	}
 
 	return &vmpb.GetBlockResponse{
 		ParentId:  blk.LastBlockID.Hash,
 		Bytes:     blockBytes,
-		Status:    vmpb.Status_STATUS_UNSPECIFIED, // TODO: get status from block
+		Status:    blkStatus,
 		Height:    uint64(blk.Height),
 		Timestamp: timestamppb.New(blk.Time),
 	}, nil
