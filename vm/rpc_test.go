@@ -195,6 +195,28 @@ func testHealth(t *testing.T, client *client.Client) {
 	require.NoError(t, err)
 }
 
+func testBlockchainInfo(t *testing.T, client *client.Client, expected *coretypes.ResultBlockchainInfo) {
+	result := new(coretypes.ResultBlockchainInfo)
+	_, err := client.Call(context.Background(), "blockchain", map[string]interface{}{}, result)
+	require.NoError(t, err)
+	require.Equal(t, expected.LastHeight, result.LastHeight)
+	lastMeta := result.BlockMetas[len(result.BlockMetas)-1]
+	expectedLastMeta := expected.BlockMetas[len(expected.BlockMetas)-1]
+	require.Equal(t, expectedLastMeta.NumTxs, lastMeta.NumTxs)
+	require.Equal(t, expected.LastHeight, lastMeta.Header.AppHash)
+	require.Equal(t, expectedLastMeta.BlockID, lastMeta.BlockID)
+}
+
+func testBlock(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultBlock) *coretypes.ResultBlock {
+	result := new(coretypes.ResultBlock)
+	_, err := client.Call(context.Background(), "block", params, result)
+	require.NoError(t, err)
+	require.Equal(t, expected.Block.ChainID, result.Block.ChainID)
+	require.Equal(t, expected.Block.Height, result.Block.Height)
+	require.Equal(t, expected.Block.AppHash, result.Block.AppHash)
+	return result
+}
+
 func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *txRuntimeEnv) {
 	ctx, cancelCtx := context.WithTimeout(context.Background(), 10*time.Second)
 	for {
@@ -360,16 +382,296 @@ func TestNetworkService(t *testing.T) {
 	})
 }
 
-func TestHealth(t *testing.T) {
-	server, _, client, cancel := setupRPC(t, buildAccept)
+func TestHistoryService(t *testing.T) {
+	server, vm, client, cancel := setupRPC(t, buildAccept)
 	defer server.Close()
 	defer cancel()
 
-	result := new(coretypes.ResultHealth)
-	_, err := client.Call(context.Background(), "health", map[string]interface{}{}, result)
-	require.NoError(t, err)
+	//txReply, err := service.BroadcastTxSync(&rpctypes.Context{}, []byte{0x00})
+	//assert.NoError(t, err)
+	//assert.Equal(t, atypes.CodeTypeOK, txReply.Code)
+	//
+	//blk, err := vm.BuildBlock(context.Background())
+	//assert.NoError(t, err)
+	//assert.NotNil(t, blk)
+	//assert.NoError(t, blk.Accept(context.Background()))
 
-	t.Logf("Health result %+v", result)
+	t.Run("Genesis", func(t *testing.T) {
+		//reply, err := service.Genesis(&rpctypes.Context{})
+		//assert.NoError(t, err)
+		//assert.Equal(t, vm.genesis, reply.Genesis)
+	})
+
+	t.Run("GenesisChunked", func(t *testing.T) {
+		//first, err := service.GenesisChunked(&rpctypes.Context{}, 0)
+		//require.NoError(t, err)
+		//
+		//decoded := make([]string, 0, first.TotalChunks)
+		//for i := 0; i < first.TotalChunks; i++ {
+		//	chunk, err := service.GenesisChunked(&rpctypes.Context{}, uint(i))
+		//	require.NoError(t, err)
+		//	data, err := base64.StdEncoding.DecodeString(chunk.Data)
+		//	require.NoError(t, err)
+		//	decoded = append(decoded, string(data))
+		//
+		//}
+		//doc := []byte(strings.Join(decoded, ""))
+		//
+		//var out types.GenesisDoc
+		//require.NoError(t, tmjson.Unmarshal(doc, &out), "first: %+v, doc: %s", first, string(doc))
+	})
+
+	t.Run("BlockchainInfo", func(t *testing.T) {
+		initialHeight := vm.state.LastBlockHeight
+		blkMetas := make([]*types.BlockMeta, 0)
+		for i := int64(0); i < initialHeight; i++ {
+			blk := testBlock(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight}, &coretypes.ResultBlock{
+				Block: &types.Block{
+					Header: types.Header{
+						ChainID: vm.state.ChainID,
+						Height:  i,
+						AppHash: vm.state.AppHash,
+					},
+				},
+			})
+			bps, err := blk.Block.MakePartSet(types.BlockPartSizeBytes)
+			require.NoError(t, err)
+			blkMetas = append(blkMetas, &types.BlockMeta{
+				BlockID:   types.BlockID{Hash: blk.Block.Hash(), PartSetHeader: bps.Header()},
+				BlockSize: blk.Block.Size(),
+				Header:    blk.Block.Header,
+				NumTxs:    len(blk.Block.Data.Txs),
+			})
+		}
+		testBlockchainInfo(t, client, &coretypes.ResultBlockchainInfo{
+			LastHeight: initialHeight,
+			BlockMetas: blkMetas,
+		})
+		_, _, tx := MakeTxKV()
+		testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+		blk := testBlock(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight}, &coretypes.ResultBlock{
+			Block: &types.Block{
+				Header: types.Header{
+					ChainID: vm.state.ChainID,
+					Height:  vm.state.LastBlockHeight,
+					AppHash: vm.state.AppHash,
+				},
+			},
+		})
+		bps, err := blk.Block.MakePartSet(types.BlockPartSizeBytes)
+		require.NoError(t, err)
+		blkMetas = append(blkMetas, &types.BlockMeta{
+			BlockID:   types.BlockID{Hash: blk.Block.Hash(), PartSetHeader: bps.Header()},
+			BlockSize: blk.Block.Size(),
+			Header:    blk.Block.Header,
+			NumTxs:    len(blk.Block.Data.Txs),
+		})
+		testBlockchainInfo(t, client, &coretypes.ResultBlockchainInfo{
+			LastHeight: initialHeight + 1,
+			BlockMetas: blkMetas,
+		})
+	})
+}
+
+func TestSignService(t *testing.T) {
+	server, vm, client, cancel := setupRPC(t, buildAccept)
+	defer server.Close()
+	defer cancel()
+	//_, _, tx := MakeTxKV()
+	//tx2 := []byte{0x02}
+	//tx3 := []byte{0x03}
+	//vm, service, msgs := mustNewKVTestVm(t)
+	//
+	//blk0, err := vm.BuildBlock(context.Background())
+	//assert.ErrorIs(t, err, errNoPendingTxs, "expecting error no txs")
+	//assert.Nil(t, blk0)
+	//
+	//txReply, err := service.BroadcastTxSync(&rpctypes.Context{}, tx)
+	//assert.NoError(t, err)
+	//assert.Equal(t, atypes.CodeTypeOK, txReply.Code)
+	//
+	//// build 1st block
+	//blk1, err := vm.BuildBlock(context.Background())
+	//assert.NoError(t, err)
+	//assert.NotNil(t, blk1)
+	//assert.NoError(t, blk1.Accept(context.Background()))
+	//height1 := int64(blk1.Height())
+
+	t.Run("Block", func(t *testing.T) {
+		initialHeight := vm.state.LastBlockHeight
+		for i := 0; i < 3; i++ {
+			_, _, tx := MakeTxKV()
+			result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+			require.EqualValues(t, result.Height, initialHeight+int64(1)+int64(i))
+			testBlock(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight}, &coretypes.ResultBlock{
+				Block: &types.Block{
+					Header: types.Header{
+						ChainID: vm.state.ChainID,
+						Height:  result.Height,
+						AppHash: vm.state.AppHash,
+					},
+				},
+			})
+		}
+	})
+
+	t.Run("BlockByHash", func(t *testing.T) {
+		//replyWithoutHash, err := service.BlockByHash(&rpctypes.Context{}, []byte{})
+		//assert.NoError(t, err)
+		//assert.Nil(t, replyWithoutHash.Block)
+		//
+		//hash := blk1.ID()
+		//reply, err := service.BlockByHash(&rpctypes.Context{}, hash[:])
+		//assert.NoError(t, err)
+		//if assert.NotNil(t, reply.Block) {
+		//	assert.EqualValues(t, hash[:], reply.Block.Hash().Bytes())
+		//}
+	})
+
+	t.Run("BlockResults", func(t *testing.T) {
+		//replyWithoutHeight, err := service.BlockResults(&rpctypes.Context{}, nil)
+		//assert.NoError(t, err)
+		//assert.Equal(t, height1, replyWithoutHeight.Height)
+		//
+		//reply, err := service.BlockResults(&rpctypes.Context{}, &height1)
+		//assert.NoError(t, err)
+		//if assert.NotNil(t, reply.TxsResults) {
+		//	assert.Equal(t, height1, reply.Height)
+		//}
+	})
+
+	t.Run("Tx", func(t *testing.T) {
+		//time.Sleep(2 * time.Second)
+		//
+		//reply, err := service.Tx(&rpctypes.Context{}, txReply.Hash.Bytes(), false)
+		//assert.NoError(t, err)
+		//assert.EqualValues(t, txReply.Hash, reply.Hash)
+		//assert.EqualValues(t, tx, reply.Tx)
+	})
+
+	t.Run("TxSearch", func(t *testing.T) {
+		//txReply2, err := service.BroadcastTxAsync(&rpctypes.Context{}, tx2)
+		//assert.NoError(t, err)
+		//assert.Equal(t, atypes.CodeTypeOK, txReply2.Code)
+		//
+		//blk2, err := vm.BuildBlock(context.Background())
+		//require.NoError(t, err)
+		//assert.NotNil(t, blk2)
+		//assert.NoError(t, blk2.Accept(context.Background()))
+		//
+		//time.Sleep(time.Second)
+		//
+		//reply, err := service.TxSearch(&rpctypes.Context{}, fmt.Sprintf("tx.hash='%s'", txReply2.Hash), false, nil, nil, "asc")
+		//assert.NoError(t, err)
+		//assert.True(t, len(reply.Txs) > 0)
+		//
+		//// TODO: need to fix
+		//// reply2, err := service.TxSearch(&rpctypes.Context{}, fmt.Sprintf("tx.height=%d", blk2.Height()), false, nil, nil, "desc")
+		//// assert.NoError(t, err)
+		//// assert.True(t, len(reply2.Txs) > 0)
+	})
+
+	//TODO: Check logic of test
+	t.Run("Commit", func(t *testing.T) {
+		//txReply, err := service.BroadcastTxAsync(&rpctypes.Context{}, tx3)
+		//require.NoError(t, err)
+		//assert.Equal(t, atypes.CodeTypeOK, txReply.Code)
+		//
+		//assert, require := assert.New(t), require.New(t)
+		//
+		//// get an offset of height to avoid racing and guessing
+		//s, err := service.Status(&rpctypes.Context{})
+		//require.NoError(err)
+		//// sh is start height or status height
+		//sh := s.SyncInfo.LatestBlockHeight
+		//
+		//// look for the future
+		//h := sh + 20
+		//_, err = service.Block(&rpctypes.Context{}, &h)
+		//require.Error(err) // no block yet
+		//
+		//// write something
+		//k, v, tx := MakeTxKV()
+		//bres, err := broadcastTx(t, vm, msgs, tx)
+		//require.NoError(err)
+		//require.True(bres.DeliverTx.IsOK())
+		//time.Sleep(2 * time.Second)
+		//
+		//txh := bres.Height
+		//apph := txh
+		//
+		//// wait before querying
+		//err = WaitForHeight(service, apph, nil)
+		//require.NoError(err)
+		//
+		//qres, err := service.ABCIQuery(&rpctypes.Context{}, "/key", k, 0, false)
+		//require.NoError(err)
+		//if assert.True(qres.Response.IsOK()) {
+		//	assert.Equal(k, qres.Response.Key)
+		//	assert.EqualValues(v, qres.Response.Value)
+		//}
+		//
+		//// make sure we can lookup the tx with proof
+		//ptx, err := service.Tx(&rpctypes.Context{}, bres.Hash, true)
+		//require.NoError(err)
+		//assert.EqualValues(txh, ptx.Height)
+		//assert.EqualValues(tx, ptx.Tx)
+		//
+		//// and we can even check the block is added
+		//block, err := service.Block(&rpctypes.Context{}, &apph)
+		//require.NoError(err)
+		//appHash := block.Block.Header.AppHash
+		//assert.True(len(appHash) > 0)
+		//assert.EqualValues(apph, block.Block.Header.Height)
+		//
+		//blockByHash, err := service.BlockByHash(&rpctypes.Context{}, block.BlockID.Hash)
+		//require.NoError(err)
+		//require.Equal(block, blockByHash)
+		//
+		//// now check the results
+		//blockResults, err := service.BlockResults(&rpctypes.Context{}, &txh)
+		//require.Nil(err, "%+v", err)
+		//assert.Equal(txh, blockResults.Height)
+		//if assert.Equal(2, len(blockResults.TxsResults)) {
+		//	// check success code
+		//	assert.EqualValues(0, blockResults.TxsResults[0].Code)
+		//}
+		//
+		//// check blockchain info, now that we know there is info
+		//info, err := service.BlockchainInfo(&rpctypes.Context{}, apph, apph)
+		//require.NoError(err)
+		//assert.True(info.LastHeight >= apph)
+		//if assert.Equal(1, len(info.BlockMetas)) {
+		//	lastMeta := info.BlockMetas[0]
+		//	assert.EqualValues(apph, lastMeta.Header.Height)
+		//	blockData := block.Block
+		//	assert.Equal(blockData.Header.AppHash, lastMeta.Header.AppHash)
+		//	assert.Equal(block.BlockID, lastMeta.BlockID)
+		//}
+		//
+		//// and get the corresponding commit with the same apphash
+		//commit, err := service.Commit(&rpctypes.Context{}, &apph)
+		//require.NoError(err)
+		//assert.NotNil(commit)
+		//assert.Equal(appHash, commit.Header.AppHash)
+		//
+		//// compare the commits (note Commit(2) has commit from Block(3))
+		//h = apph - 1
+		//commit2, err := service.Commit(&rpctypes.Context{}, &h)
+		//require.NoError(err)
+		//assert.Equal(block.Block.LastCommitHash, commit2.Commit.Hash())
+		//
+		//// and we got a proof that works!
+		//pres, err := service.ABCIQuery(&rpctypes.Context{}, "/key", k, 0, true)
+		//require.NoError(err)
+		//assert.True(pres.Response.IsOK())
+	})
+
+	t.Run("BlockSearch", func(t *testing.T) {
+		//reply, err := service.BlockSearch(&rpctypes.Context{}, "block.height=2", nil, nil, "desc")
+		//assert.NoError(t, err)
+		//assert.True(t, len(reply.Blocks) > 0)
+	})
 }
 
 func TestRPC(t *testing.T) {
