@@ -365,15 +365,17 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			return nil, err
 		}
 
-		newstate, err := executor.ApplyBlock(vm.state, types.BlockID{
+		blockID := types.BlockID{
 			Hash:          blk.Hash(),
 			PartSetHeader: bps.Header(),
-		}, blk)
+		}
+
+		newstate, err := executor.ApplyBlock(vm.state, blockID, blk)
 		if err != nil {
 			return nil, err
 		}
 
-		vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, blk.ProposerAddress, bps.Header()))
+		vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, vm.state.Validators, blockID))
 		err = vm.stateStore.Save(newstate)
 		if err != nil {
 			vm.logger.Error("failed to save state", "err", err)
@@ -877,17 +879,18 @@ func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptReque
 		vm.logger.Error("failed to make part set", "err", err)
 		return nil, err
 	}
-
-	newstate, err := executor.ApplyBlock(vm.state, types.BlockID{
+	blockID := types.BlockID{
 		Hash:          blk.Hash(),
 		PartSetHeader: bps.Header(),
-	}, blk)
+	}
+
+	newstate, err := executor.ApplyBlock(vm.state, blockID, blk)
 	if err != nil {
 		vm.logger.Error("failed to apply block", "err", err)
 		return nil, err
 	}
+	vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, vm.state.Validators, blockID))
 
-	vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, blk.ProposerAddress, bps.Header()))
 	err = vm.stateStore.Save(newstate)
 	if err != nil {
 		vm.logger.Error("failed to save state", "err", err)
