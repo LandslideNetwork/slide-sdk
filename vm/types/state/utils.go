@@ -5,10 +5,46 @@ import (
 	"fmt"
 
 	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/libs/json"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/state"
 	"github.com/cometbft/cometbft/types"
+
+	"github.com/consideritdone/landslidevm/proto/vm"
 )
+
+func EncodeBlockWithStatus(blk *types.Block, status vm.Status) ([]byte, error) {
+	blockBytes, err := EncodeBlock(blk)
+	if err != nil {
+		return nil, err
+	}
+	wrappedBlk := &vm.Block{
+		Block:  blockBytes,
+		Status: status,
+	}
+
+	data, err := json.Marshal(wrappedBlk)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func DecodeBlockWithStatus(data []byte) (*types.Block, vm.Status, error) {
+	wrappedBlk := new(vm.Block)
+
+	if err := json.Unmarshal(data, wrappedBlk); err != nil {
+		return nil, vm.Status_STATUS_UNSPECIFIED, err
+	}
+
+	blk, err := DecodeBlock(wrappedBlk.Block)
+	if err != nil {
+		return nil, vm.Status_STATUS_UNSPECIFIED, err
+	}
+
+	return blk, wrappedBlk.Status, nil
+}
 
 func EncodeBlock(block *types.Block) ([]byte, error) {
 	proto, err := block.ToProto()

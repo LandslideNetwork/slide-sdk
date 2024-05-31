@@ -12,8 +12,6 @@ import (
 	"sync"
 	"time"
 
-	messengerpb "github.com/consideritdone/landslidevm/proto/messenger"
-
 	dbm "github.com/cometbft/cometbft-db"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/config"
@@ -43,8 +41,10 @@ import (
 	"github.com/consideritdone/landslidevm/http"
 	"github.com/consideritdone/landslidevm/jsonrpc"
 	httppb "github.com/consideritdone/landslidevm/proto/http"
+	messengerpb "github.com/consideritdone/landslidevm/proto/messenger"
 	"github.com/consideritdone/landslidevm/proto/rpcdb"
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
+	"github.com/consideritdone/landslidevm/utils/ids"
 	vmtypes "github.com/consideritdone/landslidevm/vm/types"
 	"github.com/consideritdone/landslidevm/vm/types/block"
 	"github.com/consideritdone/landslidevm/vm/types/closer"
@@ -130,6 +130,7 @@ type (
 		vmconnected    *vmtypes.Atomic[bool]
 		verifiedBlocks sync.Map
 		preferred      [32]byte
+		wrappedBlocks  *vmstate.WrappedBlocksStorage
 
 		clientConn grpc.ClientConnInterface
 	}
@@ -149,6 +150,7 @@ func NewViaDB(database dbm.DB, creator AppCreator, options ...func(*LandslideVM)
 		vmconnected:    vmtypes.NewAtomic(false),
 		bootstrapped:   vmtypes.NewAtomic(false),
 		verifiedBlocks: sync.Map{},
+		wrappedBlocks:  vmstate.NewWrappedBlocksStorage(),
 	}
 
 	for _, o := range options {
@@ -380,7 +382,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		vm.state = newstate
 	}
 
-	blockBytes, err := vmstate.EncodeBlock(blk)
+	blockBytes, err := vmstate.EncodeBlockWithStatus(blk, vmpb.Status_STATUS_ACCEPTED)
 	if err != nil {
 		return nil, err
 	}
@@ -530,19 +532,29 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 		vm.logger.Error("failed to create proposal block", "err", err)
 		return nil, err
 	}
-	// blk.Time = time.Now()
 
-	blockBytes, err := vmstate.EncodeBlock(blk)
+	blkStatus := vmpb.Status_STATUS_PROCESSING
+	blkBytes, err := vmstate.EncodeBlockWithStatus(blk, blkStatus)
 	if err != nil {
 		vm.logger.Error("failed to encode block", "err", err)
 		return nil, err
 	}
 
-	vm.verifiedBlocks.Store([32]byte(blk.Hash()), blk)
+	blkID, err := ids.ToID(blk.Hash())
+	if err != nil {
+		vm.logger.Error("failed to convert block hash to ID", "err", err)
+		return nil, err
+	}
+	vm.wrappedBlocks.UnverifiedBlocks.Put(blkID, &vmstate.WrappedBlock{
+		Block:  blk,
+		Status: blkStatus,
+	})
+	vm.wrappedBlocks.MissingBlocks.Evict(blkID)
+
 	return &vmpb.BuildBlockResponse{
 		Id:                blk.Hash(),
 		ParentId:          blk.LastBlockID.Hash,
-		Bytes:             blockBytes,
+		Bytes:             blkBytes,
 		Height:            uint64(blk.Height),
 		Timestamp:         timestamppb.New(blk.Time),
 		VerifyWithContext: false,
@@ -552,16 +564,57 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 // ParseBlock attempt to create a block from a stream of bytes.
 func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest) (*vmpb.ParseBlockResponse, error) {
 	vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
-	blk, err := vmstate.DecodeBlock(req.Bytes)
-	if err != nil {
-		vm.logger.Error("failed to decode block", "err", err)
-		return nil, err
+	var (
+		blk       *types.Block
+		blkStatus vmpb.Status
+		blkID     ids.ID
+		err       error
+	)
+
+	// Check if the block is already cached
+	blkID, blkIDCached := vm.wrappedBlocks.BytesToIDCache.Get(string(req.Bytes))
+	if !blkIDCached {
+		blk, blkStatus, err = vmstate.DecodeBlockWithStatus(req.Bytes)
+		if err != nil {
+			vm.logger.Error("failed to decode block", "err", err)
+			return nil, err
+		}
+
+		blkID, err = ids.ToID(blk.Hash())
+		if err != nil {
+			vm.logger.Error("failed to convert block hash to ID", "err", err)
+			return nil, err
+		}
+
+		vm.wrappedBlocks.BytesToIDCache.Put(string(req.Bytes), blkID)
+	}
+
+	wblk, ok := vm.wrappedBlocks.GetCachedBlock(blkID)
+	if !ok {
+		wblk := &vmstate.WrappedBlock{
+			Block:  blk,
+			Status: blkStatus,
+		}
+		switch blkStatus {
+		case vmpb.Status_STATUS_ACCEPTED, vmpb.Status_STATUS_REJECTED:
+			vm.wrappedBlocks.DecidedBlocks.Put(blkID, wblk)
+		case vmpb.Status_STATUS_PROCESSING:
+			vm.wrappedBlocks.UnverifiedBlocks.Put(blkID, wblk)
+		default:
+			vm.logger.Error("found unexpected status for blk", "id", blkID, "status", blkStatus)
+			return nil, fmt.Errorf("found unexpected status for blk %s: %s", blkID, blkStatus)
+		}
+
+		vm.wrappedBlocks.MissingBlocks.Evict(blkID)
+	} else {
+		blk = wblk.Block
+		blkStatus = wblk.Status
 	}
 
 	return &vmpb.ParseBlockResponse{
 		Id:                blk.Hash(),
 		ParentId:          blk.LastBlockID.Hash,
-		Status:            vmpb.Status_STATUS_ACCEPTED, // TODO: get status from block
+		Status:            blkStatus,
 		Height:            uint64(blk.Height),
 		Timestamp:         timestamppb.New(blk.Time),
 		VerifyWithContext: false,
@@ -571,22 +624,62 @@ func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest
 // GetBlock attempt to load a block.
 func (vm *LandslideVM) GetBlock(_ context.Context, req *vmpb.GetBlockRequest) (*vmpb.GetBlockResponse, error) {
 	vm.logger.Info("GetBlock", "id", req.GetId())
-	blk := vm.blockStore.LoadBlockByHash(req.GetId())
-	if blk == nil {
-		return &vmpb.GetBlockResponse{
-			Err: vmpb.Error_ERROR_NOT_FOUND,
-		}, nil
+	var (
+		blk       *types.Block
+		blkStatus vmpb.Status
+	)
+
+	blkID, err := ids.ToID(req.GetId())
+	if err != nil {
+		vm.logger.Error("failed to convert block hash to ID", "err", err)
+		return nil, err
 	}
 
-	blockBytes, err := vmstate.EncodeBlock(blk)
+	wblk, ok := vm.wrappedBlocks.GetCachedBlock(blkID)
+	if !ok {
+		if _, ok := vm.wrappedBlocks.MissingBlocks.Get(blkID); ok {
+			return &vmpb.GetBlockResponse{
+				Err: vmpb.Error_ERROR_NOT_FOUND,
+			}, nil
+		}
+
+		blk = vm.blockStore.LoadBlockByHash(req.GetId())
+		if blk == nil {
+			vm.wrappedBlocks.MissingBlocks.Put(blkID, struct{}{})
+			return &vmpb.GetBlockResponse{
+				Err: vmpb.Error_ERROR_NOT_FOUND,
+			}, nil
+		}
+
+		wblk = &vmstate.WrappedBlock{
+			Block:  blk,
+			Status: vmpb.Status_STATUS_ACCEPTED,
+		}
+	}
+
+	blk = wblk.Block
+	blkStatus = wblk.Status
+
+	switch blkStatus {
+	case vmpb.Status_STATUS_ACCEPTED, vmpb.Status_STATUS_REJECTED:
+		vm.wrappedBlocks.DecidedBlocks.Put(blkID, wblk)
+	case vmpb.Status_STATUS_PROCESSING:
+		vm.wrappedBlocks.UnverifiedBlocks.Put(blkID, wblk)
+	default:
+		vm.logger.Error("found unexpected status for blk", "id", blkID, "status", blkStatus)
+		return nil, fmt.Errorf("found unexpected status for blk %s: %s", blkID, blkStatus)
+	}
+
+	blockBytes, err := vmstate.EncodeBlockWithStatus(blk, blkStatus)
 	if err != nil {
+		vm.logger.Error("failed to encode block", "err", err)
 		return nil, err
 	}
 
 	return &vmpb.GetBlockResponse{
 		ParentId:  blk.LastBlockID.Hash,
 		Bytes:     blockBytes,
-		Status:    vmpb.Status_STATUS_UNSPECIFIED,
+		Status:    blkStatus,
 		Height:    uint64(blk.Height),
 		Timestamp: timestamppb.New(blk.Time),
 	}, nil
@@ -733,7 +826,7 @@ func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyReque
 	vm.logger.Info("BlockVerify")
 	vm.logger.Debug("block verify", "bytes", req.Bytes)
 
-	blk, err := vmstate.DecodeBlock(req.Bytes)
+	blk, blkStatus, err := vmstate.DecodeBlockWithStatus(req.Bytes)
 	if err != nil {
 		vm.logger.Error("failed to decode block", "err", err)
 		return nil, err
@@ -746,9 +839,16 @@ func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyReque
 		return nil, err
 	}
 
-	if _, ok := vm.verifiedBlocks.Load([32]byte(blk.Hash())); !ok {
-		vm.logger.Info("Block not found in verified blocks", "block", blk.Hash())
-		vm.verifiedBlocks.Store([32]byte(blk.Hash()), blk)
+	blkID, err := ids.ToID(blk.Hash())
+	if err != nil {
+		vm.logger.Error("failed to convert block hash to ID", "err", err)
+		return nil, err
+	}
+
+	vm.wrappedBlocks.UnverifiedBlocks.Evict(blkID)
+	vm.wrappedBlocks.VerifiedBlocks[blkID] = &vmstate.WrappedBlock{
+		Block:  blk,
+		Status: blkStatus,
 	}
 
 	return &vmpb.BlockVerifyResponse{Timestamp: timestamppb.New(blk.Time)}, nil
@@ -756,20 +856,22 @@ func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyReque
 
 func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptRequest) (*emptypb.Empty, error) {
 	vm.logger.Info("BlockAccept")
-	rawBlock, exist := vm.verifiedBlocks.Load([32]byte(req.GetId()))
-	if !exist {
-		vm.logger.Error("block not found", "id", req.GetId())
-		return nil, ErrNotFound
+
+	blkID, err := ids.ToID(req.GetId())
+	if err != nil {
+		vm.logger.Error("failed to convert block hash to ID", "err", err)
+		return nil, err
 	}
-	blk, ok := rawBlock.(*types.Block)
-	if !ok {
-		vm.logger.Error("failed to cast block", "id", req.GetId())
+
+	wblk, exist := vm.wrappedBlocks.GetCachedBlock(blkID)
+	if !exist {
 		return nil, ErrNotFound
 	}
 
 	executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
 	executor.SetEventBus(vm.eventBus)
 
+	blk := wblk.Block
 	bps, err := blk.MakePartSet(types.BlockPartSizeBytes)
 	if err != nil {
 		vm.logger.Error("failed to make part set", "err", err)
@@ -793,16 +895,35 @@ func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptReque
 	}
 
 	vm.state = newstate
-	vm.verifiedBlocks.Delete([32]byte(req.GetId()))
+
+	delete(vm.wrappedBlocks.VerifiedBlocks, blkID)
+	vm.wrappedBlocks.MissingBlocks.Evict(blkID)
+	vm.wrappedBlocks.UnverifiedBlocks.Evict(blkID)
+	vm.wrappedBlocks.DecidedBlocks.Put(blkID, &vmstate.WrappedBlock{
+		Block:  blk,
+		Status: vmpb.Status_STATUS_ACCEPTED,
+	})
+
 	return &emptypb.Empty{}, nil
 }
 
 func (vm *LandslideVM) BlockReject(_ context.Context, req *vmpb.BlockRejectRequest) (*emptypb.Empty, error) {
 	vm.logger.Info("BlockReject")
-	_, exist := vm.verifiedBlocks.LoadAndDelete([32]byte(req.GetId()))
+	blkID, err := ids.ToID(req.GetId())
+	if err != nil {
+		vm.logger.Error("failed to convert block hash to ID", "err", err)
+		return nil, err
+	}
+
+	blk, exist := vm.wrappedBlocks.GetCachedBlock(blkID)
 	if !exist {
 		return nil, ErrNotFound
 	}
+
+	blk.Status = vmpb.Status_STATUS_REJECTED
+	delete(vm.wrappedBlocks.VerifiedBlocks, blkID)
+	vm.wrappedBlocks.DecidedBlocks.Put(blkID, blk)
+
 	return &emptypb.Empty{}, nil
 }
 

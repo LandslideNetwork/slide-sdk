@@ -404,3 +404,8 @@ message StateSummaryAcceptResponse {
   Mode mode = 1;
   Error err = 2;
 }
+
+message Block {
+  bytes block = 1;
+  Status status = 2;
+}

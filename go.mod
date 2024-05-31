@@ -6,9 +6,11 @@ require (
 	github.com/cometbft/cometbft v0.38.6
 	github.com/cometbft/cometbft-db v0.7.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
+	github.com/mr-tron/base58 v1.2.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/client_model v0.3.0
 	github.com/stretchr/testify v1.8.4
+	go.uber.org/mock v0.4.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80
 	google.golang.org/grpc v1.62.0
 	google.golang.org/protobuf v1.33.0

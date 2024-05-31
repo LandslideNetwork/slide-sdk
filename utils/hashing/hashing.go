@@ -1,0 +1,64 @@
+package hashing
+
+import (
+	"crypto/sha256"
+	"errors"
+	"fmt"
+)
+
+const (
+	HashLen = sha256.Size
+)
+
+var ErrInvalidHashLen = errors.New("invalid hash length")
+
+// Hash256 A 256 bit long hash value.
+type Hash256 = [HashLen]byte
+
+// ComputeHash256Array computes a cryptographically strong 256 bit hash of the
+// input byte slice.
+func ComputeHash256Array(buf []byte) Hash256 {
+	return sha256.Sum256(buf)
+}
+
+// ComputeHash256 computes a cryptographically strong 256 bit hash of the input
+// byte slice.
+func ComputeHash256(buf []byte) []byte {
+	arr := ComputeHash256Array(buf)
+	return arr[:]
+}
+
+// ComputeHash256Ranges computes a cryptographically strong 256 bit hash of the input
+// byte slice in the ranges specified.
+// Example:
+// ComputeHash256Ranges({1, 2, 4, 8, 16}, {{1, 2}, {3, 5}}) is equivalent to
+// ComputeHash256({2, 8, 16}).
+func ComputeHash256Ranges(buf []byte, ranges [][2]int) []byte {
+	hashBuilder := sha256.New()
+	for _, r := range ranges {
+		_, err := hashBuilder.Write(buf[r[0]:r[1]])
+		if err != nil {
+			panic(err)
+		}
+	}
+	return hashBuilder.Sum(nil)
+}
+
+// Checksum creates a checksum of [length] bytes from the 256 bit hash of the
+// byte slice.
+//
+// Returns: the lower [length] bytes of the hash
+// Panics if length > 32.
+func Checksum(bytes []byte, length int) []byte {
+	hash := ComputeHash256Array(bytes)
+	return hash[len(hash)-length:]
+}
+
+func ToHash256(bytes []byte) (Hash256, error) {
+	hash := Hash256{}
+	if bytesLen := len(bytes); bytesLen != HashLen {
+		return hash, fmt.Errorf("%w: expected 32 bytes but got %d", ErrInvalidHashLen, bytesLen)
+	}
+	copy(hash[:], bytes)
+	return hash, nil
+}
