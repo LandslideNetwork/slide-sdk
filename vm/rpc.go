@@ -444,7 +444,13 @@ func (rpc *RPC) Commit(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultCom
 	}
 
 	header := blockMeta.Header
-	commit := rpc.vm.blockStore.LoadBlockCommit(height)
+
+	var commit *types.Commit
+	if height == rpc.vm.blockStore.Height() {
+		commit = rpc.vm.blockStore.LoadSeenCommit(height)
+	} else {
+		commit = rpc.vm.blockStore.LoadBlockCommit(height)
+	}
 
 	return ctypes.NewResultCommit(&header, commit, !(height == rpc.vm.blockStore.Height())), nil
 }
