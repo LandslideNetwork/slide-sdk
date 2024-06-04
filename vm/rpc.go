@@ -373,8 +373,8 @@ func getHeight(bs *store.BlockStore, heightPtr *int64) (int64, error) {
 	bsHeight := bs.Height()
 	if heightPtr != nil {
 		height := *heightPtr
-		if height <= 0 {
-			return 0, fmt.Errorf("height must be greater than 0, but got %d", height)
+		if height < 0 {
+			return 0, fmt.Errorf("height must be greater or equal to 0, but got %d", height)
 		}
 		if height > bsHeight {
 			return 0, fmt.Errorf("height %d must be less than or equal to the current blockchain height %d", height, bsHeight)
