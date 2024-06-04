@@ -163,7 +163,9 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 	err = rpc.vm.mempool.CheckTx(tx, func(res *abci.ResponseCheckTx) {
 		select {
 		case <-ctx.Context().Done():
+			rpc.vm.logger.Error("Error on broadcastTxCommit", "err", ctx.Context().Err())
 		case checkTxResCh <- res:
+			rpc.vm.logger.Debug("CheckTx result", "tx", tx.Hash(), "res", res)
 		}
 	}, mempl.TxInfo{})
 	if err != nil {
@@ -175,6 +177,7 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 	case <-ctx.Context().Done():
 		return nil, fmt.Errorf("broadcast confirmation not received: %w", ctx.Context().Err())
 	case checkTxRes := <-checkTxResCh:
+		rpc.vm.logger.Debug("CheckTx result", "tx", tx.Hash(), "res", fmt.Sprintf("%+v", checkTxRes))
 		if checkTxRes.Code != abci.CodeTypeOK {
 			return &ctypes.ResultBroadcastTxCommit{
 				CheckTx:  *checkTxRes,

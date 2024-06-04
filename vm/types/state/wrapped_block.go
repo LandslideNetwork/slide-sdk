@@ -11,7 +11,7 @@ import (
 )
 
 // TODO: make these configurable
-const decidedCacheSize, missingCacheSize, unverifiedCacheSize, bytesToIDCacheSize int = 10000, 10000, 10000, 10000
+const decidedCacheSize, missingCacheSize, unverifiedCacheSize, bytesToIDCacheSize int = 100000, 100000, 100000, 100000
 
 // PointerOverhead is used to approximate the memory footprint from allocating a pointer.
 const pointerOverhead = 8
