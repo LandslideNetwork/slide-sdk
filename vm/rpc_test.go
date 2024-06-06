@@ -207,7 +207,7 @@ func testBlockchainInfo(t *testing.T, client *client.Client, expected *coretypes
 	lastMeta := result.BlockMetas[len(result.BlockMetas)-1]
 	expectedLastMeta := expected.BlockMetas[len(expected.BlockMetas)-1]
 	require.Equal(t, expectedLastMeta.NumTxs, lastMeta.NumTxs)
-	require.Equal(t, expected.LastHeight, lastMeta.Header.AppHash)
+	require.Equal(t, expectedLastMeta.Header.AppHash, lastMeta.Header.AppHash)
 	require.Equal(t, expectedLastMeta.BlockID, lastMeta.BlockID)
 }
 
@@ -217,6 +217,12 @@ func testBlock(t *testing.T, client *client.Client, params map[string]interface{
 	require.NoError(t, err)
 	require.Equal(t, expected.Block.ChainID, result.Block.ChainID)
 	require.Equal(t, expected.Block.Height, result.Block.Height)
+	t.Log("=======")
+	t.Log("Height", result.Block.Height)
+	t.Log("APP HASH", result.Block.AppHash)
+	t.Log("EXPECTED APP HASH", expected.Block.AppHash)
+	t.Log("=======")
+	//TODO: check equality and syncronisation of AppHash
 	require.Equal(t, expected.Block.AppHash, result.Block.AppHash)
 	return result
 }
@@ -243,6 +249,41 @@ func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *tx
 func checkCommittedTxResult(t *testing.T, client *client.Client, env *txRuntimeEnv) {
 	testABCIQuery(t, client, map[string]interface{}{"path": "/key", "data": fmt.Sprintf("%x", env.key)}, env.value)
 	//testABCIQuery(t, client, map[string]interface{}{"path": "/hash", "data": fmt.Sprintf("%x", env.hash)}, env.value)
+}
+
+func TestBlockProduction(t *testing.T) {
+	server, vm, client, cancel := setupRPC(t, buildAccept)
+	defer server.Close()
+	defer vm.mempool.Flush()
+	defer cancel()
+
+	initialHeight := vm.state.LastBlockHeight
+	t.Log("Initial Height: ", initialHeight)
+
+	for i := 1; i < 10; i++ {
+		testStatus(t, client, &coretypes.ResultStatus{
+			NodeInfo: p2p.DefaultNodeInfo{},
+			SyncInfo: coretypes.SyncInfo{
+				LatestBlockHeight: initialHeight,
+			},
+			ValidatorInfo: coretypes.ValidatorInfo{},
+		})
+
+		// write something
+		_, _, tx := MakeTxKV()
+		bres := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+		t.Log("Broadcast result height", bres.Height)
+
+		testBlock(t, client, map[string]interface{}{"height": bres.Height}, &coretypes.ResultBlock{
+			Block: &types.Block{
+				Header: types.Header{
+					ChainID: vm.state.ChainID,
+					Height:  bres.Height,
+					AppHash: vm.state.AppHash,
+				},
+			},
+		})
+	}
 }
 
 func TestABCIService(t *testing.T) {
@@ -422,9 +463,8 @@ func TestHistoryService(t *testing.T) {
 	})
 
 	t.Run("BlockchainInfo", func(t *testing.T) {
-		//TODO: describe the reason why ot is impossible to get block at height 0
 		blkMetas := make([]*types.BlockMeta, 0)
-		for i := int64(0); i < vm.state.LastBlockHeight; i++ {
+		for i := int64(1); i <= vm.state.LastBlockHeight; i++ {
 			blk := testBlock(t, client, map[string]interface{}{"height": i}, &coretypes.ResultBlock{
 				Block: &types.Block{
 					Header: types.Header{
@@ -449,13 +489,14 @@ func TestHistoryService(t *testing.T) {
 			BlockMetas: blkMetas,
 		})
 		_, _, tx := MakeTxKV()
+		prevStateAppHash := vm.state.AppHash
 		testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
 		blk := testBlock(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight}, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
 					ChainID: vm.state.ChainID,
 					Height:  vm.state.LastBlockHeight,
-					AppHash: vm.state.AppHash,
+					AppHash: prevStateAppHash,
 				},
 			},
 		})
