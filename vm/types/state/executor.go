@@ -241,6 +241,7 @@ func (blockExec *BlockExecutor) ApplyBlock(
 
 	fail.Fail() // XXX
 
+	blockExec.logger.Info("saving block", "height", block.Height)
 	// Save the results before we commit.
 	if err := blockExec.store.SaveFinalizeBlockResponse(block.Height, abciResponse); err != nil {
 		return state, err
@@ -283,6 +284,7 @@ func (blockExec *BlockExecutor) ApplyBlock(
 	// Update the app hash and save the statetypes.
 	state.AppHash = abciResponse.AppHash
 	if err := blockExec.store.Save(state); err != nil {
+		blockExec.logger.Error("failed to save state", "err", err)
 		return state, err
 	}
 
@@ -372,9 +374,10 @@ func (blockExec *BlockExecutor) Commit(
 	block *types.Block,
 	abciResponse *abci.ResponseFinalizeBlock,
 ) (int64, error) {
+	blockExec.logger.Info("locking mempool", "height", block.Height)
 	blockExec.mempool.Lock()
 	defer blockExec.mempool.Unlock()
-
+	blockExec.logger.Info("lock mempool passed", "height", block.Height)
 	// while mempool is Locked, flush to ensure all async requests have completed
 	// in the ABCI app before Commit.
 	err := blockExec.mempool.FlushAppConn()

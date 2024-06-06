@@ -188,6 +188,8 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		return nil, err
 	}
 
+	vm.logger = log.NewTMLogger(os.Stdout)
+
 	// Register metrics for each Go plugin processes
 	vm.processMetrics = registerer
 
@@ -217,13 +219,16 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		for {
 			select {
 			case msg, ok := <-vm.toEngine:
+				vm.logger.Info("toEngine sending message to engine", "msg", msg, "ok", ok)
 				if !ok {
 					return
 				}
 				// Nothing to do with the error within the goroutine
-				_, _ = msgClient.Notify(context.Background(), &messengerpb.NotifyRequest{
+				res, err := msgClient.Notify(context.Background(), &messengerpb.NotifyRequest{
 					Message: msg,
 				})
+				vm.logger.Info("toEngine received response from engine", "res", res, "err", err)
+
 			case <-vm.closed:
 				return
 			}
@@ -245,7 +250,6 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		vm.databaseClient = rpcdb.NewDatabaseClient(dbClientConn)
 		vm.database = database.New(vm.databaseClient)
 	}
-	vm.logger = log.NewTMLogger(os.Stdout)
 
 	dbBlockStore := dbm.NewPrefixDB(vm.database, dbPrefixBlockStore)
 	vm.blockStore = store.NewBlockStore(dbBlockStore)
@@ -342,6 +346,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	go func() {
 		for {
 			<-vm.mempool.TxsAvailable()
+			vm.logger.Info("TxsAvailable mempool has txs available")
 			vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK
 		}
 	}()
@@ -563,6 +568,7 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 	})
 	vm.wrappedBlocks.MissingBlocks.Evict(blkID)
 
+	vm.logger.Debug("BuildBlockResponse", "id", blk.Hash(), "status", blkStatus, "height", blk.Height, "timestamp", blk.Time, "ParentId", blk.LastBlockID.Hash)
 	return &vmpb.BuildBlockResponse{
 		Id:                blk.Hash(),
 		ParentId:          blk.LastBlockID.Hash,
@@ -627,13 +633,12 @@ func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest
 		vm.logger.Debug("Found block in GetCachedBlock", "id", blkID, "status", wblk.Status)
 		blk = wblk.Block
 
-		vm.logger.Debug("blkStatus", "status", blkStatus)
-		vm.logger.Debug("wblk.Status", "status", wblk.Status)
 		if blkStatus == vmpb.Status_STATUS_UNSPECIFIED {
 			blkStatus = wblk.Status
 		}
 	}
-	vm.logger.Debug("ParsedBlock", "id", blkID, "status", blkStatus)
+
+	vm.logger.Debug("ParseBlockResponse", "id", blk.Hash(), "status", blkStatus, "height", blk.Height, "timestamp", blk.Time, "ParentId", blk.LastBlockID.Hash)
 	return &vmpb.ParseBlockResponse{
 		Id:                blk.Hash(),
 		ParentId:          blk.LastBlockID.Hash,
@@ -702,6 +707,7 @@ func (vm *LandslideVM) GetBlock(_ context.Context, req *vmpb.GetBlockRequest) (*
 		return nil, err
 	}
 
+	vm.logger.Debug("GetBlockResponse", "parent", blk.LastBlockID.Hash, "status", blkStatus, "height", blk.Height, "timestamp", blk.Time)
 	return &vmpb.GetBlockResponse{
 		ParentId:  blk.LastBlockID.Hash,
 		Bytes:     blockBytes,
@@ -920,6 +926,15 @@ func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptReque
 	vm.logger.Debug("SaveBlock", "block", blk.Hash(), "ID", blkID)
 	vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, vm.state.Validators, blockID))
 
+	vm.logger.Debug(
+		"NewState",
+		"state LastBlockID",
+		newstate.LastBlockID,
+		"LastBlockID hash",
+		newstate.LastBlockID.Hash,
+		"AppHash",
+		newstate.AppHash,
+	)
 	err = vm.stateStore.Save(newstate)
 	if err != nil {
 		vm.logger.Error("failed to save state", "err", err)
@@ -936,6 +951,7 @@ func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptReque
 		Status: vmpb.Status_STATUS_ACCEPTED,
 	})
 
+	vm.logger.Info("BlockAccepted", "id", blk.Hash())
 	return &emptypb.Empty{}, nil
 }
 
