@@ -217,14 +217,19 @@ func testBlock(t *testing.T, client *client.Client, params map[string]interface{
 	require.NoError(t, err)
 	require.Equal(t, expected.Block.ChainID, result.Block.ChainID)
 	require.Equal(t, expected.Block.Height, result.Block.Height)
-	t.Log("=======")
-	t.Log("Height", result.Block.Height)
-	t.Log("APP HASH", result.Block.AppHash)
-	t.Log("EXPECTED APP HASH", expected.Block.AppHash)
-	t.Log("=======")
 	//TODO: check equality and syncronisation of AppHash
 	require.Equal(t, expected.Block.AppHash, result.Block.AppHash)
 	return result
+}
+
+func testTx(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}, expected *coretypes.ResultTx) {
+	result := new(coretypes.ResultTx)
+	_, err := client.Call(context.Background(), "tx", params, result)
+	require.NoError(t, err)
+	require.EqualValues(t, expected.Hash, result.Hash)
+	require.EqualValues(t, expected.Tx, result.Tx)
+	require.EqualValues(t, expected.Height, result.Height)
+	require.EqualValues(t, expected.TxResult, result.TxResult)
 }
 
 func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *txRuntimeEnv) {
@@ -264,13 +269,14 @@ func TestBlockProduction(t *testing.T) {
 		testStatus(t, client, &coretypes.ResultStatus{
 			NodeInfo: p2p.DefaultNodeInfo{},
 			SyncInfo: coretypes.SyncInfo{
-				LatestBlockHeight: initialHeight,
+				LatestBlockHeight: initialHeight + int64(i) - 1,
 			},
 			ValidatorInfo: coretypes.ValidatorInfo{},
 		})
 
 		// write something
 		_, _, tx := MakeTxKV()
+		previousAppHash := vm.state.AppHash
 		bres := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
 		t.Log("Broadcast result height", bres.Height)
 
@@ -279,7 +285,7 @@ func TestBlockProduction(t *testing.T) {
 				Header: types.Header{
 					ChainID: vm.state.ChainID,
 					Height:  bres.Height,
-					AppHash: vm.state.AppHash,
+					AppHash: previousAppHash,
 				},
 			},
 		})
@@ -583,12 +589,18 @@ func TestSignService(t *testing.T) {
 	})
 
 	t.Run("Tx", func(t *testing.T) {
-		//time.Sleep(2 * time.Second)
-		//
-		//reply, err := service.Tx(&rpctypes.Context{}, txReply.Hash.Bytes(), false)
-		//assert.NoError(t, err)
-		//assert.EqualValues(t, txReply.Hash, reply.Hash)
-		//assert.EqualValues(t, tx, reply.Tx)
+		for i := 0; i < 3; i++ {
+			_, _, tx := MakeTxKV()
+			result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+			testTx(t, client, vm, map[string]interface{}{"tx": tx}, &coretypes.ResultTx{
+				Hash:     result.Hash,
+				Height:   result.Height,
+				Index:    0,
+				TxResult: result.TxResult,
+				Tx:       tx,
+				Proof:    types.TxProof{},
+			})
+		}
 	})
 
 	t.Run("TxSearch", func(t *testing.T) {
