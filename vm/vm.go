@@ -221,6 +221,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			case msg, ok := <-vm.toEngine:
 				vm.logger.Info("toEngine sending message to engine", "msg", msg, "ok", ok)
 				if !ok {
+					vm.logger.Info("toEngine channel closed")
 					return
 				}
 				// Nothing to do with the error within the goroutine
@@ -228,8 +229,12 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 					Message: msg,
 				})
 				vm.logger.Info("toEngine received response from engine", "res", res, "err", err)
+				if err != nil {
+					vm.logger.Error("toEngine failed to send message to engine", "err", err)
+				}
 
 			case <-vm.closed:
+				vm.logger.Info("toEngine closed")
 				return
 			}
 		}
@@ -348,6 +353,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			<-vm.mempool.TxsAvailable()
 			vm.logger.Info("TxsAvailable mempool has txs available")
 			vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK
+			vm.logger.Info("vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK")
 		}
 	}()
 

@@ -376,7 +376,12 @@ func (blockExec *BlockExecutor) Commit(
 ) (int64, error) {
 	blockExec.logger.Info("locking mempool", "height", block.Height)
 	blockExec.mempool.Lock()
-	defer blockExec.mempool.Unlock()
+
+	defer func() {
+		blockExec.mempool.Unlock()
+		blockExec.logger.Info("mempool unlocked", "height", block.Height)
+	}()
+
 	blockExec.logger.Info("lock mempool passed", "height", block.Height)
 	// while mempool is Locked, flush to ensure all async requests have completed
 	// in the ABCI app before Commit.
