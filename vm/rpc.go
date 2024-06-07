@@ -22,6 +22,7 @@ import (
 	"github.com/cometbft/cometbft/version"
 
 	"github.com/consideritdone/landslidevm/jsonrpc"
+	messengerpb "github.com/consideritdone/landslidevm/proto/messenger"
 )
 
 type RPC struct {
@@ -72,9 +73,15 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 		"abci_query": jsonrpc.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
 		"abci_info":  jsonrpc.NewRPCFunc(rpc.ABCIInfo, "", jsonrpc.Cacheable()),
 
+		"notify": jsonrpc.NewRPCFunc(rpc.Notify, ""),
 		// evidence API
 		// "broadcast_evidence": jsonrpc.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
 	}
+}
+
+func (rpc *RPC) Notify(_ *rpctypes.Context) (*ctypes.ResultABCIInfo, error) {
+	rpc.vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK
+	return &ctypes.ResultABCIInfo{}, nil
 }
 
 // UnconfirmedTxs gets unconfirmed transactions (maximum ?limit entries)
