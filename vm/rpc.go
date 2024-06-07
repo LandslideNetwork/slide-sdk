@@ -416,6 +416,7 @@ func (rpc *RPC) BlockByHash(_ *rpctypes.Context, hash []byte) (*ctypes.ResultBlo
 }
 
 func (rpc *RPC) BlockResults(_ *rpctypes.Context, _ *int64) (*ctypes.ResultBlockResults, error) {
+	rpc.vm.logger.Info("custom: sending message to engine rpc.vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK")
 	rpc.vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK
 	// height, err := getHeight(rpc.vm.blockStore, args.Height)
 	// if err != nil {
