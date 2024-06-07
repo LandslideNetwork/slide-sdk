@@ -73,15 +73,9 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 		"abci_query": jsonrpc.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
 		"abci_info":  jsonrpc.NewRPCFunc(rpc.ABCIInfo, "", jsonrpc.Cacheable()),
 
-		"notify": jsonrpc.NewRPCFunc(rpc.Notify, ""),
 		// evidence API
 		// "broadcast_evidence": jsonrpc.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
 	}
-}
-
-func (rpc *RPC) Notify(_ *rpctypes.Context) (*ctypes.ResultABCIInfo, error) {
-	rpc.vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK
-	return &ctypes.ResultABCIInfo{}, nil
 }
 
 // UnconfirmedTxs gets unconfirmed transactions (maximum ?limit entries)
@@ -421,7 +415,8 @@ func (rpc *RPC) BlockByHash(_ *rpctypes.Context, hash []byte) (*ctypes.ResultBlo
 	return &ctypes.ResultBlock{BlockID: blockMeta.BlockID, Block: block}, nil
 }
 
-func (rpc *RPC) BlockResults(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBlockResults, error) {
+func (rpc *RPC) BlockResults(_ *rpctypes.Context, _ *int64) (*ctypes.ResultBlockResults, error) {
+	rpc.vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK
 	// height, err := getHeight(rpc.vm.blockStore, args.Height)
 	// if err != nil {
 	// 	return err
