@@ -18,6 +18,7 @@ import (
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	bftjson "github.com/cometbft/cometbft/libs/json"
+	bftversion "github.com/cometbft/cometbft/proto/tendermint/version"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	"github.com/stretchr/testify/require"
@@ -262,10 +263,32 @@ func testTxSearch(t *testing.T, client *client.Client, vm *LandslideVM, params m
 	result := new(coretypes.ResultTxSearch)
 	_, err := client.Call(context.Background(), "tx_search", params, result)
 	require.NoError(t, err)
-	//require.EqualValues(t, expected.Hash, result.Hash)
-	//require.EqualValues(t, expected.Tx, result.Tx)
-	//require.EqualValues(t, expected.Height, result.Height)
-	//require.EqualValues(t, expected.TxResult, result.TxResult)
+	require.EqualValues(t, expected.TotalCount, result.TotalCount)
+	require.EqualValues(t, expected.Txs, result.Txs)
+}
+
+func testCommit(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}, expected *coretypes.ResultCommit) {
+	result := new(coretypes.ResultCommit)
+	_, err := client.Call(context.Background(), "commit", params, result)
+	require.NoError(t, err)
+	require.Equal(t, expected.Version, result.Version)
+	require.Equal(t, expected.ChainID, result.ChainID)
+	require.Equal(t, expected.Height, result.Height)
+	require.Equal(t, expected.Time, result.Time)
+	require.Equal(t, expected.LastBlockID, result.LastBlockID)
+	require.Equal(t, expected.LastCommitHash, result.LastCommitHash)
+	require.Equal(t, expected.DataHash, result.DataHash)
+	require.Equal(t, expected.ValidatorsHash, result.ValidatorsHash)
+	require.Equal(t, expected.NextValidatorsHash, result.NextValidatorsHash)
+	require.Equal(t, expected.ConsensusHash, result.ConsensusHash)
+	require.Equal(t, expected.AppHash, result.AppHash)
+	require.Equal(t, expected.LastResultsHash, result.LastResultsHash)
+	require.Equal(t, expected.EvidenceHash, result.EvidenceHash)
+	require.Equal(t, expected.ProposerAddress, result.ProposerAddress)
+	require.Equal(t, expected.Commit.Height, result.Commit.Height)
+	require.Equal(t, expected.Commit.Round, result.Commit.Round)
+	require.Equal(t, expected.Commit.BlockID, result.Commit.BlockID)
+	require.EqualValues(t, expected.Commit.Signatures, result.Commit.Signatures)
 }
 
 func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *txRuntimeEnv) {
@@ -561,25 +584,6 @@ func TestSignService(t *testing.T) {
 	server, vm, client, cancel := setupRPC(t, buildAccept)
 	defer server.Close()
 	defer cancel()
-	//_, _, tx := MakeTxKV()
-	//tx2 := []byte{0x02}
-	//tx3 := []byte{0x03}
-	//vm, service, msgs := mustNewKVTestVm(t)
-	//
-	//blk0, err := vm.BuildBlock(context.Background())
-	//assert.ErrorIs(t, err, errNoPendingTxs, "expecting error no txs")
-	//assert.Nil(t, blk0)
-	//
-	//txReply, err := service.BroadcastTxSync(&rpctypes.Context{}, tx)
-	//assert.NoError(t, err)
-	//assert.Equal(t, atypes.CodeTypeOK, txReply.Code)
-	//
-	//// build 1st block
-	//blk1, err := vm.BuildBlock(context.Background())
-	//assert.NoError(t, err)
-	//assert.NotNil(t, blk1)
-	//assert.NoError(t, blk1.Accept(context.Background()))
-	//height1 := int64(blk1.Height())
 
 	t.Run("Block", func(t *testing.T) {
 		initialHeight := vm.state.LastBlockHeight
@@ -660,8 +664,6 @@ func TestSignService(t *testing.T) {
 	})
 
 	t.Run("TxSearch", func(t *testing.T) {
-		initialHeight := vm.state.LastBlockHeight
-		prevAppHash := vm.state.AppHash
 		_, _, tx := MakeTxKV()
 		txReply := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
 		testTxSearch(t, client, vm, map[string]interface{}{"query": fmt.Sprintf("tx.hash='%s'", txReply.Hash)}, &coretypes.ResultTxSearch{
@@ -692,100 +694,47 @@ func TestSignService(t *testing.T) {
 		})
 	})
 
-	//TODO: Check logic of test
 	t.Run("Commit", func(t *testing.T) {
-		//txReply, err := service.BroadcastTxAsync(&rpctypes.Context{}, tx3)
-		//require.NoError(t, err)
-		//assert.Equal(t, atypes.CodeTypeOK, txReply.Code)
-		//
-		//assert, require := assert.New(t), require.New(t)
-		//
-		//// get an offset of height to avoid racing and guessing
-		//s, err := service.Status(&rpctypes.Context{})
-		//require.NoError(err)
-		//// sh is start height or status height
-		//sh := s.SyncInfo.LatestBlockHeight
-		//
-		//// look for the future
-		//h := sh + 20
-		//_, err = service.Block(&rpctypes.Context{}, &h)
-		//require.Error(err) // no block yet
-		//
-		//// write something
-		//k, v, tx := MakeTxKV()
-		//bres, err := broadcastTx(t, vm, msgs, tx)
-		//require.NoError(err)
-		//require.True(bres.DeliverTx.IsOK())
-		//time.Sleep(2 * time.Second)
-		//
-		//txh := bres.Height
-		//apph := txh
-		//
-		//// wait before querying
-		//err = WaitForHeight(service, apph, nil)
-		//require.NoError(err)
-		//
-		//qres, err := service.ABCIQuery(&rpctypes.Context{}, "/key", k, 0, false)
-		//require.NoError(err)
-		//if assert.True(qres.Response.IsOK()) {
-		//	assert.Equal(k, qres.Response.Key)
-		//	assert.EqualValues(v, qres.Response.Value)
-		//}
-		//
-		//// make sure we can lookup the tx with proof
-		//ptx, err := service.Tx(&rpctypes.Context{}, bres.Hash, true)
-		//require.NoError(err)
-		//assert.EqualValues(txh, ptx.Height)
-		//assert.EqualValues(tx, ptx.Tx)
-		//
-		//// and we can even check the block is added
-		//block, err := service.Block(&rpctypes.Context{}, &apph)
-		//require.NoError(err)
-		//appHash := block.Block.Header.AppHash
-		//assert.True(len(appHash) > 0)
-		//assert.EqualValues(apph, block.Block.Header.Height)
-		//
-		//blockByHash, err := service.BlockByHash(&rpctypes.Context{}, block.BlockID.Hash)
-		//require.NoError(err)
-		//require.Equal(block, blockByHash)
-		//
-		//// now check the results
-		//blockResults, err := service.BlockResults(&rpctypes.Context{}, &txh)
-		//require.Nil(err, "%+v", err)
-		//assert.Equal(txh, blockResults.Height)
-		//if assert.Equal(2, len(blockResults.TxsResults)) {
-		//	// check success code
-		//	assert.EqualValues(0, blockResults.TxsResults[0].Code)
-		//}
-		//
-		//// check blockchain info, now that we know there is info
-		//info, err := service.BlockchainInfo(&rpctypes.Context{}, apph, apph)
-		//require.NoError(err)
-		//assert.True(info.LastHeight >= apph)
-		//if assert.Equal(1, len(info.BlockMetas)) {
-		//	lastMeta := info.BlockMetas[0]
-		//	assert.EqualValues(apph, lastMeta.Header.Height)
-		//	blockData := block.Block
-		//	assert.Equal(blockData.Header.AppHash, lastMeta.Header.AppHash)
-		//	assert.Equal(block.BlockID, lastMeta.BlockID)
-		//}
-		//
-		//// and get the corresponding commit with the same apphash
-		//commit, err := service.Commit(&rpctypes.Context{}, &apph)
-		//require.NoError(err)
-		//assert.NotNil(commit)
-		//assert.Equal(appHash, commit.Header.AppHash)
-		//
-		//// compare the commits (note Commit(2) has commit from Block(3))
-		//h = apph - 1
-		//commit2, err := service.Commit(&rpctypes.Context{}, &h)
-		//require.NoError(err)
-		//assert.Equal(block.Block.LastCommitHash, commit2.Commit.Hash())
-		//
-		//// and we got a proof that works!
-		//pres, err := service.ABCIQuery(&rpctypes.Context{}, "/key", k, 0, true)
-		//require.NoError(err)
-		//assert.True(pres.Response.IsOK())
+		prevAppHash := vm.state.AppHash
+		_, _, tx := MakeTxKV()
+		txReply := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+		blk := testBlock(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight}, &coretypes.ResultBlock{
+			Block: &types.Block{
+				Header: types.Header{
+					ChainID: vm.state.ChainID,
+					Height:  txReply.Height,
+					AppHash: vm.state.AppHash,
+				},
+			},
+		})
+		//TODO: implement check for all result commit fields
+		testCommit(t, client, vm, map[string]interface{}{"height": txReply.Height}, &coretypes.ResultCommit{
+			SignedHeader: types.SignedHeader{
+				Header: &types.Header{
+					Version:            bftversion.Consensus{},
+					ChainID:            vm.state.ChainID,
+					Height:             txReply.Height,
+					Time:               time.Time{},
+					LastBlockID:        blk.BlockID,
+					LastCommitHash:     blk.Block.LastCommitHash,
+					DataHash:           blk.Block.DataHash,
+					ValidatorsHash:     blk.Block.ValidatorsHash,
+					NextValidatorsHash: blk.Block.NextValidatorsHash,
+					ConsensusHash:      blk.Block.ConsensusHash,
+					AppHash:            prevAppHash,
+					LastResultsHash:    blk.Block.LastResultsHash,
+					EvidenceHash:       blk.Block.EvidenceHash,
+					ProposerAddress:    blk.Block.ProposerAddress,
+				},
+				Commit: &types.Commit{
+					Height:     txReply.Height,
+					Round:      0,
+					BlockID:    types.BlockID{},
+					Signatures: nil,
+				},
+			},
+			CanonicalCommit: false,
+		})
 	})
 
 	t.Run("BlockSearch", func(t *testing.T) {
