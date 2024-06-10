@@ -217,9 +217,27 @@ func testBlock(t *testing.T, client *client.Client, params map[string]interface{
 	require.NoError(t, err)
 	require.Equal(t, expected.Block.ChainID, result.Block.ChainID)
 	require.Equal(t, expected.Block.Height, result.Block.Height)
-	//TODO: check equality and syncronisation of AppHash
 	require.Equal(t, expected.Block.AppHash, result.Block.AppHash)
 	return result
+}
+
+func testBlockByHash(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultBlock) *coretypes.ResultBlock {
+	result := new(coretypes.ResultBlock)
+	_, err := client.Call(context.Background(), "block_by_hash", params, result)
+	require.NoError(t, err)
+	require.Equal(t, expected.Block.ChainID, result.Block.ChainID)
+	require.Equal(t, expected.Block.Height, result.Block.Height)
+	require.Equal(t, expected.Block.AppHash, result.Block.AppHash)
+	return result
+}
+
+func testBlockResults(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultBlockResults) {
+	result := new(coretypes.ResultBlockResults)
+	_, err := client.Call(context.Background(), "block_results", params, result)
+	require.NoError(t, err)
+	require.Equal(t, expected.Height, result.Height)
+	require.Equal(t, expected.AppHash, result.AppHash)
+	require.Equal(t, expected.TxsResults, result.TxsResults)
 }
 
 func testTx(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}, expected *coretypes.ResultTx) {
@@ -564,28 +582,48 @@ func TestSignService(t *testing.T) {
 	})
 
 	t.Run("BlockByHash", func(t *testing.T) {
-		//replyWithoutHash, err := service.BlockByHash(&rpctypes.Context{}, []byte{})
-		//assert.NoError(t, err)
-		//assert.Nil(t, replyWithoutHash.Block)
-		//
-		//hash := blk1.ID()
-		//reply, err := service.BlockByHash(&rpctypes.Context{}, hash[:])
-		//assert.NoError(t, err)
-		//if assert.NotNil(t, reply.Block) {
-		//	assert.EqualValues(t, hash[:], reply.Block.Hash().Bytes())
-		//}
+		prevAppHash := vm.state.AppHash
+		_, _, tx := MakeTxKV()
+		result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+		blk := testBlock(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight}, &coretypes.ResultBlock{
+			Block: &types.Block{
+				Header: types.Header{
+					ChainID: vm.state.ChainID,
+					Height:  result.Height,
+					AppHash: prevAppHash,
+				},
+			},
+		})
+
+		hash := blk.Block.Hash()
+		//TODO: fix block search by hash: calcBlockHash give hash of different length in comparison of store and get block
+		reply := testBlockByHash(t, client, map[string]interface{}{"hash": hash[:]}, &coretypes.ResultBlock{
+			Block: &types.Block{
+				Header: types.Header{
+					ChainID: vm.state.ChainID,
+					Height:  result.Height,
+					AppHash: prevAppHash,
+				},
+			},
+		})
+		require.EqualValues(t, hash[:], reply.Block.Hash().Bytes())
 	})
 
 	t.Run("BlockResults", func(t *testing.T) {
-		//replyWithoutHeight, err := service.BlockResults(&rpctypes.Context{}, nil)
-		//assert.NoError(t, err)
-		//assert.Equal(t, height1, replyWithoutHeight.Height)
-		//
-		//reply, err := service.BlockResults(&rpctypes.Context{}, &height1)
-		//assert.NoError(t, err)
-		//if assert.NotNil(t, reply.TxsResults) {
-		//	assert.Equal(t, height1, reply.Height)
-		//}
+		prevAppHash := vm.state.AppHash
+		_, _, tx := MakeTxKV()
+		result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+		testBlockResults(t, client, map[string]interface{}{}, &coretypes.ResultBlockResults{
+			Height:     result.Height,
+			AppHash:    prevAppHash,
+			TxsResults: []*abcitypes.ExecTxResult{&result.TxResult},
+		})
+
+		testBlockResults(t, client, map[string]interface{}{"height": result.Height}, &coretypes.ResultBlockResults{
+			Height:     result.Height,
+			AppHash:    prevAppHash,
+			TxsResults: []*abcitypes.ExecTxResult{&result.TxResult},
+		})
 	})
 
 	t.Run("Tx", func(t *testing.T) {
