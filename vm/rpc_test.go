@@ -258,6 +258,16 @@ func testTx(t *testing.T, client *client.Client, vm *LandslideVM, params map[str
 	require.EqualValues(t, expected.TxResult, result.TxResult)
 }
 
+func testTxSearch(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}, expected *coretypes.ResultTxSearch) {
+	result := new(coretypes.ResultTxSearch)
+	_, err := client.Call(context.Background(), "tx_search", params, result)
+	require.NoError(t, err)
+	//require.EqualValues(t, expected.Hash, result.Hash)
+	//require.EqualValues(t, expected.Tx, result.Tx)
+	//require.EqualValues(t, expected.Height, result.Height)
+	//require.EqualValues(t, expected.TxResult, result.TxResult)
+}
+
 func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *txRuntimeEnv) {
 	ctx, cancelCtx := context.WithTimeout(context.Background(), 10*time.Second)
 	for {
@@ -650,25 +660,36 @@ func TestSignService(t *testing.T) {
 	})
 
 	t.Run("TxSearch", func(t *testing.T) {
-		//txReply2, err := service.BroadcastTxAsync(&rpctypes.Context{}, tx2)
-		//assert.NoError(t, err)
-		//assert.Equal(t, atypes.CodeTypeOK, txReply2.Code)
-		//
-		//blk2, err := vm.BuildBlock(context.Background())
-		//require.NoError(t, err)
-		//assert.NotNil(t, blk2)
-		//assert.NoError(t, blk2.Accept(context.Background()))
-		//
-		//time.Sleep(time.Second)
-		//
-		//reply, err := service.TxSearch(&rpctypes.Context{}, fmt.Sprintf("tx.hash='%s'", txReply2.Hash), false, nil, nil, "asc")
-		//assert.NoError(t, err)
-		//assert.True(t, len(reply.Txs) > 0)
-		//
-		//// TODO: need to fix
-		//// reply2, err := service.TxSearch(&rpctypes.Context{}, fmt.Sprintf("tx.height=%d", blk2.Height()), false, nil, nil, "desc")
-		//// assert.NoError(t, err)
-		//// assert.True(t, len(reply2.Txs) > 0)
+		initialHeight := vm.state.LastBlockHeight
+		prevAppHash := vm.state.AppHash
+		_, _, tx := MakeTxKV()
+		txReply := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+		testTxSearch(t, client, vm, map[string]interface{}{"query": fmt.Sprintf("tx.hash='%s'", txReply.Hash)}, &coretypes.ResultTxSearch{
+			Txs: []*coretypes.ResultTx{{
+				Hash:   txReply.Hash,
+				Height: txReply.Height,
+				//TODO: check index
+				Index:    0,
+				TxResult: txReply.TxResult,
+				Tx:       tx,
+				//TODO: check proof
+				Proof: types.TxProof{},
+			}},
+			TotalCount: 1,
+		})
+		testTxSearch(t, client, vm, map[string]interface{}{"query": fmt.Sprintf("tx.height=%d", txReply.Height)}, &coretypes.ResultTxSearch{
+			Txs: []*coretypes.ResultTx{{
+				Hash:   txReply.Hash,
+				Height: txReply.Height,
+				//TODO: check index
+				Index:    0,
+				TxResult: txReply.TxResult,
+				Tx:       tx,
+				//TODO: check proof
+				Proof: types.TxProof{},
+			}},
+			TotalCount: 1,
+		})
 	})
 
 	//TODO: Check logic of test
