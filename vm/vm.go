@@ -133,6 +133,8 @@ type (
 		wrappedBlocks  *vmstate.WrappedBlocksStorage
 
 		clientConn grpc.ClientConnInterface
+
+		buildBlockLock sync.Mutex
 	}
 )
 
@@ -352,6 +354,9 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		for {
 			<-vm.mempool.TxsAvailable()
 			vm.logger.Info("TxsAvailable mempool has txs available")
+
+			vm.buildBlockLock.Lock()
+
 			vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK
 			vm.logger.Info("vm.toEngine <- messengerpb.Message_MESSAGE_BUILD_BLOCK")
 		}
@@ -953,6 +958,9 @@ func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptReque
 	})
 
 	vm.logger.Info("BlockAccepted", "id", blk.Hash())
+
+	vm.buildBlockLock.Unlock()
+
 	return &emptypb.Empty{}, nil
 }
 
