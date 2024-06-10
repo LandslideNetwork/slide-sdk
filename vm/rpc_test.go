@@ -240,6 +240,14 @@ func testBlockResults(t *testing.T, client *client.Client, params map[string]int
 	require.Equal(t, expected.TxsResults, result.TxsResults)
 }
 
+func testBlockSearch(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultBlockSearch) {
+	result := new(coretypes.ResultBlockSearch)
+	_, err := client.Call(context.Background(), "block_search", params, result)
+	require.NoError(t, err)
+	require.Equal(t, expected.TotalCount, result.TotalCount)
+	require.Equal(t, expected.Blocks, result.Blocks)
+}
+
 func testTx(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}, expected *coretypes.ResultTx) {
 	result := new(coretypes.ResultTx)
 	_, err := client.Call(context.Background(), "tx", params, result)
@@ -760,9 +768,39 @@ func TestSignService(t *testing.T) {
 	})
 
 	t.Run("BlockSearch", func(t *testing.T) {
-		//reply, err := service.BlockSearch(&rpctypes.Context{}, "block.height=2", nil, nil, "desc")
-		//assert.NoError(t, err)
-		//assert.True(t, len(reply.Blocks) > 0)
+		initialHeight := vm.state.LastBlockHeight
+		prevAppHash := vm.state.AppHash
+		_, _, tx := MakeTxKV()
+		result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+		blk := testBlock(t, client, map[string]interface{}{"height": result.Height}, &coretypes.ResultBlock{
+			Block: &types.Block{
+				Header: types.Header{
+					ChainID: vm.state.ChainID,
+					Height:  result.Height,
+					AppHash: prevAppHash,
+				},
+			},
+		})
+		testBlockSearch(t, client, map[string]interface{}{"query": fmt.Sprintf("block.height=%d", initialHeight+1)}, &coretypes.ResultBlockSearch{
+			Blocks:     []*coretypes.ResultBlock{blk},
+			TotalCount: 1,
+		})
+		prevAppHash = vm.state.AppHash
+		_, _, tx = MakeTxKV()
+		result = testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+		blk2 := testBlock(t, client, map[string]interface{}{"height": result.Height}, &coretypes.ResultBlock{
+			Block: &types.Block{
+				Header: types.Header{
+					ChainID: vm.state.ChainID,
+					Height:  result.Height,
+					AppHash: prevAppHash,
+				},
+			},
+		})
+		testBlockSearch(t, client, map[string]interface{}{"query": fmt.Sprintf("block.height>%d", initialHeight)}, &coretypes.ResultBlockSearch{
+			Blocks:     []*coretypes.ResultBlock{blk, blk2},
+			TotalCount: 2,
+		})
 	})
 }
 
