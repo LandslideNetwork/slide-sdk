@@ -619,7 +619,7 @@ func TestSignService(t *testing.T) {
 
 		hash := blk.Block.Hash()
 		//TODO: fix block search by hash: calcBlockHash give hash of different length in comparison of store and get block
-		reply := testBlockByHash(t, client, map[string]interface{}{"hash": hash[:]}, &coretypes.ResultBlock{
+		reply := testBlockByHash(t, client, map[string]interface{}{"hash": hash.Bytes()}, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
 					ChainID: vm.state.ChainID,
