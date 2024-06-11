@@ -781,11 +781,6 @@ func (vm *LandslideVM) BatchedParseBlock(ctx context.Context, req *vmpb.BatchedP
 	return &vmpb.BatchedParseBlockResponse{Response: responses}, nil
 }
 
-func (vm *LandslideVM) VerifyHeightIndex(context.Context, *emptypb.Empty) (*vmpb.VerifyHeightIndexResponse, error) {
-	vm.logger.Info("VerifyHeightIndex")
-	return &vmpb.VerifyHeightIndexResponse{Err: vmpb.Error_ERROR_UNSPECIFIED}, nil
-}
-
 func (vm *LandslideVM) GetBlockIDAtHeight(_ context.Context, req *vmpb.GetBlockIDAtHeightRequest) (*vmpb.GetBlockIDAtHeightResponse, error) {
 	vm.logger.Info("GetBlockIDAtHeight")
 	blk := vm.blockStore.LoadBlock(int64(req.GetHeight()))

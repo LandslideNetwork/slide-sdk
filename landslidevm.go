@@ -45,7 +45,7 @@ const (
 	// rpcChainVMProtocol should be bumped anytime changes are made which
 	// require the plugin vm to upgrade to latest avalanchego release to be
 	// compatible.
-	rpcChainVMProtocol uint = 34
+	rpcChainVMProtocol uint = 35
 )
 
 var (
