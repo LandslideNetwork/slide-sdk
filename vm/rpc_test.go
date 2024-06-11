@@ -53,6 +53,10 @@ func buildAccept(t *testing.T, ctx context.Context, vm *LandslideVM) {
 	}
 }
 
+func noAction(t *testing.T, ctx context.Context, vm *LandslideVM) {
+
+}
+
 func setupRPC(t *testing.T, blockBuilder func(*testing.T, context.Context, *LandslideVM)) (*http.Server, *LandslideVM, *client.Client, context.CancelFunc) {
 	vm := newFreshKvApp(t)
 	vmLnd := vm.(*LandslideVM)
@@ -289,6 +293,15 @@ func testCommit(t *testing.T, client *client.Client, vm *LandslideVM, params map
 	require.Equal(t, expected.Commit.Round, result.Commit.Round)
 	require.Equal(t, expected.Commit.BlockID, result.Commit.BlockID)
 	require.EqualValues(t, expected.Commit.Signatures, result.Commit.Signatures)
+}
+
+func testUnconfirmedTxs(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultUnconfirmedTxs) {
+	result := new(coretypes.ResultUnconfirmedTxs)
+	_, err := client.Call(context.Background(), "unconfirmed_txs", params, result)
+	require.NoError(t, err)
+	require.Equal(t, expected.Total, result.Total)
+	require.Equal(t, expected.Count, result.Count)
+	require.EqualValues(t, expected.Txs, result.Txs)
 }
 
 func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *txRuntimeEnv) {
@@ -771,6 +784,70 @@ func TestSignService(t *testing.T) {
 			Blocks:     []*coretypes.ResultBlock{blk, blk2},
 			TotalCount: 2,
 		})
+	})
+}
+
+func TestMempoolService(t *testing.T) {
+	server, vm, client, cancel := setupRPC(t, noAction)
+	defer server.Close()
+	defer cancel()
+
+	//vm, service, _ := mustNewCounterTestVm(t)
+	//
+	//blk0, err := vm.BuildBlock(context.Background())
+	//assert.ErrorIs(t, err, errNoPendingTxs, "expecting error no txs")
+	//assert.Nil(t, blk0)
+	//
+	//tx := []byte{0x01}
+	//expectedTx := types.Tx(tx)
+	//txReply, err := service.BroadcastTxSync(&rpctypes.Context{}, []byte{0x01})
+	//assert.NoError(t, err)
+	//assert.Equal(t, atypes.CodeTypeOK, txReply.Code)
+
+	t.Run("UnconfirmedTxs", func(t *testing.T) {
+		limit := 100
+		_, _, tx := MakeTxKV()
+		txs := []types.Tx{tx}
+		testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
+		testUnconfirmedTxs(t, client, map[string]interface{}{"limit": limit}, &coretypes.ResultUnconfirmedTxs{
+			Count: 1,
+			Total: 1,
+			Txs:   txs,
+		})
+		for i := 0; i < 3; i++ {
+			_, _, tx = MakeTxKV()
+			txs = append(txs, tx)
+			testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
+		}
+		testUnconfirmedTxs(t, client, map[string]interface{}{"limit": limit}, &coretypes.ResultUnconfirmedTxs{
+			Count: 4,
+			Total: 4,
+			Txs:   txs,
+		})
+	})
+
+	t.Run("NumUnconfirmedTxs", func(t *testing.T) {
+		//reply, err := service.NumUnconfirmedTxs(&rpctypes.Context{})
+		//assert.NoError(t, err)
+		//assert.Equal(t, reply.Count, 1)
+		//assert.Equal(t, reply.Total, 1)
+	})
+
+	t.Run("CheckTx", func(t *testing.T) {
+		//reply1, err := service.CheckTx(&rpctypes.Context{}, tx)
+		//assert.NoError(t, err)
+		//t.Logf("%v\n", reply1)
+		//// ToDo: check reply1
+		//
+		//blk, err := vm.BuildBlock(context.Background())
+		//assert.NoError(t, err)
+		//assert.NotNil(t, blk)
+		//assert.NoError(t, blk.Accept(context.Background()))
+		//
+		//reply2, err := service.CheckTx(&rpctypes.Context{}, tx)
+		//assert.NoError(t, err)
+		//// ToDo: check reply2
+		//t.Logf("%v\n", reply2)
 	})
 }
 
