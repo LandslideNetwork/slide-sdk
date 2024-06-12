@@ -304,6 +304,21 @@ func testUnconfirmedTxs(t *testing.T, client *client.Client, params map[string]i
 	require.EqualValues(t, expected.Txs, result.Txs)
 }
 
+func testNumUnconfirmedTxs(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultUnconfirmedTxs) {
+	result := new(coretypes.ResultUnconfirmedTxs)
+	_, err := client.Call(context.Background(), "num_unconfirmed_txs", params, result)
+	require.NoError(t, err)
+	require.Equal(t, expected.Total, result.Total)
+	require.Equal(t, expected.Count, result.Count)
+}
+
+func testCheckTx(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultCheckTx) {
+	result := new(coretypes.ResultCheckTx)
+	_, err := client.Call(context.Background(), "check_tx", params, result)
+	require.NoError(t, err)
+	require.Equal(t, result.Code, expected.Code)
+}
+
 func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *txRuntimeEnv) {
 	ctx, cancelCtx := context.WithTimeout(context.Background(), 10*time.Second)
 	for {
@@ -805,13 +820,19 @@ func TestMempoolService(t *testing.T) {
 	//assert.Equal(t, atypes.CodeTypeOK, txReply.Code)
 
 	t.Run("UnconfirmedTxs", func(t *testing.T) {
-		limit := 100
+		limit := 10
+		var count int
 		_, _, tx := MakeTxKV()
 		txs := []types.Tx{tx}
 		testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
+		if vm.mempool.Size() < limit {
+			count = vm.mempool.Size()
+		} else {
+			count = limit
+		}
 		testUnconfirmedTxs(t, client, map[string]interface{}{"limit": limit}, &coretypes.ResultUnconfirmedTxs{
-			Count: 1,
-			Total: 1,
+			Count: count,
+			Total: vm.mempool.Size(),
 			Txs:   txs,
 		})
 		for i := 0; i < 3; i++ {
@@ -819,21 +840,50 @@ func TestMempoolService(t *testing.T) {
 			txs = append(txs, tx)
 			testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
 		}
+		if vm.mempool.Size() < limit {
+			count = vm.mempool.Size()
+		} else {
+			count = limit
+		}
 		testUnconfirmedTxs(t, client, map[string]interface{}{"limit": limit}, &coretypes.ResultUnconfirmedTxs{
-			Count: 4,
-			Total: 4,
+			Count: count,
+			Total: vm.mempool.Size(),
 			Txs:   txs,
 		})
 	})
 
 	t.Run("NumUnconfirmedTxs", func(t *testing.T) {
-		//reply, err := service.NumUnconfirmedTxs(&rpctypes.Context{})
-		//assert.NoError(t, err)
-		//assert.Equal(t, reply.Count, 1)
-		//assert.Equal(t, reply.Total, 1)
+		_, _, tx := MakeTxKV()
+		txs := []types.Tx{tx}
+		testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
+		testNumUnconfirmedTxs(t, client, map[string]interface{}{}, &coretypes.ResultUnconfirmedTxs{
+			Total: vm.mempool.Size(),
+		})
+		for i := 0; i < 3; i++ {
+			_, _, tx = MakeTxKV()
+			txs = append(txs, tx)
+			testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
+		}
+		testNumUnconfirmedTxs(t, client, map[string]interface{}{}, &coretypes.ResultUnconfirmedTxs{
+			Total: vm.mempool.Size(),
+		})
 	})
 
 	t.Run("CheckTx", func(t *testing.T) {
+		ch := make(chan *abcitypes.ResponseCheckTx, 1)
+		_, _, tx := MakeTxKV()
+		testCheckTx(t, client, vm, map[string]interface{}{"tx": tx})
+		abcitypes.CodeTypeOK
+		reqRes, err := vm.mempool.CheckTx(tx)
+		require.NoError(t, err)
+		ch <- reqRes.Response.GetCheckTx()
+
+		// wait for tx to arrive in mempoool.
+		select {
+		case <-ch:
+		case <-time.After(5 * time.Second):
+			t.Error("Timed out waiting for CheckTx callback")
+		}
 		//reply1, err := service.CheckTx(&rpctypes.Context{}, tx)
 		//assert.NoError(t, err)
 		//t.Logf("%v\n", reply1)
