@@ -870,34 +870,13 @@ func TestMempoolService(t *testing.T) {
 	})
 
 	t.Run("CheckTx", func(t *testing.T) {
-		ch := make(chan *abcitypes.ResponseCheckTx, 1)
 		_, _, tx := MakeTxKV()
-		testCheckTx(t, client, vm, map[string]interface{}{"tx": tx})
-		abcitypes.CodeTypeOK
-		reqRes, err := vm.mempool.CheckTx(tx)
-		require.NoError(t, err)
-		ch <- reqRes.Response.GetCheckTx()
-
-		// wait for tx to arrive in mempoool.
-		select {
-		case <-ch:
-		case <-time.After(5 * time.Second):
-			t.Error("Timed out waiting for CheckTx callback")
-		}
-		//reply1, err := service.CheckTx(&rpctypes.Context{}, tx)
-		//assert.NoError(t, err)
-		//t.Logf("%v\n", reply1)
-		//// ToDo: check reply1
-		//
-		//blk, err := vm.BuildBlock(context.Background())
-		//assert.NoError(t, err)
-		//assert.NotNil(t, blk)
-		//assert.NoError(t, blk.Accept(context.Background()))
-		//
-		//reply2, err := service.CheckTx(&rpctypes.Context{}, tx)
-		//assert.NoError(t, err)
-		//// ToDo: check reply2
-		//t.Logf("%v\n", reply2)
+		testCheckTx(t, client, map[string]interface{}{"tx": tx}, &coretypes.ResultCheckTx{
+			ResponseCheckTx: abcitypes.ResponseCheckTx{Code: kvstore.CodeTypeOK},
+		})
+		testCheckTx(t, client, map[string]interface{}{"tx": []byte("inappropriate tx")}, &coretypes.ResultCheckTx{
+			ResponseCheckTx: abcitypes.ResponseCheckTx{Code: kvstore.CodeTypeInvalidTxFormat},
+		})
 	})
 }
 
