@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"sort"
 	"time"
 
@@ -23,6 +24,17 @@ import (
 
 	"github.com/consideritdone/landslidevm/jsonrpc"
 )
+
+type ErrValidation struct {
+	Source  error
+	ValType string
+}
+
+func (e ErrValidation) Error() string {
+	return fmt.Sprintf("%s validation failed: %s", e.ValType, e.Source)
+}
+
+func (e ErrValidation) Unwrap() error { return e.Source }
 
 type RPC struct {
 	vm     *LandslideVM
@@ -776,21 +788,16 @@ func (rpc *RPC) BroadcastEvidence(
 	_ *rpctypes.Context,
 	ev types.Evidence,
 ) (*ctypes.ResultBroadcastEvidence, error) {
-	//if ev == nil {
-	//	return nil, ErrNoEvidence
-	//}
-	//
-	//if err := ev.ValidateBasic(); err != nil {
-	//	return nil, ErrValidation{
-	//		Source:  err,
-	//		ValType: reflect.TypeOf(ev).String(),
-	//	}
-	//}
-	//
-	//if err := rpc.vm..EvidencePool.AddEvidence(ev); err != nil {
-	//	return nil, ErrAddEvidence{err}
-	//}
-	//
-	//return &ctypes.ResultBroadcastEvidence{Hash: ev.Hash()}, nil
+	if ev == nil {
+		return nil, ErrNoEvidence
+	}
+
+	if err := ev.ValidateBasic(); err != nil {
+		return nil, ErrValidation{
+			Source:  err,
+			ValType: reflect.TypeOf(ev).String(),
+		}
+	}
+
 	return &ctypes.ResultBroadcastEvidence{Hash: ev.Hash()}, nil
 }
