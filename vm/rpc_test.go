@@ -17,14 +17,12 @@ func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
 	vm := newFreshKvApp(t)
 	vmLnd := vm.(*LandslideVM)
 	mux := http.NewServeMux()
-	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vmLnd).Routes(), vmLnd.logger)
-
 	address := "127.0.0.1:44444"
+	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vmLnd, address).Routes(), vmLnd.logger)
+
 	server := &http.Server{Addr: address, Handler: mux}
 	go func() {
 		server.ListenAndServe()
-		//panic(err)
-		//require.NoError(t, err)
 	}()
 
 	// wait for servers to start

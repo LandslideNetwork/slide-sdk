@@ -470,15 +470,15 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 	server := grpcutils.NewServer()
 	vm.serverCloser.Add(server)
 
-	mux := http2.NewServeMux()
-	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vm).Routes(), vm.logger)
-
-	httppb.RegisterHTTPServer(server, http.NewServer(mux))
-
 	listener, err := grpcutils.NewListener()
 	if err != nil {
 		return nil, err
 	}
+
+	mux := http2.NewServeMux()
+	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vm, listener.Addr().String()).Routes(), vm.logger)
+
+	httppb.RegisterHTTPServer(server, http.NewServer(mux))
 
 	go grpcutils.Serve(listener, server)
 

@@ -25,11 +25,12 @@ import (
 )
 
 type RPC struct {
-	vm *LandslideVM
+	vm     *LandslideVM
+	remote string
 }
 
-func NewRPC(vm *LandslideVM) *RPC {
-	return &RPC{vm}
+func NewRPC(vm *LandslideVM, remote string) *RPC {
+	return &RPC{vm: vm, remote: remote}
 }
 
 func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
@@ -73,7 +74,7 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 		"abci_info":  jsonrpc.NewRPCFunc(rpc.ABCIInfo, "", jsonrpc.Cacheable()),
 
 		// evidence API
-		// "broadcast_evidence": jsonrpc.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
+		"broadcast_evidence": jsonrpc.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
 	}
 }
 
@@ -762,4 +763,34 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 	}
 
 	return result, nil
+}
+
+// Remote returns the remote network address in a string form.
+func (rpc *RPC) Remote() string {
+	return rpc.remote
+}
+
+// BroadcastEvidence broadcasts evidence of the misbehavior.
+// More: https://docs.cometbft.com/main/rpc/#/Evidence/broadcast_evidence
+func (rpc *RPC) BroadcastEvidence(
+	_ *rpctypes.Context,
+	ev types.Evidence,
+) (*ctypes.ResultBroadcastEvidence, error) {
+	//if ev == nil {
+	//	return nil, ErrNoEvidence
+	//}
+	//
+	//if err := ev.ValidateBasic(); err != nil {
+	//	return nil, ErrValidation{
+	//		Source:  err,
+	//		ValType: reflect.TypeOf(ev).String(),
+	//	}
+	//}
+	//
+	//if err := rpc.vm..EvidencePool.AddEvidence(ev); err != nil {
+	//	return nil, ErrAddEvidence{err}
+	//}
+	//
+	//return &ctypes.ResultBroadcastEvidence{Hash: ev.Hash()}, nil
+	return &ctypes.ResultBroadcastEvidence{Hash: ev.Hash()}, nil
 }
