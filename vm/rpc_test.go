@@ -42,7 +42,6 @@ func buildAccept(t *testing.T, ctx context.Context, vm *LandslideVM) {
 		default:
 			if vm.mempool.Size() > 0 {
 				block, err := vm.BuildBlock(ctx, &vmpb.BuildBlockRequest{})
-				t.Logf("new block: %#v", block)
 				require.NoError(t, err)
 				_, err = vm.BlockAccept(ctx, &vmpb.BlockAcceptRequest{
 					Id: block.Id,
@@ -71,7 +70,7 @@ func setupRPC(t *testing.T, blockBuilder func(*testing.T, context.Context, *Land
 	go blockBuilder(t, ctx, vmLnd)
 	go func() {
 		err := server.ListenAndServe()
-		t.Log(err)
+		t.Error(err)
 	}()
 
 	// wait for servers to start
@@ -105,7 +104,6 @@ func testABCIQuery(t *testing.T, client *client.Client, params map[string]interf
 	_, err := client.Call(context.Background(), "abci_query", params, result)
 	require.NoError(t, err)
 	require.True(t, result.Response.IsOK())
-	t.Logf("%v %v", expected, result.Response.Value)
 	require.EqualValues(t, expected, result.Response.Value)
 }
 
@@ -361,7 +359,6 @@ func TestBlockProduction(t *testing.T) {
 	defer cancel()
 
 	initialHeight := vm.state.LastBlockHeight
-	t.Log("Initial Height: ", initialHeight)
 
 	for i := 1; i < 10; i++ {
 		testStatus(t, client, &coretypes.ResultStatus{
@@ -376,7 +373,6 @@ func TestBlockProduction(t *testing.T) {
 		_, _, tx := MakeTxKV()
 		previousAppHash := vm.state.AppHash
 		bres := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-		t.Log("Broadcast result height", bres.Height)
 
 		testBlock(t, client, map[string]interface{}{"height": bres.Height}, &coretypes.ResultBlock{
 			Block: &types.Block{
