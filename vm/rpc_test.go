@@ -26,8 +26,6 @@ import (
 	"github.com/consideritdone/landslidevm/jsonrpc"
 )
 
-const blockProductionAvgTime = 6 * time.Second
-
 type txRuntimeEnv struct {
 	key, value, hash []byte
 	initHeight       int64
@@ -70,7 +68,7 @@ func setupRPC(t *testing.T, blockBuilder func(*testing.T, context.Context, *Land
 	go blockBuilder(t, ctx, vmLnd)
 	go func() {
 		err := server.ListenAndServe()
-		t.Error(err)
+		t.Log(err)
 	}()
 
 	// wait for servers to start
@@ -111,6 +109,7 @@ func testBroadcastTxCommit(t *testing.T, client *client.Client, vm *LandslideVM,
 	initMempoolSize := vm.mempool.Size()
 	result := new(coretypes.ResultBroadcastTxCommit)
 	_, err := client.Call(context.Background(), "broadcast_tx_commit", params, result)
+	waitForStateUpdate(result.Height, vm)
 	require.NoError(t, err)
 	require.True(t, result.CheckTx.IsOK())
 	require.True(t, result.TxResult.IsOK())
@@ -326,6 +325,15 @@ func testCheckTx(t *testing.T, client *client.Client, params map[string]interfac
 	_, err := client.Call(context.Background(), "check_tx", params, result)
 	require.NoError(t, err)
 	require.Equal(t, result.Code, expected.Code)
+}
+
+func waitForStateUpdate(expectedHeight int64, vm *LandslideVM) {
+	for {
+		if vm.state.LastBlockHeight == expectedHeight {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 }
 
 func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *txRuntimeEnv) {
@@ -591,12 +599,12 @@ func TestHistoryService(t *testing.T) {
 		})
 		_, _, tx := MakeTxKV()
 		prevStateAppHash := vm.state.AppHash
-		testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-		blk := testBlock(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight}, &coretypes.ResultBlock{
+		bres := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+		blk := testBlock(t, client, map[string]interface{}{"height": bres.Height}, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
 					ChainID: vm.state.ChainID,
-					Height:  vm.state.LastBlockHeight,
+					Height:  bres.Height,
 					AppHash: prevStateAppHash,
 				},
 			},
@@ -609,7 +617,6 @@ func TestHistoryService(t *testing.T) {
 			Header:    blk.Block.Header,
 			NumTxs:    len(blk.Block.Data.Txs),
 		})
-		time.Sleep(blockProductionAvgTime)
 		//TODO: fix test blockchain info, unexpected height, uncomment this block of code
 		testBlockchainInfo(t, client, &coretypes.ResultBlockchainInfo{
 			LastHeight: initialHeight + 1,
@@ -646,7 +653,7 @@ func TestSignService(t *testing.T) {
 		prevAppHash := vm.state.AppHash
 		_, _, tx := MakeTxKV()
 		result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-		blk := testBlock(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight}, &coretypes.ResultBlock{
+		blk := testBlock(t, client, map[string]interface{}{"height": result.Height}, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
 					ChainID: vm.state.ChainID,

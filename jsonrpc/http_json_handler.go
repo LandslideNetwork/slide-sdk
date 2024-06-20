@@ -123,12 +123,11 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, logger log.Logger) http.Han
 				cache = false
 			}
 
-			logger.Info("calling func", "method", request.Method, "args", args)
 			returns := rpcFunc.f.Call(args)
 			result, err := unreflectResult(returns)
-			logger.Info("result of calling func for %s: err: %s", request.Method, err)
 
 			if err != nil {
+				logger.Debug("unexpected result", "method", request.Method, "err", err)
 				responses = append(responses, types.RPCInternalError(request.ID, err))
 				continue
 			}
