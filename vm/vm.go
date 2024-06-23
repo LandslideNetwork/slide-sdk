@@ -89,6 +89,7 @@ type (
 		GenesisBytes []byte
 		UpgradeBytes []byte
 		ConfigBytes  []byte
+		ChainDataDir string
 	}
 
 	AppCreator func(*AppCreatorOpts) (Application, error)
@@ -264,6 +265,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		GenesisBytes: req.GenesisBytes,
 		UpgradeBytes: req.UpgradeBytes,
 		ConfigBytes:  req.ConfigBytes,
+		ChainDataDir: req.ChainDataDir,
 	}
 	app, err := vm.appCreator(vm.appOpts)
 	if err != nil {
