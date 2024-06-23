@@ -329,7 +329,7 @@ func testCheckTx(t *testing.T, client *client.Client, params map[string]interfac
 
 func waitForStateUpdate(expectedHeight int64, vm *LandslideVM) {
 	for {
-		if vm.state.LastBlockHeight == expectedHeight {
+		if vm.safeState.LastBlockHeight() == expectedHeight {
 			return
 		}
 		time.Sleep(100 * time.Millisecond)
@@ -344,7 +344,7 @@ func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *tx
 			cancelCtx()
 			t.Fatal("Broadcast tx timeout exceeded")
 		default:
-			if vm.state.LastBlockHeight == env.initHeight+1 {
+			if vm.safeState.LastBlockHeight() == env.initHeight+1 {
 				cancelCtx()
 				testABCIQuery(t, client, map[string]interface{}{"path": "/key", "data": fmt.Sprintf("%x", env.key)}, env.value)
 				//testABCIQuery(t, client, map[string]interface{}{"path": "/hash", "data": fmt.Sprintf("%x", env.hash)}, env.value)
@@ -366,7 +366,7 @@ func TestBlockProduction(t *testing.T) {
 	defer vm.mempool.Flush()
 	defer cancel()
 
-	initialHeight := vm.state.LastBlockHeight
+	initialHeight := vm.safeState.LastBlockHeight()
 
 	for i := 1; i < 10; i++ {
 		testStatus(t, client, &coretypes.ResultStatus{
@@ -379,13 +379,13 @@ func TestBlockProduction(t *testing.T) {
 
 		// write something
 		_, _, tx := MakeTxKV()
-		previousAppHash := vm.state.AppHash
+		previousAppHash := vm.safeState.AppHash()
 		bres := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
 
 		testBlock(t, client, map[string]interface{}{"height": bres.Height}, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
-					ChainID: vm.state.ChainID,
+					ChainID: vm.safeState.ChainID(),
 					Height:  bres.Height,
 					AppHash: previousAppHash,
 				},
@@ -402,7 +402,7 @@ func TestABCIService(t *testing.T) {
 
 	t.Run("ABCIInfo", func(t *testing.T) {
 		for i := 0; i < 3; i++ {
-			initialHeight := vm.state.LastBlockHeight
+			initialHeight := vm.safeState.LastBlockHeight()
 			testABCIInfo(t, client, &coretypes.ResultABCIInfo{
 				Response: abcitypes.ResponseInfo{
 					Version:         version.ABCIVersion,
@@ -443,7 +443,7 @@ func TestABCIService(t *testing.T) {
 	t.Run("BroadcastTxAsync", func(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			k, v, tx := MakeTxKV()
-			initHeight := vm.state.LastBlockHeight
+			initHeight := vm.safeState.LastBlockHeight()
 			result := testBroadcastTxAsync(t, client, vm, map[string]interface{}{"tx": tx})
 			checkTxResult(t, client, vm, &txRuntimeEnv{key: k, value: v, hash: result.Hash, initHeight: initHeight})
 		}
@@ -452,7 +452,7 @@ func TestABCIService(t *testing.T) {
 	t.Run("BroadcastTxSync", func(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			k, v, tx := MakeTxKV()
-			initHeight := vm.state.LastBlockHeight
+			initHeight := vm.safeState.LastBlockHeight()
 			result := testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
 			checkTxResult(t, client, vm, &txRuntimeEnv{key: k, value: v, hash: result.Hash, initHeight: initHeight})
 		}
@@ -475,7 +475,7 @@ func TestStatusService(t *testing.T) {
 	defer cancel()
 
 	t.Run("Status", func(t *testing.T) {
-		initialHeight := vm.state.LastBlockHeight
+		initialHeight := vm.safeState.LastBlockHeight()
 		for i := 0; i < 3; i++ {
 			_, _, tx := MakeTxKV()
 			result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
@@ -520,12 +520,12 @@ func TestNetworkService(t *testing.T) {
 	})
 
 	t.Run("ConsensusParams", func(t *testing.T) {
-		initialHeight := vm.state.LastBlockHeight
+		initialHeight := vm.safeState.LastBlockHeight()
 		for i := 0; i < 3; i++ {
 			_, _, tx := MakeTxKV()
 			result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
 			require.EqualValues(t, result.Height, initialHeight+int64(1)+int64(i))
-			testConsensusParams(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight}, &coretypes.ResultConsensusParams{
+			testConsensusParams(t, client, map[string]interface{}{"height": vm.safeState.LastBlockHeight()}, &coretypes.ResultConsensusParams{
 				BlockHeight: result.Height,
 				//TODO: compare consensus params
 				//ConsensusParams: types.ConsensusParams{},
@@ -573,13 +573,13 @@ func TestHistoryService(t *testing.T) {
 
 	t.Run("BlockchainInfo", func(t *testing.T) {
 		blkMetas := make([]*types.BlockMeta, 0)
-		for i := int64(1); i <= vm.state.LastBlockHeight; i++ {
+		for i := int64(1); i <= vm.safeState.LastBlockHeight(); i++ {
 			blk := testBlock(t, client, map[string]interface{}{"height": i}, &coretypes.ResultBlock{
 				Block: &types.Block{
 					Header: types.Header{
-						ChainID: vm.state.ChainID,
+						ChainID: vm.safeState.ChainID(),
 						Height:  i,
-						AppHash: vm.state.AppHash,
+						AppHash: vm.safeState.AppHash(),
 					},
 				},
 			})
@@ -592,18 +592,18 @@ func TestHistoryService(t *testing.T) {
 				NumTxs:    len(blk.Block.Data.Txs),
 			})
 		}
-		initialHeight := vm.state.LastBlockHeight
+		initialHeight := vm.safeState.LastBlockHeight()
 		testBlockchainInfo(t, client, &coretypes.ResultBlockchainInfo{
 			LastHeight: initialHeight,
 			BlockMetas: blkMetas,
 		})
 		_, _, tx := MakeTxKV()
-		prevStateAppHash := vm.state.AppHash
+		prevStateAppHash := vm.safeState.AppHash()
 		bres := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
 		blk := testBlock(t, client, map[string]interface{}{"height": bres.Height}, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
-					ChainID: vm.state.ChainID,
+					ChainID: vm.safeState.ChainID(),
 					Height:  bres.Height,
 					AppHash: prevStateAppHash,
 				},
@@ -631,16 +631,16 @@ func TestSignService(t *testing.T) {
 	defer cancel()
 
 	t.Run("Block", func(t *testing.T) {
-		initialHeight := vm.state.LastBlockHeight
+		initialHeight := vm.safeState.LastBlockHeight()
 		for i := 0; i < 3; i++ {
 			_, _, tx := MakeTxKV()
-			prevAppHash := vm.state.AppHash
+			prevAppHash := vm.safeState.AppHash()
 			result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
 			require.EqualValues(t, result.Height, initialHeight+int64(1)+int64(i))
-			testBlock(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight}, &coretypes.ResultBlock{
+			testBlock(t, client, map[string]interface{}{"height": vm.safeState.LastBlockHeight()}, &coretypes.ResultBlock{
 				Block: &types.Block{
 					Header: types.Header{
-						ChainID: vm.state.ChainID,
+						ChainID: vm.safeState.ChainID(),
 						Height:  result.Height,
 						AppHash: prevAppHash,
 					},
@@ -650,13 +650,13 @@ func TestSignService(t *testing.T) {
 	})
 
 	t.Run("BlockByHash", func(t *testing.T) {
-		prevAppHash := vm.state.AppHash
+		prevAppHash := vm.safeState.AppHash()
 		_, _, tx := MakeTxKV()
 		result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
 		blk := testBlock(t, client, map[string]interface{}{"height": result.Height}, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
-					ChainID: vm.state.ChainID,
+					ChainID: vm.safeState.ChainID(),
 					Height:  result.Height,
 					AppHash: prevAppHash,
 				},
@@ -668,7 +668,7 @@ func TestSignService(t *testing.T) {
 		reply := testBlockByHash(t, client, map[string]interface{}{"hash": hash.Bytes()}, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
-					ChainID: vm.state.ChainID,
+					ChainID: vm.safeState.ChainID(),
 					Height:  result.Height,
 					AppHash: prevAppHash,
 				},
@@ -679,7 +679,7 @@ func TestSignService(t *testing.T) {
 
 	//TODO: implement block_results rpc method, than uncomment this block of code
 	t.Run("BlockResults", func(t *testing.T) {
-		prevAppHash := vm.state.AppHash
+		prevAppHash := vm.safeState.AppHash()
 		_, _, tx := MakeTxKV()
 		result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
 		testBlockResults(t, client, map[string]interface{}{}, &coretypes.ResultBlockResults{
@@ -742,13 +742,13 @@ func TestSignService(t *testing.T) {
 	})
 
 	t.Run("Commit", func(t *testing.T) {
-		prevAppHash := vm.state.AppHash
+		prevAppHash := vm.safeState.AppHash()
 		_, _, tx := MakeTxKV()
 		txReply := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-		blk := testBlock(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight}, &coretypes.ResultBlock{
+		blk := testBlock(t, client, map[string]interface{}{"height": vm.safeState.LastBlockHeight()}, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
-					ChainID: vm.state.ChainID,
+					ChainID: vm.safeState.ChainID(),
 					Height:  txReply.Height,
 					AppHash: prevAppHash,
 				},
@@ -759,7 +759,7 @@ func TestSignService(t *testing.T) {
 			SignedHeader: types.SignedHeader{
 				Header: &types.Header{
 					//Version:            bftversion.Consensus{},
-					ChainID: vm.state.ChainID,
+					ChainID: vm.safeState.ChainID(),
 					Height:  txReply.Height,
 					//Time:               time.Time{},
 					LastBlockID:        blk.BlockID,
@@ -785,14 +785,14 @@ func TestSignService(t *testing.T) {
 	})
 
 	t.Run("BlockSearch", func(t *testing.T) {
-		initialHeight := vm.state.LastBlockHeight
-		prevAppHash := vm.state.AppHash
+		initialHeight := vm.safeState.LastBlockHeight()
+		prevAppHash := vm.safeState.AppHash()
 		_, _, tx := MakeTxKV()
 		result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
 		blk := testBlock(t, client, map[string]interface{}{"height": result.Height}, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
-					ChainID: vm.state.ChainID,
+					ChainID: vm.safeState.ChainID(),
 					Height:  result.Height,
 					AppHash: prevAppHash,
 				},
@@ -802,13 +802,13 @@ func TestSignService(t *testing.T) {
 			Blocks:     []*coretypes.ResultBlock{blk},
 			TotalCount: 1,
 		})
-		prevAppHash = vm.state.AppHash
+		prevAppHash = vm.safeState.AppHash()
 		_, _, tx = MakeTxKV()
 		result = testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
 		blk2 := testBlock(t, client, map[string]interface{}{"height": result.Height}, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
-					ChainID: vm.state.ChainID,
+					ChainID: vm.safeState.ChainID(),
 					Height:  result.Height,
 					AppHash: prevAppHash,
 				},
