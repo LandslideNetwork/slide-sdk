@@ -7,11 +7,18 @@ import (
 	"github.com/cometbft/cometbft/abci/example/kvstore"
 
 	"github.com/consideritdone/landslidevm"
+	"github.com/consideritdone/landslidevm/vm"
 )
 
 func main() {
-	appCreator := landslidevm.NewLocalAppCreator(kvstore.NewInMemoryApplication())
+	appCreator := KvStoreCreator()
 	if err := landslidevm.Serve(context.Background(), appCreator); err != nil {
 		panic(fmt.Sprintf("can't serve application: %s", err))
+	}
+}
+
+func KvStoreCreator() vm.AppCreator {
+	return func(config *vm.AppCreatorOpts) (vm.Application, error) {
+		return kvstore.NewPersistentApplication(config.ChainDataDir), nil
 	}
 }
