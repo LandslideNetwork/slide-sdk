@@ -113,7 +113,7 @@ type (
 
 		blockStore *store.BlockStore
 		stateStore state.Store
-		safeState  safestate.SafeState
+		state      safestate.SafeState
 		genesis    *types.GenesisDoc
 		genChunks  []string
 
@@ -277,7 +277,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			return types.GenesisDocFromJSON(req.GenesisBytes)
 		},
 	)
-	vm.safeState = safestate.New(cmtState)
+	vm.state = safestate.New(cmtState)
 	vm.genesis = genesis
 	if err != nil {
 		return nil, err
@@ -316,7 +316,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 	handshaker := consensus.NewHandshaker(
 		vm.stateStore,
-		vm.safeState.StateCopy(),
+		vm.state.StateCopy(),
 		vm.blockStore,
 		vm.genesis,
 	)
@@ -330,15 +330,15 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	vm.safeState = safestate.New(cmtState)
+	vm.state.UpdateState(cmtState)
 
 	vm.mempool = mempool.NewCListMempool(
 		config.DefaultMempoolConfig(),
 		vm.app.Mempool(),
-		vm.safeState.LastBlockHeight(),
+		vm.state.LastBlockHeight(),
 		mempool.WithMetrics(mempool.NopMetrics()),
-		mempool.WithPreCheck(state.TxPreCheck(vm.safeState.StateCopy())),
-		mempool.WithPostCheck(state.TxPostCheck(vm.safeState.StateCopy())),
+		mempool.WithPreCheck(state.TxPreCheck(vm.state.StateCopy())),
+		mempool.WithPostCheck(state.TxPostCheck(vm.state.StateCopy())),
 	)
 	vm.mempool.SetLogger(vm.logger.With("module", "mempool"))
 	vm.mempool.EnableTxsAvailable()
@@ -351,15 +351,15 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}()
 
 	var blk *types.Block
-	if vm.safeState.LastBlockHeight() > 0 {
-		vm.logger.Debug("loading last block", "height", vm.safeState.LastBlockHeight())
-		blk = vm.blockStore.LoadBlock(vm.safeState.LastBlockHeight())
+	if vm.state.LastBlockHeight() > 0 {
+		vm.logger.Debug("loading last block", "height", vm.state.LastBlockHeight())
+		blk = vm.blockStore.LoadBlock(vm.state.LastBlockHeight())
 	} else {
 		vm.logger.Debug("creating genesis block")
 		executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
 		executor.SetEventBus(vm.eventBus)
 
-		blk, err = executor.CreateProposalBlock(context.Background(), vm.safeState.LastBlockHeight()+1, vm.safeState.StateCopy(), &types.ExtendedCommit{}, proposerAddress)
+		blk, err = executor.CreateProposalBlock(context.Background(), vm.state.LastBlockHeight()+1, vm.state.StateCopy(), &types.ExtendedCommit{}, proposerAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -374,18 +374,18 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			PartSetHeader: bps.Header(),
 		}
 
-		newstate, err := executor.ApplyBlock(vm.safeState.StateCopy(), blockID, blk)
+		newstate, err := executor.ApplyBlock(vm.state.StateCopy(), blockID, blk)
 		if err != nil {
 			return nil, err
 		}
 
-		vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, vm.safeState.Validators(), blockID))
+		vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, vm.state.Validators(), blockID))
 		err = vm.stateStore.Save(newstate)
 		if err != nil {
 			vm.logger.Error("failed to save state", "err", err)
 			return nil, err
 		}
-		vm.safeState = safestate.New(newstate)
+		vm.state.UpdateState(newstate)
 	}
 
 	blockBytes, err := vmstate.EncodeBlockWithStatus(blk, vmpb.Status_STATUS_ACCEPTED)
@@ -418,19 +418,19 @@ func (vm *LandslideVM) SetState(_ context.Context, req *vmpb.SetStateRequest) (*
 		vm.logger.Error("SetState", "state", req.State)
 		return nil, ErrUnknownState
 	}
-	blk := vm.blockStore.LoadBlock(vm.safeState.LastBlockHeight())
+	blk := vm.blockStore.LoadBlock(vm.state.LastBlockHeight())
 	if blk == nil {
 		return nil, ErrNotFound
 	}
 
-	blkID := vm.safeState.LastBlockID()
+	blkID := vm.state.LastBlockID()
 	vm.logger.Debug("SetState", "LastAcceptedId", blkID.Hash, "block", blk.Hash())
 	parentHash := block.BlockParentHash(blk)
 	res := vmpb.SetStateResponse{
 		LastAcceptedId:       blk.Hash(),
 		LastAcceptedParentId: parentHash[:],
 		Height:               uint64(blk.Height),
-		Bytes:                vm.safeState.StateBytes(),
+		Bytes:                vm.state.StateBytes(),
 		Timestamp:            timestamppb.New(blk.Time),
 	}
 	vm.vmstate.Set(req.State)
@@ -515,7 +515,7 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 	executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
 	executor.SetEventBus(vm.eventBus)
 
-	validators := vm.safeState.Validators()
+	validators := vm.state.Validators()
 	signatures := make([]types.ExtendedCommitSig, len(validators.Validators))
 	for i := range signatures {
 		signatures[i] = types.ExtendedCommitSig{
@@ -529,13 +529,13 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 	}
 
 	lastComm := types.ExtendedCommit{
-		Height:             vm.safeState.LastBlockHeight(),
+		Height:             vm.state.LastBlockHeight(),
 		Round:              0,
-		BlockID:            vm.safeState.LastBlockID(),
+		BlockID:            vm.state.LastBlockID(),
 		ExtendedSignatures: signatures,
 	}
 
-	blk, err := executor.CreateProposalBlock(context.Background(), vm.safeState.LastBlockHeight()+1, vm.safeState.StateCopy(), &lastComm, proposerAddress)
+	blk, err := executor.CreateProposalBlock(context.Background(), vm.state.LastBlockHeight()+1, vm.state.StateCopy(), &lastComm, proposerAddress)
 	if err != nil {
 		vm.logger.Error("failed to create proposal block", "err", err)
 		return nil, err
@@ -836,7 +836,7 @@ func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyReque
 	}
 
 	vm.logger.Info("ValidateBlock")
-	err = vmstate.ValidateBlock(vm.safeState.StateCopy(), blk)
+	err = vmstate.ValidateBlock(vm.state.StateCopy(), blk)
 	if err != nil {
 		vm.logger.Error("failed to validate block", "err", err)
 		return nil, err
@@ -885,13 +885,13 @@ func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptReque
 		PartSetHeader: bps.Header(),
 	}
 
-	prevState := vm.safeState.StateCopy()
+	prevState := vm.state.StateCopy()
 	newstate, err := executor.ApplyBlock(prevState, blockID, blk)
 	if err != nil {
 		vm.logger.Error("failed to apply block", "err", err)
 		return nil, err
 	}
-	vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, vm.safeState.Validators(), blockID))
+	vm.blockStore.SaveBlock(blk, bps, commit.MakeCommit(blk.Height, blk.Time, vm.state.Validators(), blockID))
 
 	err = vm.stateStore.Save(newstate)
 	if err != nil {
@@ -899,7 +899,7 @@ func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptReque
 		return nil, err
 	}
 
-	vm.safeState = safestate.New(newstate)
+	vm.state.UpdateState(newstate)
 
 	delete(vm.wrappedBlocks.VerifiedBlocks, blkID)
 	vm.wrappedBlocks.MissingBlocks.Evict(blkID)

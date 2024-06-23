@@ -30,6 +30,12 @@ func (ss *SafeState) StateBytes() []byte {
 	return ss.State.Bytes()
 }
 
+func (ss *SafeState) UpdateState(cmtState state.State) {
+	ss.mtx.Lock()
+	defer ss.mtx.Unlock()
+	ss.State = cmtState
+}
+
 func (ss *SafeState) LastBlockHeight() int64 {
 	ss.mtx.RLock()
 	defer ss.mtx.RUnlock()
