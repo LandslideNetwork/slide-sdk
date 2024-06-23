@@ -144,7 +144,7 @@ func NewViaDB(database dbm.DB, creator AppCreator, options ...func(*LandslideVM)
 	vm := &LandslideVM{
 		appCreator:     creator,
 		database:       database,
-		allowShutdown:  vmtypes.NewAtomic(true),
+		allowShutdown:  vmtypes.NewAtomic(false),
 		vmenabled:      vmtypes.NewAtomic(false),
 		vmstate:        vmtypes.NewAtomic(vmpb.State_STATE_UNSPECIFIED),
 		vmconnected:    vmtypes.NewAtomic(false),
@@ -439,7 +439,7 @@ func (vm *LandslideVM) CanShutdown() bool {
 
 // Shutdown is called when the node is shutting down.
 func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
-	vm.logger.Info("Shutdown")
+	fmt.Println("Shutdown")
 	vm.allowShutdown.Set(true)
 	if vm.closed != nil {
 		close(vm.closed)
