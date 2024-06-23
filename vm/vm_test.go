@@ -9,6 +9,7 @@ import (
 	"github.com/cometbft/cometbft/abci/example/kvstore"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
 )
@@ -119,4 +120,31 @@ func TestAcceptBlock(t *testing.T) {
 		Id: buildRes.GetId(),
 	})
 	require.NoError(t, err)
+}
+
+// TestShutdownWithoutInit tests VM Shutdown function. This function called without Initialize in Avalanchego Factory
+// https://github.com/ava-labs/avalanchego/blob/0c4efd743e1d737f4e8970d0e0ebf229ea44406c/vms/manager.go#L129
+func TestShutdownWithoutInit(t *testing.T) {
+	vmdb := dbm.NewMemDB()
+	appdb := dbm.NewMemDB()
+	mockConn := &mockClientConn{}
+	vm := NewViaDB(vmdb, func(*AppCreatorOpts) (Application, error) {
+		return kvstore.NewApplication(appdb), nil
+	}, WithClientConn(mockConn))
+	require.NotNil(t, vm)
+	_, err := vm.Shutdown(context.Background(), &emptypb.Empty{})
+	require.NoError(t, err)
+}
+
+// allowShutdown should be false by default https://github.com/ava-labs/avalanchego/blob/c8a5d0b11bcfe8b8a74983a9b0ef04fc68e78cf3/vms/rpcchainvm/vm.go#L40
+func TestAllowShutdown(t *testing.T) {
+	vm := newFreshKvApp(t)
+	vmLnd := vm.(*LandslideVM)
+
+	require.False(t, vmLnd.CanShutdown())
+
+	_, err := vm.Shutdown(context.Background(), &emptypb.Empty{})
+	require.NoError(t, err)
+
+	require.True(t, vmLnd.CanShutdown())
 }
