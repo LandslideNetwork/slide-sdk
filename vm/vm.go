@@ -19,6 +19,7 @@ import (
 	"github.com/cometbft/cometbft/consensus"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/libs/log"
+	cmtpubsub "github.com/cometbft/cometbft/libs/pubsub"
 	"github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/proxy"
@@ -37,6 +38,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	rpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	"github.com/consideritdone/landslidevm/database"
 	"github.com/consideritdone/landslidevm/grpcutils"
 	"github.com/consideritdone/landslidevm/http"
@@ -476,7 +478,21 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 	vm.serverCloser.Add(server)
 
 	mux := http2.NewServeMux()
-	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vm).Routes(), vm.logger)
+	cmtRPC := NewRPC(vm)
+	wm := rpcserver.NewWebsocketManager(cmtRPC.CMTRoutes(),
+		rpcserver.OnDisconnect(func(remoteAddr string) {
+			err := vm.eventBus.UnsubscribeAll(context.Background(), remoteAddr)
+			if err != nil && err != cmtpubsub.ErrSubscriptionNotFound {
+				vm.logger.Error("Failed to unsubscribe addr from events", "addr", remoteAddr, "err", err)
+			}
+		}),
+		rpcserver.ReadLimit(config.DefaultRPCConfig().MaxBodyBytes),
+		rpcserver.WriteChanCapacity(config.DefaultRPCConfig().WebSocketWriteBufferSize),
+	)
+	wm.SetLogger(vm.logger)
+	mux.HandleFunc("/websocket", wm.WebsocketHandler)
+	mux.HandleFunc("/v1/websocket", wm.WebsocketHandler)
+	jsonrpc.RegisterRPCFuncs(mux, cmtRPC.Routes(), vm.logger)
 
 	httppb.RegisterHTTPServer(server, http.NewServer(mux))
 
