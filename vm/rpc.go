@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cometbft/cometbft/config"
+	cmtpubsub "github.com/cometbft/cometbft/libs/pubsub"
+	cmtquery "github.com/cometbft/cometbft/libs/pubsub/query"
+	"github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	"sort"
 	"time"
 
@@ -24,6 +28,12 @@ import (
 	"github.com/consideritdone/landslidevm/jsonrpc"
 )
 
+const (
+	// maxQueryLength is the maximum length of a query string that will be
+	// accepted. This is just a safety check to avoid outlandish queries.
+	maxQueryLength = 512
+)
+
 type RPC struct {
 	vm *LandslideVM
 }
@@ -34,11 +44,6 @@ func NewRPC(vm *LandslideVM) *RPC {
 
 func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 	return map[string]*jsonrpc.RPCFunc{
-		// subscribe/unsubscribe are reserved for websocket events.
-		// "subscribe":       jsonrpc.NewWSRPCFunc(rpc.Subscribe, "query"),
-		// "unsubscribe":     jsonrpc.NewWSRPCFunc(rpc.Unsubscribe, "query"),
-		// "unsubscribe_all": jsonrpc.NewWSRPCFunc(rpc.UnsubscribeAll, ""),
-
 		// info AP
 		"health":          jsonrpc.NewRPCFunc(rpc.Health, ""),
 		"status":          jsonrpc.NewRPCFunc(rpc.Status, ""),
@@ -74,6 +79,51 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 
 		// evidence API
 		// "broadcast_evidence": jsonrpc.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
+	}
+}
+
+func (rpc *RPC) CMTRoutes() map[string]*server.RPCFunc {
+	return map[string]*server.RPCFunc{
+		//subscribe/unsubscribe are reserved for websocket events.
+		"subscribe":       server.NewWSRPCFunc(rpc.Subscribe, "query"),
+		"unsubscribe":     server.NewWSRPCFunc(rpc.Unsubscribe, "query"),
+		"unsubscribe_all": server.NewWSRPCFunc(rpc.UnsubscribeAll, ""),
+
+		// info AP
+		"health":          server.NewRPCFunc(rpc.Health, ""),
+		"status":          server.NewRPCFunc(rpc.Status, ""),
+		"net_info":        server.NewRPCFunc(rpc.NetInfo, ""),
+		"blockchain":      server.NewRPCFunc(rpc.BlockchainInfo, "minHeight,maxHeight", server.Cacheable()),
+		"genesis":         server.NewRPCFunc(rpc.Genesis, "", server.Cacheable()),
+		"genesis_chunked": server.NewRPCFunc(rpc.GenesisChunked, "chunk", server.Cacheable()),
+		"block":           server.NewRPCFunc(rpc.Block, "height", server.Cacheable("height")),
+		"block_by_hash":   server.NewRPCFunc(rpc.BlockByHash, "hash", server.Cacheable()),
+		"block_results":   server.NewRPCFunc(rpc.BlockResults, "height", server.Cacheable("height")),
+		"commit":          server.NewRPCFunc(rpc.Commit, "height", server.Cacheable("height")),
+		// "header":              server.NewRPCFunc(rpc.Header, "height", server.Cacheable("height")),
+		// "header_by_hash":      server.NewRPCFunc(rpc.HeaderByHash, "hash", server.Cacheable()),
+		"check_tx": server.NewRPCFunc(rpc.CheckTx, "tx"),
+		"tx":       server.NewRPCFunc(rpc.Tx, "hash,prove", server.Cacheable()),
+		// "consensus_state":     server.NewRPCFunc(rpc.GetConsensusState, ""),
+		"unconfirmed_txs":      server.NewRPCFunc(rpc.UnconfirmedTxs, "limit"),
+		"num_unconfirmed_txs":  server.NewRPCFunc(rpc.NumUnconfirmedTxs, ""),
+		"tx_search":            server.NewRPCFunc(rpc.TxSearch, "query,prove,page,per_page,order_by"),
+		"block_search":         server.NewRPCFunc(rpc.BlockSearch, "query,page,per_page,order_by"),
+		"validators":           server.NewRPCFunc(rpc.Validators, "height,page,per_page", server.Cacheable("height")),
+		"dump_consensus_state": server.NewRPCFunc(rpc.DumpConsensusState, ""),
+		"consensus_params":     server.NewRPCFunc(rpc.ConsensusParams, "height", server.Cacheable("height")),
+
+		// tx broadcast API
+		"broadcast_tx_commit": server.NewRPCFunc(rpc.BroadcastTxCommit, "tx"),
+		"broadcast_tx_sync":   server.NewRPCFunc(rpc.BroadcastTxSync, "tx"),
+		"broadcast_tx_async":  server.NewRPCFunc(rpc.BroadcastTxAsync, "tx"),
+
+		// abci API
+		"abci_query": server.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
+		"abci_info":  server.NewRPCFunc(rpc.ABCIInfo, "", server.Cacheable()),
+
+		// evidence API
+		// "broadcast_evidence": server.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
 	}
 }
 
@@ -800,4 +850,116 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 	}
 
 	return result, nil
+}
+
+// Subscribe for events via WebSocket.
+// More: https://docs.cometbft.com/v0.38.x/rpc/#/Websocket/subscribe
+func (rpc *RPC) Subscribe(ctx *rpctypes.Context, query string) (*ctypes.ResultSubscribe, error) {
+	addr := ctx.RemoteAddr()
+	cfg := config.DefaultRPCConfig()
+
+	if rpc.vm.eventBus.NumClients() >= cfg.MaxSubscriptionClients {
+		return nil, fmt.Errorf("max_subscription_clients %d reached", cfg.MaxSubscriptionClients)
+	} else if rpc.vm.eventBus.NumClientSubscriptions(addr) >= cfg.MaxSubscriptionsPerClient {
+		return nil, fmt.Errorf("max_subscriptions_per_client %d reached", cfg.MaxSubscriptionsPerClient)
+	} else if len(query) > maxQueryLength {
+		return nil, errors.New("maximum query length exceeded")
+	}
+
+	rpc.vm.logger.Info("Subscribe to query", "remote", addr, "query", query)
+
+	q, err := cmtquery.New(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse query: %w", err)
+	}
+
+	subCtx, cancel := context.WithTimeout(ctx.Context(), core.SubscribeTimeout)
+	defer cancel()
+
+	sub, err := rpc.vm.eventBus.Subscribe(subCtx, addr, q, cfg.SubscriptionBufferSize)
+	if err != nil {
+		return nil, err
+	}
+
+	closeIfSlow := cfg.CloseOnSlowClient
+
+	// Capture the current ID, since it can change in the future.
+	subscriptionID := ctx.JSONReq.ID
+	go func() {
+		for {
+			select {
+			case msg := <-sub.Out():
+				var (
+					resultEvent = &ctypes.ResultEvent{Query: query, Data: msg.Data(), Events: msg.Events()}
+					resp        = rpctypes.NewRPCSuccessResponse(subscriptionID, resultEvent)
+				)
+				writeCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer cancel()
+				if err := ctx.WSConn.WriteRPCResponse(writeCtx, resp); err != nil {
+					rpc.vm.logger.Info("Can't write response (slow client)",
+						"to", addr, "subscriptionID", subscriptionID, "err", err)
+
+					if closeIfSlow {
+						var (
+							err  = errors.New("subscription was canceled (reason: slow client)")
+							resp = rpctypes.RPCServerError(subscriptionID, err)
+						)
+						if !ctx.WSConn.TryWriteRPCResponse(resp) {
+							rpc.vm.logger.Info("Can't write response (slow client)",
+								"to", addr, "subscriptionID", subscriptionID, "err", err)
+						}
+						return
+					}
+				}
+			case <-sub.Canceled():
+				if sub.Err() != cmtpubsub.ErrUnsubscribed {
+					var reason string
+					if sub.Err() == nil {
+						reason = "CometBFT exited"
+					} else {
+						reason = sub.Err().Error()
+					}
+					var (
+						err  = fmt.Errorf("subscription was canceled (reason: %s)", reason)
+						resp = rpctypes.RPCServerError(subscriptionID, err)
+					)
+					if !ctx.WSConn.TryWriteRPCResponse(resp) {
+						rpc.vm.logger.Info("Can't write response (slow client)",
+							"to", addr, "subscriptionID", subscriptionID, "err", err)
+					}
+				}
+				return
+			}
+		}
+	}()
+
+	return &ctypes.ResultSubscribe{}, nil
+}
+
+// Unsubscribe from events via WebSocket.
+// More: https://docs.cometbft.com/v0.38.x/rpc/#/Websocket/unsubscribe
+func (rpc *RPC) Unsubscribe(ctx *rpctypes.Context, query string) (*ctypes.ResultUnsubscribe, error) {
+	addr := ctx.RemoteAddr()
+	rpc.vm.logger.Info("Unsubscribe from query", "remote", addr, "query", query)
+	q, err := cmtquery.New(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse query: %w", err)
+	}
+	err = rpc.vm.eventBus.Unsubscribe(context.Background(), addr, q)
+	if err != nil {
+		return nil, err
+	}
+	return &ctypes.ResultUnsubscribe{}, nil
+}
+
+// UnsubscribeAll from all events via WebSocket.
+// More: https://docs.cometbft.com/v0.38.x/rpc/#/Websocket/unsubscribe_all
+func (rpc *RPC) UnsubscribeAll(ctx *rpctypes.Context) (*ctypes.ResultUnsubscribe, error) {
+	addr := ctx.RemoteAddr()
+	rpc.vm.logger.Info("Unsubscribe from all", "remote", addr)
+	err := rpc.vm.eventBus.UnsubscribeAll(context.Background(), addr)
+	if err != nil {
+		return nil, err
+	}
+	return &ctypes.ResultUnsubscribe{}, nil
 }
