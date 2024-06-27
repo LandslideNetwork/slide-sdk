@@ -848,6 +848,8 @@ func (rpc *RPC) Subscribe(ctx *rpctypes.Context, query string) (*ctypes.ResultSu
 	// Capture the current ID, since it can change in the future.
 	subscriptionID := ctx.JSONReq.ID
 	go func() {
+		writeCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
 		for {
 			select {
 			case msg := <-sub.Out():
@@ -855,8 +857,6 @@ func (rpc *RPC) Subscribe(ctx *rpctypes.Context, query string) (*ctypes.ResultSu
 					resultEvent = &ctypes.ResultEvent{Query: query, Data: msg.Data(), Events: msg.Events()}
 					resp        = rpctypes.NewRPCSuccessResponse(subscriptionID, resultEvent)
 				)
-				writeCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-				defer cancel()
 				if err := ctx.WSConn.WriteRPCResponse(writeCtx, resp); err != nil {
 					rpc.vm.logger.Info("Can't write response (slow client)",
 						"to", addr, "subscriptionID", subscriptionID, "err", err)
