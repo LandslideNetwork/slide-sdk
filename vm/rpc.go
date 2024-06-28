@@ -207,8 +207,7 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 				TxResult: abci.ExecTxResult{},
 				Hash:     tx.Hash(),
 			}, err
-		// TODO: use rpc.config.TimeoutBroadcastTxCommit for timeout
-		case <-time.After(10 * time.Second):
+		case <-time.After(rpc.vm.config.TimeoutBroadcastTxCommit):
 			err = errors.New("timed out waiting for tx to be included in a block")
 			rpc.vm.logger.Error("Error on broadcastTxCommit", "err", err)
 			return &ctypes.ResultBroadcastTxCommit{
