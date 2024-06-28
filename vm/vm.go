@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -106,6 +107,7 @@ type (
 		app            proxy.AppConns
 		appOpts        *AppCreatorOpts
 		logger         log.Logger
+		config         vmConfig
 
 		toEngine chan messengerpb.Message
 		closed   chan struct{}
@@ -210,6 +212,16 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}
 
 	msgClient := messengerpb.NewMessengerClient(vm.clientConn)
+
+	vm.config.SetDefaults()
+	if len(req.ConfigBytes) > 0 {
+		if err := json.Unmarshal(req.ConfigBytes, &vm.config); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config %s: %w", string(req.ConfigBytes), err)
+		}
+	}
+	if err := vm.config.Validate(); err != nil {
+		return nil, err
+	}
 
 	vm.toEngine = make(chan messengerpb.Message, 1)
 	vm.closed = make(chan struct{})
@@ -481,6 +493,20 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 	}
 
 	go grpcutils.Serve(listener, server)
+
+	if vm.config.GRPCPort > 0 {
+		listenerGRPC, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", vm.config.GRPCPort))
+		if err != nil {
+			return nil, err
+		}
+
+		go func() {
+			if err := StartGRPCServer(NewRPC(vm), listenerGRPC); err != nil {
+				vm.logger.Error("failed to start gRPC server", "err", err)
+			}
+			_ = listenerGRPC.Close()
+		}()
+	}
 
 	return &vmpb.CreateHandlersResponse{
 		Handlers: []*vmpb.Handler{
