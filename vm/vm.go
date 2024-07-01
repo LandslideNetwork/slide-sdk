@@ -19,7 +19,7 @@ import (
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/libs/log"
-	cmtpubsub "github.com/cometbft/cometbft/libs/pubsub"
+	"github.com/cometbft/cometbft/libs/pubsub"
 	"github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/proxy"
@@ -522,11 +522,11 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 	vm.serverCloser.Add(server)
 
 	mux := http2.NewServeMux()
-	cmtRPC := NewRPC(vm)
-	wm := rpcserver.NewWebsocketManager(cmtRPC.CMTRoutes(),
+	tmRPC := NewRPC(vm)
+	wm := rpcserver.NewWebsocketManager(tmRPC.TMRoutes(),
 		rpcserver.OnDisconnect(func(remoteAddr string) {
 			err := vm.eventBus.UnsubscribeAll(context.Background(), remoteAddr)
-			if err != nil && err != cmtpubsub.ErrSubscriptionNotFound {
+			if err != nil && err != pubsub.ErrSubscriptionNotFound {
 				vm.logger.Error("Failed to unsubscribe addr from events", "addr", remoteAddr, "err", err)
 			}
 		}),
@@ -536,7 +536,7 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 	wm.SetLogger(vm.logger)
 	mux.HandleFunc("/websocket", wm.WebsocketHandler)
 	mux.HandleFunc("/v1/websocket", wm.WebsocketHandler)
-	jsonrpc.RegisterRPCFuncs(mux, cmtRPC.Routes(), vm.logger)
+	jsonrpc.RegisterRPCFuncs(mux, tmRPC.Routes(), vm.logger)
 
 	httppb.RegisterHTTPServer(server, http.NewServer(mux))
 
