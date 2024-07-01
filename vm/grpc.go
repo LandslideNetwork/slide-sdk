@@ -9,6 +9,7 @@ import (
 	cmgrpcproto "github.com/cometbft/cometbft/proto/tendermint/rpc/grpc"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Config is an gRPC server configuration.
@@ -25,11 +26,14 @@ func StartGRPCServer(rpc *RPC, ln net.Listener) error {
 	return grpcServer.Serve(ln)
 }
 
-// StartGRPCClient dials the gRPC server using protoAddr and returns a new
+// StartGRPCClient dials the gRPC server using address and returns a new
 // BroadcastAPIClient.
-func StartGRPCClient(protoAddr string) cmgrpcproto.BroadcastAPIClient {
-	//nolint:staticcheck // SA1019 Existing use of deprecated but supported dial option.
-	conn, err := grpc.Dial(protoAddr, grpc.WithInsecure(), grpc.WithContextDialer(dialerFunc))
+func StartGRPCClient(address string) cmgrpcproto.BroadcastAPIClient {
+	conn, err := grpc.Dial(
+		address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithContextDialer(dialerFunc),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +49,6 @@ type broadcastAPI struct {
 }
 
 func (bapi *broadcastAPI) Ping(context.Context, *cmgrpcproto.RequestPing) (*cmgrpcproto.ResponsePing, error) {
-	// kvstore so we can check if the server is up
 	return &cmgrpcproto.ResponsePing{}, nil
 }
 
