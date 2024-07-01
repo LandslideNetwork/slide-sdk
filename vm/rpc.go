@@ -5,8 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cometbft/cometbft/config"
-	cmtpubsub "github.com/cometbft/cometbft/libs/pubsub"
-	cmtquery "github.com/cometbft/cometbft/libs/pubsub/query"
+	"github.com/cometbft/cometbft/libs/pubsub"
 	"github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	"sort"
 	"time"
@@ -82,7 +81,7 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 	}
 }
 
-func (rpc *RPC) CMTRoutes() map[string]*server.RPCFunc {
+func (rpc *RPC) TMRoutes() map[string]*server.RPCFunc {
 	return map[string]*server.RPCFunc{
 		//subscribe/unsubscribe are reserved for websocket events.
 		"subscribe":       server.NewWSRPCFunc(rpc.Subscribe, "query"),
@@ -830,7 +829,7 @@ func (rpc *RPC) Subscribe(ctx *rpctypes.Context, query string) (*ctypes.ResultSu
 
 	rpc.vm.logger.Info("Subscribe to query", "remote", addr, "query", query)
 
-	q, err := cmtquery.New(query)
+	q, err := tmquery.New(query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse query: %w", err)
 	}
@@ -874,7 +873,7 @@ func (rpc *RPC) Subscribe(ctx *rpctypes.Context, query string) (*ctypes.ResultSu
 					}
 				}
 			case <-sub.Canceled():
-				if sub.Err() != cmtpubsub.ErrUnsubscribed {
+				if sub.Err() != pubsub.ErrUnsubscribed {
 					var reason string
 					if sub.Err() == nil {
 						reason = "CometBFT exited"
@@ -903,7 +902,7 @@ func (rpc *RPC) Subscribe(ctx *rpctypes.Context, query string) (*ctypes.ResultSu
 func (rpc *RPC) Unsubscribe(ctx *rpctypes.Context, query string) (*ctypes.ResultUnsubscribe, error) {
 	addr := ctx.RemoteAddr()
 	rpc.vm.logger.Info("Unsubscribe from query", "remote", addr, "query", query)
-	q, err := cmtquery.New(query)
+	q, err := tmquery.New(query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse query: %w", err)
 	}

@@ -6,7 +6,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/libs/json"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/state"
 	"github.com/cometbft/cometbft/types"
 
@@ -55,7 +55,7 @@ func EncodeBlock(block *types.Block) ([]byte, error) {
 }
 
 func DecodeBlock(data []byte) (*types.Block, error) {
-	protoBlock := new(cmtproto.Block)
+	protoBlock := new(tmproto.Block)
 	if err := protoBlock.Unmarshal(data); err != nil {
 		return nil, err
 	}

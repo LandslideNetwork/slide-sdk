@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"sort"
 
-	cmtjson "github.com/cometbft/cometbft/libs/json"
+	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	types "github.com/cometbft/cometbft/rpc/jsonrpc/types"
@@ -159,7 +159,7 @@ func mapParamsToArgs(
 
 		if p, ok := params[argName]; ok && p != nil && len(p) > 0 {
 			val := reflect.New(argType)
-			err := cmtjson.Unmarshal(p, val.Interface())
+			err := tmjson.Unmarshal(p, val.Interface())
 			if err != nil {
 				return nil, err
 			}
@@ -186,7 +186,7 @@ func arrayParamsToArgs(
 	for i, p := range params {
 		argType := rpcFunc.args[i+argsOffset]
 		val := reflect.New(argType)
-		err := cmtjson.Unmarshal(p, val.Interface())
+		err := tmjson.Unmarshal(p, val.Interface())
 		if err != nil {
 			return nil, err
 		}
