@@ -506,6 +506,8 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 			}
 			_ = listenerGRPC.Close()
 		}()
+
+		vm.logger.Info("gRPC server started", "address", listenerGRPC.Addr().String())
 	}
 
 	return &vmpb.CreateHandlersResponse{
