@@ -789,7 +789,7 @@ func (rpc *RPC) BroadcastEvidence(
 	ev types.Evidence,
 ) (*ctypes.ResultBroadcastEvidence, error) {
 	if ev == nil {
-		return nil, ErrNoEvidence
+		return nil, errors.New("no evidence was provided")
 	}
 
 	if err := ev.ValidateBasic(); err != nil {
@@ -798,6 +798,8 @@ func (rpc *RPC) BroadcastEvidence(
 			ValType: reflect.TypeOf(ev).String(),
 		}
 	}
+
+	//TODO: add evidence to evidence pool or implement another logic of evidence processing
 
 	return &ctypes.ResultBroadcastEvidence{Hash: ev.Hash()}, nil
 }
