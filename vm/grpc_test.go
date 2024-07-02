@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
-	cmgrpcproto "github.com/cometbft/cometbft/proto/tendermint/rpc/grpc"
 	"github.com/stretchr/testify/assert"
+
+	cmgrpcproto "github.com/consideritdone/landslidevm/proto/tendermint/rpc/grpc"
 )
 
 func TestPingGRPC(t *testing.T) {

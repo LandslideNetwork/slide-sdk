@@ -4,12 +4,14 @@ import (
 	"context"
 	"net"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtnet "github.com/cometbft/cometbft/libs/net"
-	cmgrpcproto "github.com/cometbft/cometbft/proto/tendermint/rpc/grpc"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/consideritdone/landslidevm/proto/tendermint/abci"
+
+	cmgrpcproto "github.com/consideritdone/landslidevm/proto/tendermint/rpc/grpc"
 )
 
 // Config is an gRPC server configuration.

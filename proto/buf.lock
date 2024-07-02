@@ -2,6 +2,12 @@
 version: v1
 deps:
   - remote: buf.build
+    owner: cosmos
+    repository: gogo-proto
+    commit: 88ef6483f90f478fb938c37dde52ece3
+    digest: shake256:89c45df2aa11e0cff97b0d695436713db3d993d76792e9f8dc1ae90e6ab9a9bec55503d48ceedd6b86069ab07d3041b32001b2bfe0227fa725dd515ff381e5ba
+  - remote: buf.build
     owner: prometheus
     repository: client-model
-    commit: 1d56a02d481a412a83b3c4984eb90c2e
+    commit: e171c0b235c546d5a9a597c2961bd357
+    digest: shake256:7db3f73ac0f1dce71e70f304f318e9741e857fd78b7b42f0df7a3da353fbb2f387899da7b0a77ac9ee9565194510e39a913cdb9a8ab3c2ff4b8713428c795213
