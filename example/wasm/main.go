@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"cosmossdk.io/log"
 	"github.com/CosmWasm/wasmd/app"
@@ -11,12 +14,23 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
+	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/consideritdone/landslidevm"
 	"github.com/consideritdone/landslidevm/vm"
+	vmtypes "github.com/consideritdone/landslidevm/vm/types"
 )
 
 func main() {
@@ -40,8 +54,140 @@ func WasmCreator() vm.AppCreator {
 		cfg.SetBech32PrefixForConsensusNode(app.Bech32PrefixConsAddr, app.Bech32PrefixConsPub)
 		cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 		cfg.Seal()
-		wasmApp := app.NewWasmApp(logger, db, nil, true, sims.NewAppOptionsWithFlagHome(os.TempDir()), []keeper.Option{}, baseapp.SetChainID("landslide-test"))
+
+		chainID := "landslide-test"
+		var wasmApp = app.NewWasmApp(
+			logger,
+			db,
+			nil,
+			true,
+			sims.NewAppOptionsWithFlagHome(os.TempDir()),
+			[]keeper.Option{},
+			baseapp.SetChainID(chainID),
+		)
+		srvCfg := *srvconfig.DefaultConfig()
+		grpcCfg := srvCfg.GRPC
+
+		var vmCfg vmtypes.VmConfig
+		vmCfg.SetDefaults()
+		if len(config.ConfigBytes) > 0 {
+			if err := json.Unmarshal(config.ConfigBytes, &vmCfg); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal config %s: %w", string(config.ConfigBytes), err)
+			}
+			// set the grpc port, if it is set to 0, disable gRPC
+			if vmCfg.GRPCPort > 0 {
+				grpcCfg.Address = fmt.Sprintf("127.0.0.1:%d", vmCfg.GRPCPort)
+			} else {
+				grpcCfg.Enable = false
+			}
+		}
+
+		if err := vmCfg.Validate(); err != nil {
+			return nil, err
+		}
+
+		// early return if gRPC is disabled
+		if !grpcCfg.Enable {
+			return server.NewCometABCIWrapper(wasmApp), nil
+		}
+
+		interfaceRegistry := cdctypes.NewInterfaceRegistry()
+		marshaller := codec.NewProtoCodec(interfaceRegistry)
+		clientCtx := client.Context{}.
+			WithCodec(marshaller).
+			WithLegacyAmino(makeCodec()).
+			WithTxConfig(tx.NewTxConfig(marshaller, tx.DefaultSignModes)).
+			WithInterfaceRegistry(interfaceRegistry).
+			WithChainID(chainID)
+
+		// use the provided clientCtx to register the services
+		wasmApp.RegisterTxService(clientCtx)
+		wasmApp.RegisterTendermintService(clientCtx)
+		wasmApp.RegisterNodeService(clientCtx, srvconfig.Config{})
+
+		maxSendMsgSize := grpcCfg.MaxSendMsgSize
+		if maxSendMsgSize == 0 {
+			maxSendMsgSize = srvconfig.DefaultGRPCMaxSendMsgSize
+		}
+
+		maxRecvMsgSize := grpcCfg.MaxRecvMsgSize
+		if maxRecvMsgSize == 0 {
+			maxRecvMsgSize = srvconfig.DefaultGRPCMaxRecvMsgSize
+		}
+
+		// if gRPC is enabled, configure gRPC client for gRPC gateway
+		grpcClient, err := grpc.Dial(
+			grpcCfg.Address,
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithDefaultCallOptions(
+				grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
+				grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
+				grpc.MaxCallSendMsgSize(maxSendMsgSize),
+			),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		clientCtx = clientCtx.WithGRPCClient(grpcClient)
+		logger.Debug("gRPC client assigned to client context", "target", grpcCfg.Address)
+
+		g, ctx := getCtx(logger, false)
+
+		grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, wasmApp, grpcCfg)
+		if err != nil {
+			return nil, err
+		}
+
+		// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
+		// that the server is gracefully shut down.
+		g.Go(func() error {
+			return servergrpc.StartGRPCServer(ctx, logger.With("module", "grpc-server"), grpcCfg, grpcSrv)
+		})
 
 		return server.NewCometABCIWrapper(wasmApp), nil
+	}
+}
+
+// custom tx codec
+func makeCodec() *codec.LegacyAmino {
+	cdc := codec.NewLegacyAmino()
+	sdk.RegisterLegacyAminoCodec(cdc)
+	cryptocodec.RegisterCrypto(cdc)
+	return cdc
+}
+
+func getCtx(logger log.Logger, block bool) (*errgroup.Group, context.Context) {
+	ctx, cancelFn := context.WithCancel(context.Background())
+	g, ctx := errgroup.WithContext(ctx)
+	// listen for quit signals so the calling parent process can gracefully exit
+	listenForQuitSignals(g, block, cancelFn, logger)
+	return g, ctx
+}
+
+// listenForQuitSignals listens for SIGINT and SIGTERM. When a signal is received,
+// the cleanup function is called, indicating the caller can gracefully exit or
+// return.
+//
+// Note, the blocking behavior of this depends on the block argument.
+// The caller must ensure the corresponding context derived from the cancelFn is used correctly.
+func listenForQuitSignals(g *errgroup.Group, block bool, cancelFn context.CancelFunc, logger log.Logger) {
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+	f := func() {
+		sig := <-sigCh
+		cancelFn()
+
+		logger.Info("caught signal", "signal", sig.String())
+	}
+
+	if block {
+		g.Go(func() error {
+			f()
+			return nil
+		})
+	} else {
+		go f()
 	}
 }
