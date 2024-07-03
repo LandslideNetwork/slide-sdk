@@ -16,6 +16,7 @@ import (
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/consensus"
+	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/mempool"
@@ -533,7 +534,7 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 				BlockIDFlag:      types.BlockIDFlagNil,
 				Timestamp:        time.Now(),
 				ValidatorAddress: vm.state.Validators.Validators[i].Address,
-				Signature:        []byte{0x0},
+				Signature:        crypto.CRandBytes(types.MaxSignatureSize), // todo: sign the block
 			},
 		}
 	}
