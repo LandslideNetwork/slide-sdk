@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	defaultRPCPort                                = 9090
+	defaultRPCPort                                = 9752
 	defaultGRPCPort                               = 9090
 	defaultMaxOpenConnections                     = 0 // unlimited
 	defaultTimeoutBroadcastTxCommit time.Duration = 30 * time.Second
