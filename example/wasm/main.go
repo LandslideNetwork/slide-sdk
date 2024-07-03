@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"cosmossdk.io/log"
@@ -101,15 +102,12 @@ func WasmCreator() vm.AppCreator {
 			WithInterfaceRegistry(interfaceRegistry).
 			WithChainID(chainID)
 
-		// error, can`t init node
-		// [07-03|10:45:18.758] INFO <2JMcFUp4E8nqyXAeP8Rhg7jkxR9nBQDxCKBspBdrmWEZLwPaFh Chain> subprocess/runtime.go:143 plugin handshake succeeded {"addr": "127.0.0.1:60581"}
-		// [07-03|10:45:18.791] INFO <2JMcFUp4E8nqyXAeP8Rhg7jkxR9nBQDxCKBspBdrmWEZLwPaFh Chain> rpcchainvm/vm_client.go:158 grpc: serving database {"address": "127.0.0.1:60604"}
-		// [07-03|10:45:18.792] INFO <2JMcFUp4E8nqyXAeP8Rhg7jkxR9nBQDxCKBspBdrmWEZLwPaFh Chain> rpcchainvm/vm_client.go:177 grpc: serving vm services {"address": "127.0.0.1:60609"}
-
-		rpcURI, runtimeAddrExist := os.LookupEnv(landslidevm.EngineAddressKey)
-		if !runtimeAddrExist {
-			return nil, fmt.Errorf("required env var missing: %q", landslidevm.EngineAddressKey)
-		}
+		splitChainDataDir := strings.Split(config.ChainDataDir, "/")
+		rpcURI := fmt.Sprintf(
+			"http://127.0.0.1:%d/ext/bc/%s/rpc",
+			vmCfg.RPCPort,
+			splitChainDataDir[len(splitChainDataDir)-1],
+		)
 
 		clientCtx = clientCtx.WithNodeURI(rpcURI)
 		rpcclient, err := rpchttp.New(rpcURI, "/websocket")

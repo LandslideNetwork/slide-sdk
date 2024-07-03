@@ -30,6 +30,30 @@ func (m *mockClientConn) NewStream(ctx context.Context, desc *grpc.StreamDesc, m
 	return nil, nil
 }
 
+func TestChainId(t *testing.T) {
+
+	/*
+		I[2024-07-03|15:28:06.054] chainIDRaw                                   chain=55E1FCFDDE01F9F6D4C16FA2ED89CE65A8669120A86F321EEF121891CAB61241
+		I[2024-07-03|15:28:06.054] CChainId                                     chain=55E1FCFDDE01F9F6D4C16FA2ED89CE65A8669120A86F321EEF121891CAB61241
+		I[2024-07-03|15:28:06.054] XChainId                                     chain=B573C177E55B1368EB620A3287408EB6BEA1E9B1197B7D06A5C4B57CF7D8726F
+		I[2024-07-03|15:28:06.054] SubnetId                                     chain=D32CFAD24C07B14ADBE1DCEC4336CA0FFBF150B8099C98B38B69DDEF0FFBE344
+		I[2024-07-03|15:28:06.054] NodeId                                       chain=F29BCE5F34A74301EB0DE716D5194E4A4AEA5D7A
+		I[2024-07-03|15:28:06.054] ChainDataDir                                 chain=/tmp/e2e-test-landslide/nodes/node5/chainData/2DinS2RhV8APTEmyehwpToKhCQUDGbn3UyEdTvrZ6mXfNBZAPE
+		I[2024-07-03|15:28:06.054] AvaxAssetId                                  chain=94B45AA6E4464A9AD3FC4E73C7947BA1632D7C820BAF0EBBFC7548C4823F26BD
+	*/
+
+	/*
+		I[2024-07-03|15:30:09.921] chainIDRaw                                   chain=55E1FCFDDE01F9F6D4C16FA2ED89CE65A8669120A86F321EEF121891CAB61241
+		I[2024-07-03|15:30:09.921] CChainId                                     chain=55E1FCFDDE01F9F6D4C16FA2ED89CE65A8669120A86F321EEF121891CAB61241
+		I[2024-07-03|15:30:09.921] XChainId                                     chain=B573C177E55B1368EB620A3287408EB6BEA1E9B1197B7D06A5C4B57CF7D8726F
+		I[2024-07-03|15:30:09.921] SubnetId                                     chain=D32CFAD24C07B14ADBE1DCEC4336CA0FFBF150B8099C98B38B69DDEF0FFBE344
+		I[2024-07-03|15:30:09.921] NodeId                                       chain=F29BCE5F34A74301EB0DE716D5194E4A4AEA5D7A
+		I[2024-07-03|15:30:09.921] ChainDataDir                                 chain=/tmp/e2e-test-landslide/nodes/node5/chainData/oXDez3R5zPPqZTykiTezYFiziFbSzLNzq7uZirs5HQssbQn2q
+		I[2024-07-03|15:30:09.921] AvaxAssetId                                  chain=94B45AA6E4464A9AD3FC4E73C7947BA1632D7C820BAF0EBBFC7548C4823F26BD
+	*/
+
+}
+
 func newKvApp(t *testing.T, vmdb, appdb dbm.DB) vmpb.VMServer {
 	mockConn := &mockClientConn{}
 	vm := NewViaDB(vmdb, func(*AppCreatorOpts) (Application, error) {

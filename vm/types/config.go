@@ -6,6 +6,7 @@ import (
 )
 
 const (
+	defaultRPCPort                                = 9090
 	defaultGRPCPort                               = 9090
 	defaultMaxOpenConnections                     = 0 // unlimited
 	defaultTimeoutBroadcastTxCommit time.Duration = 30 * time.Second
@@ -13,6 +14,7 @@ const (
 
 // VmConfig ...
 type VmConfig struct {
+	RPCPort                  uint16        `json:"rpc_port"`
 	GRPCPort                 uint16        `json:"grpc_port"`
 	GRPCMaxOpenConnections   int           `json:"grpc_max_open_connections"`
 	TimeoutBroadcastTxCommit time.Duration `json:"broadcast_commit_timeout"`
