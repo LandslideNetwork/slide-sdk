@@ -12,6 +12,7 @@ import (
 	"github.com/CosmWasm/wasmd/app"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -99,6 +100,23 @@ func WasmCreator() vm.AppCreator {
 			WithTxConfig(tx.NewTxConfig(marshaller, tx.DefaultSignModes)).
 			WithInterfaceRegistry(interfaceRegistry).
 			WithChainID(chainID)
+
+		// error, can`t init node
+		// [07-03|10:45:18.758] INFO <2JMcFUp4E8nqyXAeP8Rhg7jkxR9nBQDxCKBspBdrmWEZLwPaFh Chain> subprocess/runtime.go:143 plugin handshake succeeded {"addr": "127.0.0.1:60581"}
+		// [07-03|10:45:18.791] INFO <2JMcFUp4E8nqyXAeP8Rhg7jkxR9nBQDxCKBspBdrmWEZLwPaFh Chain> rpcchainvm/vm_client.go:158 grpc: serving database {"address": "127.0.0.1:60604"}
+		// [07-03|10:45:18.792] INFO <2JMcFUp4E8nqyXAeP8Rhg7jkxR9nBQDxCKBspBdrmWEZLwPaFh Chain> rpcchainvm/vm_client.go:177 grpc: serving vm services {"address": "127.0.0.1:60609"}
+
+		rpcURI, runtimeAddrExist := os.LookupEnv(landslidevm.EngineAddressKey)
+		if !runtimeAddrExist {
+			return nil, fmt.Errorf("required env var missing: %q", landslidevm.EngineAddressKey)
+		}
+
+		clientCtx = clientCtx.WithNodeURI(rpcURI)
+		rpcclient, err := rpchttp.New(rpcURI, "/websocket")
+		if err != nil {
+			return nil, err
+		}
+		clientCtx = clientCtx.WithClient(rpcclient)
 
 		// use the provided clientCtx to register the services
 		wasmApp.RegisterTxService(clientCtx)
