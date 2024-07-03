@@ -736,7 +736,7 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 			),
 			DefaultNodeID: p2p.ID(rpc.vm.appOpts.NodeId),
 			ListenAddr:    "",
-			Network:       fmt.Sprintf("%d", rpc.vm.appOpts.NetworkId),
+			Network:       rpc.vm.networkName,
 			Version:       version.TMCoreSemVer,
 			Channels:      nil,
 			Moniker:       "",

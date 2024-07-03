@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"cosmossdk.io/log"
@@ -31,6 +30,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/consideritdone/landslidevm"
+	"github.com/consideritdone/landslidevm/utils/ids"
 	"github.com/consideritdone/landslidevm/vm"
 	vmtypes "github.com/consideritdone/landslidevm/vm/types"
 )
@@ -57,19 +57,8 @@ func WasmCreator() vm.AppCreator {
 		cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 		cfg.Seal()
 
-		chainID := "landslide-test"
-		var wasmApp = app.NewWasmApp(
-			logger,
-			db,
-			nil,
-			true,
-			sims.NewAppOptionsWithFlagHome(os.TempDir()),
-			[]keeper.Option{},
-			baseapp.SetChainID(chainID),
-		)
 		srvCfg := *srvconfig.DefaultConfig()
 		grpcCfg := srvCfg.GRPC
-
 		var vmCfg vmtypes.VmConfig
 		vmCfg.SetDefaults()
 		if len(config.ConfigBytes) > 0 {
@@ -87,6 +76,17 @@ func WasmCreator() vm.AppCreator {
 		if err := vmCfg.Validate(); err != nil {
 			return nil, err
 		}
+		chainID := vmCfg.NetworkName
+
+		var wasmApp = app.NewWasmApp(
+			logger,
+			db,
+			nil,
+			true,
+			sims.NewAppOptionsWithFlagHome(os.TempDir()),
+			[]keeper.Option{},
+			baseapp.SetChainID(chainID),
+		)
 
 		// early return if gRPC is disabled
 		if !grpcCfg.Enable {
@@ -102,11 +102,15 @@ func WasmCreator() vm.AppCreator {
 			WithInterfaceRegistry(interfaceRegistry).
 			WithChainID(chainID)
 
-		splitChainDataDir := strings.Split(config.ChainDataDir, "/")
+		avaChainID, err := ids.ToID(config.ChainId)
+		if err != nil {
+			return nil, err
+		}
+
 		rpcURI := fmt.Sprintf(
 			"http://127.0.0.1:%d/ext/bc/%s/rpc",
 			vmCfg.RPCPort,
-			splitChainDataDir[len(splitChainDataDir)-1],
+			avaChainID,
 		)
 
 		clientCtx = clientCtx.WithNodeURI(rpcURI)
