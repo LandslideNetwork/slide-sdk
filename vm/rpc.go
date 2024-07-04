@@ -549,6 +549,7 @@ func (rpc *RPC) Validators(
 }
 
 func (rpc *RPC) Tx(_ *rpctypes.Context, hash []byte, prove bool) (*ctypes.ResultTx, error) {
+	rpc.vm.logger.Info("Tx called", "hash", hash)
 	r, err := rpc.vm.txIndexer.Get(hash)
 	if err != nil {
 		rpc.vm.logger.Error("Error on Tx", "err", err)
