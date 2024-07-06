@@ -139,6 +139,7 @@ func (rpc *RPC) ABCIQuery(
 }
 
 func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
+	rpc.vm.logger.Info("BroadcastTxCommit called")
 	subscriber := ctx.RemoteAddr()
 
 	// Subscribe to tx being committed in block.
@@ -208,7 +209,7 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 				Hash:     tx.Hash(),
 			}, err
 		// TODO: use rpc.config.TimeoutBroadcastTxCommit for timeout
-		case <-time.After(10 * time.Second):
+		case <-time.After(30 * time.Second):
 			err = errors.New("timed out waiting for tx to be included in a block")
 			rpc.vm.logger.Error("Error on broadcastTxCommit", "err", err)
 			return &ctypes.ResultBroadcastTxCommit{
@@ -221,22 +222,28 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 }
 
 func (rpc *RPC) BroadcastTxAsync(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
+	rpc.vm.logger.Info("BroadcastTxAsync called")
 	err := rpc.vm.mempool.CheckTx(tx, nil, mempl.TxInfo{})
 	if err != nil {
+		rpc.vm.logger.Error("Error on broadcastTxAsync", "err", err)
 		return nil, err
 	}
 	return &ctypes.ResultBroadcastTx{Hash: tx.Hash()}, nil
 }
 
 func (rpc *RPC) BroadcastTxSync(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
+	rpc.vm.logger.Info("BroadcastTxSync called")
 	resCh := make(chan *abci.ResponseCheckTx, 1)
 	err := rpc.vm.mempool.CheckTx(tx, func(res *abci.ResponseCheckTx) {
 		resCh <- res
 	}, mempl.TxInfo{})
 	if err != nil {
+		rpc.vm.logger.Error("Error on BroadcastTxSync", "err", err)
 		return nil, err
 	}
 	res := <-resCh
+
+	rpc.vm.logger.Info("BroadcastTxSync response", "Code", res.Code, "Log", res.Log, "Codespace", res.Codespace, "Hash", tx.Hash())
 	return &ctypes.ResultBroadcastTx{
 		Code:      res.GetCode(),
 		Data:      res.GetData(),
@@ -397,8 +404,11 @@ func (rpc *RPC) Block(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBloc
 	blockMeta := rpc.vm.blockStore.LoadBlockMeta(height)
 
 	if blockMeta == nil {
+		rpc.vm.logger.Info("Block not found", "height", height)
 		return &ctypes.ResultBlock{BlockID: types.BlockID{}, Block: block}, nil
 	}
+
+	rpc.vm.logger.Info("Block response", "height", height, "block", block, "blockMeta", blockMeta)
 	return &ctypes.ResultBlock{BlockID: blockMeta.BlockID, Block: block}, nil
 }
 
@@ -539,12 +549,15 @@ func (rpc *RPC) Validators(
 }
 
 func (rpc *RPC) Tx(_ *rpctypes.Context, hash []byte, prove bool) (*ctypes.ResultTx, error) {
+	rpc.vm.logger.Info("Tx called", "hash", hash)
 	r, err := rpc.vm.txIndexer.Get(hash)
 	if err != nil {
+		rpc.vm.logger.Error("Error on Tx", "err", err)
 		return nil, err
 	}
 
 	if r == nil {
+		rpc.vm.logger.Error("Error on Tx", "tx not found", hash)
 		return nil, fmt.Errorf("tx (%X) not found", hash)
 	}
 
