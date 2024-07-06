@@ -405,7 +405,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	vm.logger.Debug("initialize block", "bytes ", blockBytes)
+	//vm.logger.Debug("initialize block", "bytes ", blockBytes)
 	vm.logger.Info("vm initialization completed")
 
 	parentHash := block.BlockParentHash(blk)
@@ -582,7 +582,8 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 
 // ParseBlock attempt to create a block from a stream of bytes.
 func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest) (*vmpb.ParseBlockResponse, error) {
-	vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
+	vm.logger.Info("ParseBlock")
+	//vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
 	var (
 		blk       *types.Block
 		blkStatus vmpb.Status
@@ -838,7 +839,7 @@ func (vm *LandslideVM) GetStateSummary(context.Context, *vmpb.GetStateSummaryReq
 
 func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyRequest) (*vmpb.BlockVerifyResponse, error) {
 	vm.logger.Info("BlockVerify")
-	vm.logger.Debug("block verify", "bytes", req.Bytes)
+	//vm.logger.Debug("block verify", "bytes", req.Bytes)
 
 	blk, blkStatus, err := vmstate.DecodeBlockWithStatus(req.Bytes)
 	if err != nil {

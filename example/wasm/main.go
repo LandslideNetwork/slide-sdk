@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -93,7 +92,7 @@ func WasmCreator() vm.AppCreator {
 			return server.NewCometABCIWrapper(wasmApp), nil
 		}
 
-		interfaceRegistry := cdctypes.NewInterfaceRegistry()
+		interfaceRegistry := wasmApp.InterfaceRegistry()
 		marshaller := codec.NewProtoCodec(interfaceRegistry)
 		clientCtx := client.Context{}.
 			WithCodec(marshaller).
