@@ -90,6 +90,7 @@ type (
 		GenesisBytes []byte
 		UpgradeBytes []byte
 		ConfigBytes  []byte
+		Config       *vmtypes.Config
 		ChainDataDir string
 	}
 
@@ -275,17 +276,17 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}
 
 	// Set the default configuration
-	var vmCfg vmtypes.VMConfig
-	vmCfg.SetDefaults()
+	var cfg vmtypes.Config
+	cfg.VMConfig.SetDefaults()
 	if len(vm.appOpts.ConfigBytes) > 0 {
-		if err := json.Unmarshal(vm.appOpts.ConfigBytes, &vmCfg); err != nil {
+		if err := json.Unmarshal(vm.appOpts.ConfigBytes, &cfg); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal config %s: %w", string(vm.appOpts.ConfigBytes), err)
 		}
 	}
-	if err := vmCfg.Validate(); err != nil {
+	if err := cfg.VMConfig.Validate(); err != nil {
 		return nil, err
 	}
-	vm.config = vmCfg
+	vm.config = cfg.VMConfig
 
 	vm.state, vm.genesis, err = node.LoadStateFromDBOrGenesisDocProvider(
 		dbStateStore,
