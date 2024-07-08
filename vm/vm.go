@@ -96,7 +96,6 @@ type (
 	AppCreator func(*AppCreatorOpts) (Application, error)
 
 	LandslideVM struct {
-		networkName   string
 		allowShutdown *vmtypes.Atomic[bool]
 
 		processMetrics prometheus.Gatherer
@@ -136,6 +135,7 @@ type (
 		wrappedBlocks  *vmstate.WrappedBlocksStorage
 
 		clientConn grpc.ClientConnInterface
+		config     vmtypes.VMConfig
 	}
 )
 
@@ -275,7 +275,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}
 
 	// Set the default configuration
-	var vmCfg vmtypes.VmConfig
+	var vmCfg vmtypes.VMConfig
 	vmCfg.SetDefaults()
 	if len(vm.appOpts.ConfigBytes) > 0 {
 		if err := json.Unmarshal(vm.appOpts.ConfigBytes, &vmCfg); err != nil {
@@ -285,7 +285,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err := vmCfg.Validate(); err != nil {
 		return nil, err
 	}
-	vm.networkName = vmCfg.NetworkName
+	vm.config = vmCfg
 
 	vm.state, vm.genesis, err = node.LoadStateFromDBOrGenesisDocProvider(
 		dbStateStore,
@@ -405,7 +405,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	//vm.logger.Debug("initialize block", "bytes ", blockBytes)
+	// vm.logger.Debug("initialize block", "bytes ", blockBytes)
 	vm.logger.Info("vm initialization completed")
 
 	parentHash := block.BlockParentHash(blk)
@@ -583,7 +583,7 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 // ParseBlock attempt to create a block from a stream of bytes.
 func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest) (*vmpb.ParseBlockResponse, error) {
 	vm.logger.Info("ParseBlock")
-	//vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
+	// vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
 	var (
 		blk       *types.Block
 		blkStatus vmpb.Status
@@ -839,7 +839,7 @@ func (vm *LandslideVM) GetStateSummary(context.Context, *vmpb.GetStateSummaryReq
 
 func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyRequest) (*vmpb.BlockVerifyResponse, error) {
 	vm.logger.Info("BlockVerify")
-	//vm.logger.Debug("block verify", "bytes", req.Bytes)
+	// vm.logger.Debug("block verify", "bytes", req.Bytes)
 
 	blk, blkStatus, err := vmstate.DecodeBlockWithStatus(req.Bytes)
 	if err != nil {

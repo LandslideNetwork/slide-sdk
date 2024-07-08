@@ -58,15 +58,15 @@ func WasmCreator() vm.AppCreator {
 
 		srvCfg := *srvconfig.DefaultConfig()
 		grpcCfg := srvCfg.GRPC
-		var vmCfg vmtypes.VmConfig
+		var vmCfg vmtypes.VMConfig
 		vmCfg.SetDefaults()
 		if len(config.ConfigBytes) > 0 {
 			if err := json.Unmarshal(config.ConfigBytes, &vmCfg); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal config %s: %w", string(config.ConfigBytes), err)
 			}
 			// set the grpc port, if it is set to 0, disable gRPC
-			if vmCfg.GRPCPort > 0 {
-				grpcCfg.Address = fmt.Sprintf("127.0.0.1:%d", vmCfg.GRPCPort)
+			if vmCfg.RPCConfig.GRPCPort > 0 {
+				grpcCfg.Address = fmt.Sprintf("127.0.0.1:%d", vmCfg.RPCConfig.GRPCPort)
 			} else {
 				grpcCfg.Enable = false
 			}
@@ -108,7 +108,7 @@ func WasmCreator() vm.AppCreator {
 
 		rpcURI := fmt.Sprintf(
 			"http://127.0.0.1:%d/ext/bc/%s/rpc",
-			vmCfg.RPCPort,
+			vmCfg.RPCConfig.RPCPort,
 			avaChainID,
 		)
 

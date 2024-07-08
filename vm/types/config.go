@@ -9,34 +9,44 @@ const (
 	defaultRPCPort                                = 9752
 	defaultGRPCPort                               = 9090
 	defaultMaxOpenConnections                     = 0 // unlimited
-	defaultTimeoutBroadcastTxCommit time.Duration = 30 * time.Second
+	defaultTimeoutBroadcastTxCommit time.Duration = 10 * time.Second
+
+	defaultNetworkName    = "landslide-test"
+	defaultWarpAPIEnabled = true
 )
 
-// VmConfig ...
-type VmConfig struct {
+// VMConfig ...
+type VMConfig struct {
+	RPCConfig      RPCConfig `json:"rpc_config"`
+	NetworkName    string    `json:"network_name"`
+	WarpAPIEnabled bool      `json:"warp_api_enabled"`
+}
+
+type RPCConfig struct {
 	RPCPort                  uint16        `json:"rpc_port"`
 	GRPCPort                 uint16        `json:"grpc_port"`
 	GRPCMaxOpenConnections   int           `json:"grpc_max_open_connections"`
-	TimeoutBroadcastTxCommit time.Duration `json:"broadcast_commit_timeout"`
-	NetworkName              string        `json:"network_name"`
+	TimeoutBroadcastTxCommit time.Duration `json:"broadcast_tx_commit_timeout"`
 }
 
 // SetDefaults sets the default values for the config.
-func (c *VmConfig) SetDefaults() {
-	c.RPCPort = defaultRPCPort
-	c.GRPCPort = defaultGRPCPort
-	c.GRPCMaxOpenConnections = defaultMaxOpenConnections
-	c.TimeoutBroadcastTxCommit = defaultTimeoutBroadcastTxCommit
-	c.NetworkName = "landslide-test"
+func (c *VMConfig) SetDefaults() {
+	c.NetworkName = defaultNetworkName
+	c.WarpAPIEnabled = defaultWarpAPIEnabled
+
+	c.RPCConfig.RPCPort = defaultRPCPort
+	c.RPCConfig.GRPCPort = defaultGRPCPort
+	c.RPCConfig.GRPCMaxOpenConnections = defaultMaxOpenConnections
+	c.RPCConfig.TimeoutBroadcastTxCommit = defaultTimeoutBroadcastTxCommit
 }
 
 // Validate returns an error if this is an invalid config.
-func (c *VmConfig) Validate() error {
-	if c.GRPCMaxOpenConnections < 0 {
+func (c *VMConfig) Validate() error {
+	if c.RPCConfig.GRPCMaxOpenConnections < 0 {
 		return fmt.Errorf("grpc_max_open_connections can't be negative")
 	}
 
-	if c.TimeoutBroadcastTxCommit < 0 {
+	if c.RPCConfig.TimeoutBroadcastTxCommit < 0 {
 		return fmt.Errorf("broadcast_tx_commit_timeout can't be negative")
 	}
 

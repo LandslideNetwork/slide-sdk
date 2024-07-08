@@ -208,8 +208,7 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 				TxResult: abci.ExecTxResult{},
 				Hash:     tx.Hash(),
 			}, err
-		// TODO: use rpc.config.TimeoutBroadcastTxCommit for timeout
-		case <-time.After(30 * time.Second):
+		case <-time.After(rpc.vm.config.RPCConfig.TimeoutBroadcastTxCommit):
 			err = errors.New("timed out waiting for tx to be included in a block")
 			rpc.vm.logger.Error("Error on broadcastTxCommit", "err", err)
 			return &ctypes.ResultBroadcastTxCommit{
@@ -749,7 +748,7 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 			),
 			DefaultNodeID: p2p.ID(rpc.vm.appOpts.NodeId),
 			ListenAddr:    "",
-			Network:       rpc.vm.networkName,
+			Network:       rpc.vm.config.NetworkName,
 			Version:       version.TMCoreSemVer,
 			Channels:      nil,
 			Moniker:       "",
