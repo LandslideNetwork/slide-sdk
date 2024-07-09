@@ -52,7 +52,7 @@ func (c *VMConfig) SetDefaults() {
 
 	c.ConsensusParams.Block.MaxBytes = defaultMaxBytes
 	c.ConsensusParams.Block.MaxGas = defaultMaxGas
-	c.ConsensusParams.Evidence.MaxBytes = defaultMaxBytes
+	c.ConsensusParams.Evidence.MaxBytes = 1000
 }
 
 // Validate returns an error if this is an invalid config.
