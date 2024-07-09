@@ -370,7 +370,16 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		blk = vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
 	} else {
 		vm.logger.Debug("creating genesis block")
-		executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
+		executor := vmstate.NewBlockExecutor(
+			vm.stateStore,
+			vm.logger,
+			vm.app.Consensus(),
+			vm.mempool,
+			vm.blockStore,
+			vm.config.ConsensusParams.Block.MaxBytes,
+			vm.config.ConsensusParams.Block.MaxGas,
+			vm.config.ConsensusParams.Evidence.MaxBytes,
+		)
 		executor.SetEventBus(vm.eventBus)
 
 		blk, err = executor.CreateProposalBlock(context.Background(), vm.state.LastBlockHeight+1, vm.state, &types.ExtendedCommit{}, proposerAddress)
@@ -525,7 +534,16 @@ func (vm *LandslideVM) Disconnected(context.Context, *vmpb.DisconnectedRequest) 
 // BuildBlock attempt to create a new block from data contained in the VM.
 func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vmpb.BuildBlockResponse, error) {
 	vm.logger.Info("BuildBlock")
-	executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
+	executor := vmstate.NewBlockExecutor(
+		vm.stateStore,
+		vm.logger,
+		vm.app.Consensus(),
+		vm.mempool,
+		vm.blockStore,
+		vm.config.ConsensusParams.Block.MaxBytes,
+		vm.config.ConsensusParams.Block.MaxGas,
+		vm.config.ConsensusParams.Evidence.MaxBytes,
+	)
 	executor.SetEventBus(vm.eventBus)
 
 	signatures := make([]types.ExtendedCommitSig, len(vm.state.Validators.Validators))
@@ -884,7 +902,16 @@ func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptReque
 		return nil, ErrNotFound
 	}
 
-	executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
+	executor := vmstate.NewBlockExecutor(
+		vm.stateStore,
+		vm.logger,
+		vm.app.Consensus(),
+		vm.mempool,
+		vm.blockStore,
+		vm.config.ConsensusParams.Block.MaxBytes,
+		vm.config.ConsensusParams.Block.MaxGas,
+		vm.config.ConsensusParams.Evidence.MaxBytes,
+	)
 	executor.SetEventBus(vm.eventBus)
 
 	blk := wblk.Block

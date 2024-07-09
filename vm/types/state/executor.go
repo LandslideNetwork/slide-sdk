@@ -43,6 +43,11 @@ type BlockExecutor struct {
 	logger log.Logger
 
 	metrics *statetypes.Metrics
+
+	blockMaxBytes    int64
+	blockMaxGas      int64
+	evidenceMaxBytes int64
+	txMaxSizeBytes   int64
 }
 
 type BlockExecutorOption func(executor *BlockExecutor)
@@ -61,16 +66,23 @@ func NewBlockExecutor(
 	proxyApp proxy.AppConnConsensus,
 	mempool mempool.Mempool,
 	blockStore statetypes.BlockStore,
+	blockMaxBytes int64,
+	blockMaxGas int64,
+	evidenceMaxBytes int64,
 	options ...BlockExecutorOption,
+
 ) *BlockExecutor {
 	res := &BlockExecutor{
-		store:      stateStore,
-		proxyApp:   proxyApp,
-		eventBus:   types.NopEventBus{},
-		mempool:    mempool,
-		logger:     logger,
-		metrics:    statetypes.NopMetrics(),
-		blockStore: blockStore,
+		store:            stateStore,
+		proxyApp:         proxyApp,
+		eventBus:         types.NopEventBus{},
+		mempool:          mempool,
+		logger:           logger,
+		metrics:          statetypes.NopMetrics(),
+		blockStore:       blockStore,
+		blockMaxBytes:    blockMaxBytes,
+		blockMaxGas:      blockMaxGas,
+		evidenceMaxBytes: evidenceMaxBytes,
 	}
 
 	for _, option := range options {
@@ -104,24 +116,22 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 	proposerAddr []byte,
 ) (*types.Block, error) {
 
-	// maxBytes := state.ConsensusParams.Block.MaxBytes
-	// emptyMaxBytes := maxBytes == -1
-	// if emptyMaxBytes {
-	//	maxBytes = int64(types.MaxBlockSizeBytes)
-	// }
+	maxBytes := blockExec.blockMaxBytes
+	emptyMaxBytes := maxBytes == -1
+	if emptyMaxBytes {
+		maxBytes = int64(types.MaxBlockSizeBytes)
+	}
 
-	// maxGas := state.ConsensusParams.Block.MaxGas
+	maxGas := blockExec.blockMaxGas
 
 	// Fetch a limited amount of valid txs
-	// maxDataBytes := types.MaxDataBytes(maxBytes, 0, state.Validators.Size())
-	// maxReapBytes := maxDataBytes
-	// if emptyMaxBytes {
-	//	maxReapBytes = -1
-	// }
-	maxDataBytes := int64(-1)
+	maxDataBytes := types.MaxDataBytes(maxBytes, blockExec.evidenceMaxBytes, state.Validators.Size())
+	maxReapBytes := maxDataBytes
+	if emptyMaxBytes {
+		maxReapBytes = -1
+	}
 
-	// txs := blockExec.mempool.ReapMaxBytesMaxGas(maxReapBytes, maxGas)
-	txs := blockExec.mempool.ReapMaxBytesMaxGas(-1, -1)
+	txs := blockExec.mempool.ReapMaxBytesMaxGas(maxReapBytes, maxGas)
 	commit := lastExtCommit.ToCommit()
 	block := state.MakeBlock(height, txs, commit, nil, proposerAddr)
 	rpp, err := blockExec.proxyApp.PrepareProposal(
@@ -149,11 +159,8 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 		return nil, err
 	}
 
-	// TODO: get maxTxSizeBytes from the app config
-	maxTxSizeBytes := int64(types.MaxBlockSizeBytes)
-
 	txl := types.ToTxs(rpp.Txs)
-	if err := txl.Validate(maxTxSizeBytes); err != nil {
+	if err := txl.Validate(maxDataBytes); err != nil {
 		return nil, err
 	}
 
