@@ -332,11 +332,6 @@ func (rpc *RPC) GenesisChunked(_ *rpctypes.Context, chunk uint) (*ctypes.ResultG
 		return nil, fmt.Errorf("service configuration error, there are no chunks")
 	}
 
-	// Step 1: Check if chunk exceeds the maximum int value on 32-bit systems
-	if chunk > uint(^0>>1) {
-		return nil, fmt.Errorf("chunk number exceeds maximum limit")
-	}
-
 	id := int(chunk)
 
 	if id < 0 || id > len(rpc.vm.genChunks)-1 {
