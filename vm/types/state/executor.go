@@ -47,7 +47,6 @@ type BlockExecutor struct {
 	blockMaxBytes    int64
 	blockMaxGas      int64
 	evidenceMaxBytes int64
-	txMaxSizeBytes   int64
 }
 
 type BlockExecutorOption func(executor *BlockExecutor)
