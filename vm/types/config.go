@@ -11,8 +11,8 @@ const (
 	defaultTimeoutBroadcastTxCommit uint16 = 10 // seconds
 	defaultNetworkName                     = "landslide-test"
 
-	defaultMaxBytes int64 = 10 * 1024 * 1024 // 10MB
-	defaultMaxGas   int64 = 10000000         // 10,000,000
+	defaultMaxBytes int64 = 100 * 1024 * 1024 // 10MB
+	defaultMaxGas   int64 = 10000000          // 10,000,000
 )
 
 type (
