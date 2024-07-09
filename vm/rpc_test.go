@@ -6,8 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cometbft/cometbft/abci/example/kvstore"
+	"github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/libs/pubsub"
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/p2p"
+	rpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	"github.com/cometbft/cometbft/types"
 	"github.com/cometbft/cometbft/version"
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
@@ -26,9 +29,21 @@ import (
 	"github.com/consideritdone/landslidevm/jsonrpc"
 )
 
+type HandlerRPC func(vmLnd *LandslideVM) http.Handler
+
+type BlockBuilder func(*testing.T, context.Context, *LandslideVM)
+
 type txRuntimeEnv struct {
 	key, value, hash []byte
 	initHeight       int64
+}
+
+type ResultEcho struct {
+	Value string `json:"value"`
+}
+
+type ResultEchoBytes struct {
+	Value []byte `json:"value"`
 }
 
 func buildAccept(t *testing.T, ctx context.Context, vm *LandslideVM) {
@@ -56,11 +71,11 @@ func noAction(t *testing.T, ctx context.Context, vm *LandslideVM) {
 
 }
 
-func setupRPC(t *testing.T, blockBuilder func(*testing.T, context.Context, *LandslideVM)) (*http.Server, *LandslideVM, *client.Client, context.CancelFunc) {
+func setupServer(t *testing.T, handler HandlerRPC, blockBuilder BlockBuilder) (*http.Server, *LandslideVM, *client.Client, context.CancelFunc) {
 	vm := newFreshKvApp(t)
 	vmLnd := vm.(*LandslideVM)
-	mux := http.NewServeMux()
-	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vmLnd).Routes(), vmLnd.logger)
+
+	mux := handler(vmLnd)
 
 	address := "127.0.0.1:44444"
 	server := &http.Server{Addr: address, Handler: mux}
@@ -78,6 +93,31 @@ func setupRPC(t *testing.T, blockBuilder func(*testing.T, context.Context, *Land
 	require.NoError(t, err)
 
 	return server, vmLnd, client, cancel
+}
+
+func setupRPC(vmLnd *LandslideVM) http.Handler {
+	mux := http.NewServeMux()
+	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vmLnd).Routes(), vmLnd.logger)
+	return mux
+}
+
+func setupWSRPC(vmLnd *LandslideVM) http.Handler {
+	mux := http.NewServeMux()
+	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vmLnd).Routes(), vmLnd.logger)
+	tmRPC := NewRPC(vmLnd)
+	wm := rpcserver.NewWebsocketManager(tmRPC.TMRoutes(),
+		rpcserver.OnDisconnect(func(remoteAddr string) {
+			err := vmLnd.eventBus.UnsubscribeAll(context.Background(), remoteAddr)
+			if err != nil && err != pubsub.ErrSubscriptionNotFound {
+				vmLnd.logger.Error("Failed to unsubscribe addr from events", "addr", remoteAddr, "err", err)
+			}
+		}),
+		rpcserver.ReadLimit(config.DefaultRPCConfig().MaxBodyBytes),
+		rpcserver.WriteChanCapacity(config.DefaultRPCConfig().WebSocketWriteBufferSize),
+	)
+	wm.SetLogger(vmLnd.logger)
+	mux.HandleFunc("/websocket", wm.WebsocketHandler)
+	return mux
 }
 
 // MakeTxKV returns a text transaction, allong with expected key, value pair
@@ -327,6 +367,11 @@ func testCheckTx(t *testing.T, client *client.Client, params map[string]interfac
 	require.Equal(t, result.Code, expected.Code)
 }
 
+func testSubscribe(t *testing.T, client *client.WSClient, params map[string]interface{}) {
+	err := client.Call(context.Background(), "subscribe", params)
+	require.NoError(t, err)
+}
+
 func waitForStateUpdate(expectedHeight int64, vm *LandslideVM) {
 	for {
 		if vm.state.LastBlockHeight() == expectedHeight {
@@ -361,7 +406,7 @@ func checkCommittedTxResult(t *testing.T, client *client.Client, env *txRuntimeE
 }
 
 func TestBlockProduction(t *testing.T) {
-	server, vm, client, cancel := setupRPC(t, buildAccept)
+	server, vm, client, cancel := setupServer(t, setupRPC, buildAccept)
 	defer server.Close()
 	defer vm.mempool.Flush()
 	defer cancel()
@@ -395,7 +440,7 @@ func TestBlockProduction(t *testing.T) {
 }
 
 func TestABCIService(t *testing.T) {
-	server, vm, client, cancel := setupRPC(t, buildAccept)
+	server, vm, client, cancel := setupServer(t, setupRPC, buildAccept)
 	defer server.Close()
 	defer vm.mempool.Flush()
 	defer cancel()
@@ -469,7 +514,7 @@ func TestABCIService(t *testing.T) {
 }
 
 func TestStatusService(t *testing.T) {
-	server, vm, client, cancel := setupRPC(t, buildAccept)
+	server, vm, client, cancel := setupServer(t, setupRPC, buildAccept)
 	defer server.Close()
 	defer vm.mempool.Flush()
 	defer cancel()
@@ -492,7 +537,7 @@ func TestStatusService(t *testing.T) {
 }
 
 func TestNetworkService(t *testing.T) {
-	server, vm, client, cancel := setupRPC(t, buildAccept)
+	server, vm, client, cancel := setupServer(t, setupRPC, buildAccept)
 	defer server.Close()
 	defer cancel()
 
@@ -539,7 +584,7 @@ func TestNetworkService(t *testing.T) {
 }
 
 func TestHistoryService(t *testing.T) {
-	server, vm, client, cancel := setupRPC(t, buildAccept)
+	server, vm, client, cancel := setupServer(t, setupRPC, buildAccept)
 	defer server.Close()
 	defer cancel()
 
@@ -626,7 +671,7 @@ func TestHistoryService(t *testing.T) {
 }
 
 func TestSignService(t *testing.T) {
-	server, vm, client, cancel := setupRPC(t, buildAccept)
+	server, vm, client, cancel := setupServer(t, setupRPC, buildAccept)
 	defer server.Close()
 	defer cancel()
 
@@ -822,7 +867,7 @@ func TestSignService(t *testing.T) {
 }
 
 func TestMempoolService(t *testing.T) {
-	server, vm, client, cancel := setupRPC(t, noAction)
+	server, vm, client, cancel := setupServer(t, setupRPC, noAction)
 	defer server.Close()
 	defer cancel()
 
@@ -894,3 +939,32 @@ func TestMempoolService(t *testing.T) {
 //{"Header", "header", map[string]interface{}{}, new(ctypes.ResultHeader)},
 //{"HeaderByHash", "header_by_hash", map[string]interface{}{}, new(ctypes.ResultHeader)},
 //{"Validators", "validators", map[string]interface{}{}, new(ctypes.ResultValidators)},
+
+func TestWSRPC(t *testing.T) {
+	server, vm, client, cancel := setupServer(t, setupWSRPC, buildAccept)
+	defer server.Close()
+	defer cancel()
+
+	t.Log(vm)
+	t.Log(client)
+
+	//err := client.Start()
+	//defer client.Stop()
+	//require.Nil(t, err)
+	//fmt.Println(vm)
+	//
+	//// on Subscribe
+	//testSubscribe(t, client, map[string]interface{}{"query": "TestHeaderEvents"})
+	//result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+	//
+	////// on Unsubscribe
+	////err = client.Unsubscribe(context.Background(), "TestHeaderEvents",
+	////	types.QueryForEvent(types.EventNewBlockHeader).String())
+	////require.NoError(t, err)
+	////
+	////// on UnsubscribeAll
+	////err = client.UnsubscribeAll(context.Background(), "TestHeaderEvents")
+	////require.NoError(t, err)
+	//err = client.Stop()
+	//require.Nil(t, err)
+}

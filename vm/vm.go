@@ -491,7 +491,6 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 	)
 	wm.SetLogger(vm.logger)
 	mux.HandleFunc("/websocket", wm.WebsocketHandler)
-	mux.HandleFunc("/v1/websocket", wm.WebsocketHandler)
 	jsonrpc.RegisterRPCFuncs(mux, tmRPC.Routes(), vm.logger)
 
 	httppb.RegisterHTTPServer(server, http.NewServer(mux))
