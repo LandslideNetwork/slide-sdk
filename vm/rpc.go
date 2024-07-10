@@ -74,7 +74,18 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 
 		// evidence API
 		// "broadcast_evidence": jsonrpc.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
+		"test_panic": jsonrpc.NewRPCFunc(rpc.TestPanic, ""),
 	}
+}
+
+// NumUnconfirmedTxs gets number of unconfirmed transactions.
+func (rpc *RPC) TestPanic(_ *rpctypes.Context) (*ctypes.ResultUnconfirmedTxs, error) {
+	panic("test panic")
+	return &ctypes.ResultUnconfirmedTxs{
+		Count:      rpc.vm.mempool.Size(),
+		Total:      rpc.vm.mempool.Size(),
+		TotalBytes: rpc.vm.mempool.SizeBytes(),
+	}, nil
 }
 
 // UnconfirmedTxs gets unconfirmed transactions (maximum ?limit entries)
