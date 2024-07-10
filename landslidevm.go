@@ -45,14 +45,16 @@ const (
 	// rpcChainVMProtocol should be bumped anytime changes are made which
 	// require the plugin vm to upgrade to latest avalanchego release to be
 	// compatible.
-	rpcChainVMProtocol uint = 35
+	rpcChainVMProtocol          uint = 35
+	defaultMaxRecvMsgSize            = 50 * 1024 * 1024 // 50 MB
+	defaultMaxConcurrentStreams      = 1000
 )
 
 var (
 	DefaultServerOptions = []grpc.ServerOption{
-		grpc.MaxRecvMsgSize(math.MaxInt),
+		grpc.MaxRecvMsgSize(defaultMaxRecvMsgSize),
 		grpc.MaxSendMsgSize(math.MaxInt),
-		grpc.MaxConcurrentStreams(math.MaxUint32),
+		grpc.MaxConcurrentStreams(defaultMaxConcurrentStreams),
 		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
 			MinTime:             defaultServerKeepAliveMinTime,
 			PermitWithoutStream: defaultPermitWithoutStream,
