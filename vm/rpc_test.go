@@ -71,7 +71,7 @@ func noAction(t *testing.T, ctx context.Context, vm *LandslideVM) {
 
 }
 
-func setupServer(t *testing.T, handler HandlerRPC, blockBuilder BlockBuilder) (*http.Server, *LandslideVM, *client.Client, context.CancelFunc) {
+func setupServer(t *testing.T, handler HandlerRPC, blockBuilder BlockBuilder) (*http.Server, *LandslideVM, string, context.CancelFunc) {
 	vm := newFreshKvApp(t)
 	vmLnd := vm.(*LandslideVM)
 
@@ -89,9 +89,20 @@ func setupServer(t *testing.T, handler HandlerRPC, blockBuilder BlockBuilder) (*
 	// wait for servers to start
 	time.Sleep(time.Second * 2)
 
+	return server, vmLnd, address, cancel
+}
+
+func setupRPCServer(t *testing.T, handler HandlerRPC, blockBuilder BlockBuilder) (*http.Server, *LandslideVM, *client.Client, context.CancelFunc) {
+	server, vmLnd, address, cancel := setupServer(t, handler, blockBuilder)
 	client, err := client.New("tcp://" + address)
 	require.NoError(t, err)
+	return server, vmLnd, client, cancel
+}
 
+func setupWSRPCServer(t *testing.T, handler HandlerRPC, blockBuilder BlockBuilder) (*http.Server, *LandslideVM, *client.WSClient, context.CancelFunc) {
+	server, vmLnd, address, cancel := setupServer(t, handler, blockBuilder)
+	client, err := client.NewWS("tcp://"+address, "/websocket")
+	require.NoError(t, err)
 	return server, vmLnd, client, cancel
 }
 
@@ -406,7 +417,7 @@ func checkCommittedTxResult(t *testing.T, client *client.Client, env *txRuntimeE
 }
 
 func TestBlockProduction(t *testing.T) {
-	server, vm, client, cancel := setupServer(t, setupRPC, buildAccept)
+	server, vm, client, cancel := setupRPCServer(t, setupRPC, buildAccept)
 	defer server.Close()
 	defer vm.mempool.Flush()
 	defer cancel()
@@ -440,7 +451,7 @@ func TestBlockProduction(t *testing.T) {
 }
 
 func TestABCIService(t *testing.T) {
-	server, vm, client, cancel := setupServer(t, setupRPC, buildAccept)
+	server, vm, client, cancel := setupRPCServer(t, setupRPC, buildAccept)
 	defer server.Close()
 	defer vm.mempool.Flush()
 	defer cancel()
@@ -514,7 +525,7 @@ func TestABCIService(t *testing.T) {
 }
 
 func TestStatusService(t *testing.T) {
-	server, vm, client, cancel := setupServer(t, setupRPC, buildAccept)
+	server, vm, client, cancel := setupRPCServer(t, setupRPC, buildAccept)
 	defer server.Close()
 	defer vm.mempool.Flush()
 	defer cancel()
@@ -537,7 +548,7 @@ func TestStatusService(t *testing.T) {
 }
 
 func TestNetworkService(t *testing.T) {
-	server, vm, client, cancel := setupServer(t, setupRPC, buildAccept)
+	server, vm, client, cancel := setupRPCServer(t, setupRPC, buildAccept)
 	defer server.Close()
 	defer cancel()
 
@@ -584,7 +595,7 @@ func TestNetworkService(t *testing.T) {
 }
 
 func TestHistoryService(t *testing.T) {
-	server, vm, client, cancel := setupServer(t, setupRPC, buildAccept)
+	server, vm, client, cancel := setupRPCServer(t, setupRPC, buildAccept)
 	defer server.Close()
 	defer cancel()
 
@@ -671,7 +682,7 @@ func TestHistoryService(t *testing.T) {
 }
 
 func TestSignService(t *testing.T) {
-	server, vm, client, cancel := setupServer(t, setupRPC, buildAccept)
+	server, vm, client, cancel := setupRPCServer(t, setupRPC, buildAccept)
 	defer server.Close()
 	defer cancel()
 
@@ -867,7 +878,7 @@ func TestSignService(t *testing.T) {
 }
 
 func TestMempoolService(t *testing.T) {
-	server, vm, client, cancel := setupServer(t, setupRPC, noAction)
+	server, vm, client, cancel := setupRPCServer(t, setupRPC, noAction)
 	defer server.Close()
 	defer cancel()
 
@@ -941,7 +952,7 @@ func TestMempoolService(t *testing.T) {
 //{"Validators", "validators", map[string]interface{}{}, new(ctypes.ResultValidators)},
 
 func TestWSRPC(t *testing.T) {
-	server, vm, client, cancel := setupServer(t, setupWSRPC, buildAccept)
+	server, vm, client, cancel := setupWSRPCServer(t, setupWSRPC, buildAccept)
 	defer server.Close()
 	defer cancel()
 
