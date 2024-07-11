@@ -153,6 +153,12 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 	rpc.vm.logger.Info("BroadcastTxCommit called")
 	subscriber := ctx.RemoteAddr()
 
+	if rpc.vm.eventBus.NumClients() >= rpc.vm.config.MaxSubscriptionClients {
+		return nil, fmt.Errorf("max_subscription_clients %d reached", rpc.vm.config.MaxSubscriptionClients)
+	} else if rpc.vm.eventBus.NumClientSubscriptions(subscriber) >= rpc.vm.config.MaxSubscriptionsPerClient {
+		return nil, fmt.Errorf("max_subscriptions_per_client %d reached", rpc.vm.config.MaxSubscriptionsPerClient)
+	}
+
 	// Subscribe to tx being committed in block.
 	subCtx, cancel := context.WithTimeout(context.Background(), core.SubscribeTimeout)
 	defer cancel()

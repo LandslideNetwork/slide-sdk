@@ -12,7 +12,10 @@ const (
 	defaultNetworkName                     = "landslide-test"
 
 	defaultMaxBytes int64 = 100 * 1024 * 1024 // 10MB
-	defaultMaxGas   int64 = 10000000          // 10,000,000
+	defaultMaxGas   int64 = 10000000
+
+	defaultMaxSubscriptionClients    = 100
+	defaultMaxSubscriptionsPerClient = 5
 )
 
 type (
@@ -23,9 +26,11 @@ type (
 
 	// VMConfig contains the configuration of the VM.
 	VMConfig struct {
-		NetworkName              string          `json:"network_name"`
-		TimeoutBroadcastTxCommit uint16          `json:"timeout_broadcast_tx_commit"`
-		ConsensusParams          ConsensusParams `json:"consensus_params"`
+		NetworkName               string          `json:"network_name"`
+		TimeoutBroadcastTxCommit  uint16          `json:"timeout_broadcast_tx_commit"`
+		ConsensusParams           ConsensusParams `json:"consensus_params"`
+		MaxSubscriptionClients    int             `json:"max_subscription_clients"`
+		MaxSubscriptionsPerClient int             `json:"max_subscriptions_per_client"`
 	}
 
 	// ConsensusParams contains consensus critical parameters that determine the
@@ -53,6 +58,9 @@ func (c *VMConfig) SetDefaults() {
 	c.ConsensusParams.Block.MaxBytes = defaultMaxBytes
 	c.ConsensusParams.Block.MaxGas = defaultMaxGas
 	c.ConsensusParams.Evidence.MaxBytes = 1000
+
+	c.MaxSubscriptionsPerClient = defaultMaxSubscriptionsPerClient
+	c.MaxSubscriptionClients = defaultMaxSubscriptionClients
 }
 
 // Validate returns an error if this is an invalid config.
@@ -63,6 +71,14 @@ func (c *VMConfig) Validate() error {
 
 	if err := c.ConsensusParams.Validate(); err != nil {
 		return fmt.Errorf("consensus_params is invalid: %w", err)
+	}
+
+	if c.MaxSubscriptionsPerClient < 0 {
+		return fmt.Errorf("max_subscriptions_per_client must be positive. Got %d", c.MaxSubscriptionsPerClient)
+	}
+
+	if c.MaxSubscriptionClients < 0 {
+		return fmt.Errorf("max_subscription_clients must be positive. Got %d", c.MaxSubscriptionClients)
 	}
 
 	return nil
