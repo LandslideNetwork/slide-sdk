@@ -320,7 +320,9 @@ func (rpc *RPC) BlockchainInfo(
 	var blockMetas []*types.BlockMeta
 	for height := maxHeight; height >= minHeight; height-- {
 		blockMeta := rpc.vm.blockStore.LoadBlockMeta(height)
-		blockMetas = append(blockMetas, blockMeta)
+		if blockMeta != nil {
+			blockMetas = append(blockMetas, blockMeta)
+		}
 	}
 
 	return &ctypes.ResultBlockchainInfo{
