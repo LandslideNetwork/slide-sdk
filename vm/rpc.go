@@ -74,18 +74,7 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 
 		// evidence API
 		// "broadcast_evidence": jsonrpc.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
-		"test_panic": jsonrpc.NewRPCFunc(rpc.TestPanic, ""),
 	}
-}
-
-// NumUnconfirmedTxs gets number of unconfirmed transactions.
-func (rpc *RPC) TestPanic(_ *rpctypes.Context) (*ctypes.ResultUnconfirmedTxs, error) {
-	panic("test panic")
-	return &ctypes.ResultUnconfirmedTxs{
-		Count:      rpc.vm.mempool.Size(),
-		Total:      rpc.vm.mempool.Size(),
-		TotalBytes: rpc.vm.mempool.SizeBytes(),
-	}, nil
 }
 
 // UnconfirmedTxs gets unconfirmed transactions (maximum ?limit entries)
@@ -247,26 +236,34 @@ func (rpc *RPC) BroadcastTxAsync(_ *rpctypes.Context, tx types.Tx) (*ctypes.Resu
 	return &ctypes.ResultBroadcastTx{Hash: tx.Hash()}, nil
 }
 
-func (rpc *RPC) BroadcastTxSync(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
+// BroadcastTxSync returns with the response from CheckTx. Does not wait for
+// the transaction result.
+// More: https://docs.cometbft.com/v0.38.x/rpc/#/Tx/broadcast_tx_sync
+func (rpc *RPC) BroadcastTxSync(ctx *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
 	rpc.vm.logger.Info("BroadcastTxSync called")
 	resCh := make(chan *abci.ResponseCheckTx, 1)
 	err := rpc.vm.mempool.CheckTx(tx, func(res *abci.ResponseCheckTx) {
-		resCh <- res
+		select {
+		case <-ctx.Context().Done():
+		case resCh <- res:
+		}
 	}, mempl.TxInfo{})
 	if err != nil {
 		rpc.vm.logger.Error("Error on BroadcastTxSync", "err", err)
 		return nil, err
 	}
-	res := <-resCh
-
-	rpc.vm.logger.Info("BroadcastTxSync response", "Code", res.Code, "Log", res.Log, "Codespace", res.Codespace, "Hash", tx.Hash())
-	return &ctypes.ResultBroadcastTx{
-		Code:      res.GetCode(),
-		Data:      res.GetData(),
-		Log:       res.GetLog(),
-		Codespace: res.GetCodespace(),
-		Hash:      tx.Hash(),
-	}, nil
+	select {
+	case <-ctx.Context().Done():
+		return nil, fmt.Errorf("broadcast confirmation not received: %w", ctx.Context().Err())
+	case res := <-resCh:
+		return &ctypes.ResultBroadcastTx{
+			Code:      res.Code,
+			Data:      res.Data,
+			Log:       res.Log,
+			Codespace: res.Codespace,
+			Hash:      tx.Hash(),
+		}, nil
+	}
 }
 
 // filterMinMax returns error if either min or max are negative or min > max
