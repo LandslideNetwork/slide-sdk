@@ -139,6 +139,8 @@ func Serve[T interface {
 	}
 
 	client := runtimepb.NewRuntimeClient(clientConn)
+
+	// the gRPC server should be exposed only to the local IP address 127.0.0.1
 	listener, err := net.Listen("tcp", "127.0.0.1:")
 	if err != nil {
 		return fmt.Errorf("failed to create new listener: %w", err)

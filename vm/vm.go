@@ -170,7 +170,8 @@ func WithClientConn(clientConn grpc.ClientConnInterface) func(vm *LandslideVM) {
 	}
 }
 
-// Initialize this VM.
+// Initialize initializes the VM.
+// This method should only be accessible by the AvalancheGo node and not exposed publicly.
 func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest) (*vmpb.InitializeResponse, error) {
 	registerer := prometheus.NewRegistry()
 
@@ -531,7 +532,8 @@ func (vm *LandslideVM) Disconnected(context.Context, *vmpb.DisconnectedRequest) 
 	return &emptypb.Empty{}, nil
 }
 
-// BuildBlock attempt to create a new block from data contained in the VM.
+// BuildBlock attempts to create a new block from data contained in the VM.
+// This method should be restricted to the AvalancheGo node.
 func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vmpb.BuildBlockResponse, error) {
 	vm.logger.Info("BuildBlock")
 	executor := vmstate.NewBlockExecutor(
@@ -888,6 +890,8 @@ func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyReque
 	return &vmpb.BlockVerifyResponse{Timestamp: timestamppb.New(blk.Time)}, nil
 }
 
+// BlockAccept notifies the VM that a block has been accepted.
+// This is a critical method and should not be exposed publicly.
 func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptRequest) (*emptypb.Empty, error) {
 	vm.logger.Info("BlockAccept")
 
