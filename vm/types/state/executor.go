@@ -166,6 +166,7 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 	return state.MakeBlock(height, txl, commit, nil, proposerAddr), nil
 }
 
+// ProcessProposal is called whenever a node receives a complete proposal.
 func (blockExec *BlockExecutor) ProcessProposal(
 	block *types.Block,
 	state statetypes.State,

@@ -110,6 +110,7 @@ func (rpc *RPC) CheckTx(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultCheckTx
 	return &ctypes.ResultCheckTx{ResponseCheckTx: *res}, nil
 }
 
+// ABCIInfo returns the latest information about the application.
 func (rpc *RPC) ABCIInfo(_ *rpctypes.Context) (*ctypes.ResultABCIInfo, error) {
 	resInfo, err := rpc.vm.app.Query().Info(context.TODO(), proxy.RequestInfo)
 	if err != nil {
@@ -118,6 +119,7 @@ func (rpc *RPC) ABCIInfo(_ *rpctypes.Context) (*ctypes.ResultABCIInfo, error) {
 	return &ctypes.ResultABCIInfo{Response: *resInfo}, nil
 }
 
+// ABCIQuery queries the application for some information.
 func (rpc *RPC) ABCIQuery(
 	_ *rpctypes.Context,
 	path string,
@@ -366,17 +368,17 @@ func (rpc *RPC) GenesisChunked(_ *rpctypes.Context, chunk uint) (*ctypes.ResultG
 	}, nil
 }
 
-// ToDo: no peers, because it's vm
+// NetInfo - no peers, because it's vm
 func (rpc *RPC) NetInfo(_ *rpctypes.Context) (*ctypes.ResultNetInfo, error) {
 	return nil, nil
 }
 
-// ToDo: we doesn't have consensusState
+// DumpConsensusState - we doesn't have consensusState
 func (rpc *RPC) DumpConsensusState(_ *rpctypes.Context) (*ctypes.ResultDumpConsensusState, error) {
 	return nil, nil
 }
 
-// ToDo: we doesn't have consensusState
+// GetConsensusState - we doesn't have consensusState
 func (rpc *RPC) GetConsensusState(_ *rpctypes.Context) (*ctypes.ResultConsensusState, error) {
 	return nil, nil
 }
@@ -534,6 +536,7 @@ func validateSkipCount(page, perPage int) int {
 	return skipCount
 }
 
+// Validators fetches and verifies validators.
 func (rpc *RPC) Validators(
 	_ *rpctypes.Context,
 	heightPtr *int64,
@@ -600,6 +603,8 @@ func (rpc *RPC) Tx(_ *rpctypes.Context, hash []byte, prove bool) (*ctypes.Result
 	}, nil
 }
 
+// TxSearch defines a method to search for a paginated set of transactions by
+// transaction event search criteria.
 func (rpc *RPC) TxSearch(
 	ctx *rpctypes.Context,
 	query string,

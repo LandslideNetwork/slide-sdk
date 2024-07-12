@@ -135,8 +135,9 @@ type (
 		preferred      [32]byte
 		wrappedBlocks  *vmstate.WrappedBlocksStorage
 
-		clientConn grpc.ClientConnInterface
-		config     vmtypes.VMConfig
+		clientConn    grpc.ClientConnInterface
+		optClientConn *grpc.ClientConn
+		config        vmtypes.VMConfig
 	}
 )
 
@@ -164,9 +165,9 @@ func NewViaDB(database dbm.DB, creator AppCreator, options ...func(*LandslideVM)
 	return vm
 }
 
-func WithClientConn(clientConn grpc.ClientConnInterface) func(vm *LandslideVM) {
+func WithClientConn(clientConn *grpc.ClientConn) func(vm *LandslideVM) {
 	return func(vm *LandslideVM) {
-		vm.clientConn = clientConn
+		vm.optClientConn = clientConn
 	}
 }
 
@@ -196,7 +197,11 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	// Register metrics for each Go plugin processes
 	vm.processMetrics = registerer
 
-	if vm.clientConn == nil {
+	// add to connCloser even we have defined vm.clientConn via Option
+	if vm.optClientConn != nil {
+		vm.connCloser.Add(vm.optClientConn)
+		vm.clientConn = vm.optClientConn
+	} else {
 		clientConn, err := grpc.Dial(
 			"passthrough:///"+req.ServerAddr,
 			grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
@@ -209,10 +214,11 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			return nil, err
 		}
 
-		// TODO: add to connCloser even we have defined vm.clientConn via Option
 		vm.connCloser.Add(clientConn)
 		vm.clientConn = clientConn
 	}
+
+	vm.logger = log.NewTMLogger(os.Stdout)
 
 	msgClient := messengerpb.NewMessengerClient(vm.clientConn)
 
@@ -223,12 +229,17 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			select {
 			case msg, ok := <-vm.toEngine:
 				if !ok {
+					vm.logger.Error("channel closed")
 					return
 				}
 				// Nothing to do with the error within the goroutine
-				_, _ = msgClient.Notify(context.Background(), &messengerpb.NotifyRequest{
+				_, err := msgClient.Notify(context.Background(), &messengerpb.NotifyRequest{
 					Message: msg,
 				})
+				if err != nil {
+					vm.logger.Error("failed to notify", "err", err)
+				}
+
 			case <-vm.closed:
 				return
 			}
@@ -244,13 +255,13 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
+			vm.logger.Error("failed to dial database", "err", err)
 			return nil, err
 		}
 		vm.connCloser.Add(dbClientConn)
 		vm.databaseClient = rpcdb.NewDatabaseClient(dbClientConn)
 		vm.database = database.New(vm.databaseClient)
 	}
-	vm.logger = log.NewTMLogger(os.Stdout)
 
 	dbBlockStore := dbm.NewPrefixDB(vm.database, dbPrefixBlockStore)
 	vm.blockStore = store.NewBlockStore(dbBlockStore)
@@ -273,6 +284,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}
 	app, err := vm.appCreator(vm.appOpts)
 	if err != nil {
+		vm.logger.Error("failed to create app", "err", err)
 		return nil, err
 	}
 
