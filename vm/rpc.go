@@ -193,7 +193,12 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 		// Wait for the tx to be included in a block or timeout.
 		select {
 		case msg := <-deliverTxSub.Out(): // The tx was included in a block.
-			eventDataTx := msg.Data().(types.EventDataTx)
+			eventDataTx, ok := msg.Data().(types.EventDataTx)
+			if !ok {
+				err = fmt.Errorf("expected types.EventDataTx, got %T", msg.Data())
+				rpc.vm.logger.Error("Error on broadcastTxCommit", "err", err)
+				return nil, err
+			}
 			return &ctypes.ResultBroadcastTxCommit{
 				CheckTx:  *checkTxRes,
 				TxResult: eventDataTx.Result,
