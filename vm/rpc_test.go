@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"github.com/cometbft/cometbft/abci/example/kvstore"
 	"github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/libs/pubsub"
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/p2p"
+	"github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	rpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	"github.com/cometbft/cometbft/types"
 	"github.com/cometbft/cometbft/version"
@@ -22,8 +24,9 @@ import (
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	bftjson "github.com/cometbft/cometbft/libs/json"
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	rpcclienthttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	"github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	"github.com/stretchr/testify/require"
 
 	"github.com/consideritdone/landslidevm/jsonrpc"
@@ -36,14 +39,6 @@ type BlockBuilder func(*testing.T, context.Context, *LandslideVM)
 type txRuntimeEnv struct {
 	key, value, hash []byte
 	initHeight       int64
-}
-
-type ResultEcho struct {
-	Value string `json:"value"`
-}
-
-type ResultEchoBytes struct {
-	Value []byte `json:"value"`
 }
 
 func buildAccept(t *testing.T, ctx context.Context, vm *LandslideVM) {
@@ -92,9 +87,9 @@ func setupServer(t *testing.T, handler HandlerRPC, blockBuilder BlockBuilder) (*
 	return server, vmLnd, address, cancel
 }
 
-func setupRPCServer(t *testing.T, handler HandlerRPC, blockBuilder BlockBuilder) (*http.Server, *LandslideVM, *client.Client, context.CancelFunc) {
+func setupRPCServer(t *testing.T, handler HandlerRPC, blockBuilder BlockBuilder) (*http.Server, *LandslideVM, rpcclient.Client, context.CancelFunc) {
 	server, vmLnd, address, cancel := setupServer(t, handler, blockBuilder)
-	client, err := client.New("tcp://" + address)
+	client, err := rpcclienthttp.New("tcp://"+address, "/websocket")
 	require.NoError(t, err)
 	return server, vmLnd, client, cancel
 }
@@ -138,9 +133,8 @@ func MakeTxKV() ([]byte, []byte, []byte) {
 	return k, v, append(k, append([]byte("="), v...)...)
 }
 
-func testABCIInfo(t *testing.T, client *client.Client, expected *coretypes.ResultABCIInfo) {
-	result := new(coretypes.ResultABCIInfo)
-	_, err := client.Call(context.Background(), "abci_info", map[string]interface{}{}, result)
+func testABCIInfo(t *testing.T, client rpcclient.Client, expected *coretypes.ResultABCIInfo) {
+	result, err := client.ABCIInfo(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, expected.Response.Version, result.Response.Version)
 	require.Equal(t, expected.Response.AppVersion, result.Response.AppVersion)
@@ -148,18 +142,16 @@ func testABCIInfo(t *testing.T, client *client.Client, expected *coretypes.Resul
 	require.NotNil(t, result.Response.LastBlockAppHash)
 }
 
-func testABCIQuery(t *testing.T, client *client.Client, params map[string]interface{}, expected interface{}) {
-	result := new(coretypes.ResultABCIQuery)
-	_, err := client.Call(context.Background(), "abci_query", params, result)
+func testABCIQuery(t *testing.T, client rpcclient.Client, path string, data bytes.HexBytes, expected interface{}) {
+	result, err := client.ABCIQuery(context.Background(), path, data)
 	require.NoError(t, err)
 	require.True(t, result.Response.IsOK())
 	require.EqualValues(t, expected, result.Response.Value)
 }
 
-func testBroadcastTxCommit(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}) *coretypes.ResultBroadcastTxCommit {
+func testBroadcastTxCommit(t *testing.T, client rpcclient.Client, vm *LandslideVM, tx types.Tx) *coretypes.ResultBroadcastTxCommit {
 	initMempoolSize := vm.mempool.Size()
-	result := new(coretypes.ResultBroadcastTxCommit)
-	_, err := client.Call(context.Background(), "broadcast_tx_commit", params, result)
+	result, err := client.BroadcastTxCommit(context.Background(), tx)
 	waitForStateUpdate(result.Height, vm)
 	require.NoError(t, err)
 	require.True(t, result.CheckTx.IsOK())
@@ -168,41 +160,31 @@ func testBroadcastTxCommit(t *testing.T, client *client.Client, vm *LandslideVM,
 	return result
 }
 
-func testBroadcastTxSync(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}) *coretypes.ResultBroadcastTx {
-	//initMempoolSize := vm.mempool.Size()
-
-	result := new(coretypes.ResultBroadcastTx)
-	_, err := client.Call(context.Background(), "broadcast_tx_sync", params, result)
+func testBroadcastTxSync(t *testing.T, client rpcclient.Client, tx types.Tx) *coretypes.ResultBroadcastTx {
+	result, err := client.BroadcastTxSync(context.Background(), tx)
 	require.NoError(t, err)
 	require.Equal(t, result.Code, abcitypes.CodeTypeOK)
-	//require.Equal(t, initMempoolSize+1, vm.mempool.Size())
-	//tx := types.Tx(params["tx"].([]byte))
-	//require.EqualValues(t, tx.String(), result.Data.String())
-	//require.EqualValues(t, tx, vm.mempool.ReapMaxTxs(-1)[0])
 	return result
 }
 
-func testBroadcastTxAsync(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}) *coretypes.ResultBroadcastTx {
-	result := new(coretypes.ResultBroadcastTx)
-	_, err := client.Call(context.Background(), "broadcast_tx_async", params, result)
+func testBroadcastTxAsync(t *testing.T, client rpcclient.Client, tx types.Tx) *coretypes.ResultBroadcastTx {
+	result, err := client.BroadcastTxAsync(context.Background(), tx)
 	require.NoError(t, err)
 	require.NotNil(t, result.Hash)
 	require.Equal(t, result.Code, abcitypes.CodeTypeOK)
 	return result
 }
 
-func testStatus(t *testing.T, client *client.Client, expected *coretypes.ResultStatus) {
-	result := new(coretypes.ResultStatus)
-	_, err := client.Call(context.Background(), "status", map[string]interface{}{}, result)
+func testStatus(t *testing.T, client rpcclient.Client, expected *coretypes.ResultStatus) {
+	result, err := client.Status(context.Background())
 	require.NoError(t, err)
 	//TODO: test node info moniker
 	//require.Equal(t, expected.NodeInfo.Moniker, result.NodeInfo.Moniker)
 	require.Equal(t, expected.SyncInfo.LatestBlockHeight, result.SyncInfo.LatestBlockHeight)
 }
 
-func testNetInfo(t *testing.T, client *client.Client, expected *coretypes.ResultNetInfo) {
-	result := new(coretypes.ResultNetInfo)
-	_, err := client.Call(context.Background(), "net_info", map[string]interface{}{}, result)
+func testNetInfo(t *testing.T, client rpcclient.Client, expected *coretypes.ResultNetInfo) {
+	_, err := client.NetInfo(context.Background())
 	require.NoError(t, err)
 	//TODO: check equality
 	//require.Equal(t, expected.Listening, result.Listening)
@@ -216,9 +198,8 @@ func testNetInfo(t *testing.T, client *client.Client, expected *coretypes.Result
 
 }
 
-func testConsensusState(t *testing.T, client *client.Client, expected *coretypes.ResultConsensusState) {
-	result := new(coretypes.ResultConsensusState)
-	_, err := client.Call(context.Background(), "consensus_state", map[string]interface{}{}, result)
+func testConsensusState(t *testing.T, client rpcclient.Client, expected *coretypes.ResultConsensusState) {
+	_, err := client.ConsensusState(context.Background())
 	require.NoError(t, err)
 	//TODO: check equality
 	//require.Equal(t, expected.RoundState, result.RoundState)
@@ -226,9 +207,8 @@ func testConsensusState(t *testing.T, client *client.Client, expected *coretypes
 	//assert.NotEmpty(t, cons.RoundState)
 }
 
-func testDumpConsensusState(t *testing.T, client *client.Client, expected *coretypes.ResultDumpConsensusState) {
-	result := new(coretypes.ResultDumpConsensusState)
-	_, err := client.Call(context.Background(), "dump_consensus_state", map[string]interface{}{}, result)
+func testDumpConsensusState(t *testing.T, client rpcclient.Client, expected *coretypes.ResultDumpConsensusState) {
+	_, err := client.DumpConsensusState(context.Background())
 	require.NoError(t, err)
 	//TODO: check equality
 	//require.Equal(t, expected.RoundState, result.RoundState)
@@ -238,9 +218,8 @@ func testDumpConsensusState(t *testing.T, client *client.Client, expected *coret
 	//require.ElementsMatch(t, expected.Peers, result.Peers)
 }
 
-func testConsensusParams(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultConsensusParams) {
-	result := new(coretypes.ResultConsensusParams)
-	_, err := client.Call(context.Background(), "consensus_params", params, result)
+func testConsensusParams(t *testing.T, client rpcclient.Client, height *int64, expected *coretypes.ResultConsensusParams) {
+	result, err := client.ConsensusParams(context.Background(), height)
 	require.NoError(t, err)
 	//TODO: check equality
 	require.Equal(t, expected.BlockHeight, result.BlockHeight)
@@ -248,15 +227,13 @@ func testConsensusParams(t *testing.T, client *client.Client, params map[string]
 	//require.Equal(t, expected.ConsensusParams.Hash(), result.ConsensusParams.Hash())
 }
 
-func testHealth(t *testing.T, client *client.Client) {
-	result := new(coretypes.ResultHealth)
-	_, err := client.Call(context.Background(), "health", map[string]interface{}{}, result)
+func testHealth(t *testing.T, client rpcclient.Client) {
+	_, err := client.Health(context.Background())
 	require.NoError(t, err)
 }
 
-func testBlockchainInfo(t *testing.T, client *client.Client, expected *coretypes.ResultBlockchainInfo) {
-	result := new(coretypes.ResultBlockchainInfo)
-	_, err := client.Call(context.Background(), "blockchain", map[string]interface{}{}, result)
+func testBlockchainInfo(t *testing.T, client rpcclient.Client, minHeight int64, maxHeight int64, expected *coretypes.ResultBlockchainInfo) {
+	result, err := client.BlockchainInfo(context.Background(), minHeight, maxHeight)
 	require.NoError(t, err)
 	require.Equal(t, expected.LastHeight, result.LastHeight)
 	//TODO: implement same sorting method
@@ -267,9 +244,8 @@ func testBlockchainInfo(t *testing.T, client *client.Client, expected *coretypes
 	//require.Equal(t, expectedLastMeta.BlockID, lastMeta.BlockID)
 }
 
-func testBlock(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultBlock) *coretypes.ResultBlock {
-	result := new(coretypes.ResultBlock)
-	_, err := client.Call(context.Background(), "block", params, result)
+func testBlock(t *testing.T, client rpcclient.Client, height *int64, expected *coretypes.ResultBlock) *coretypes.ResultBlock {
+	result, err := client.Block(context.Background(), height)
 	require.NoError(t, err)
 	require.Equal(t, expected.Block.ChainID, result.Block.ChainID)
 	require.Equal(t, expected.Block.Height, result.Block.Height)
@@ -277,9 +253,8 @@ func testBlock(t *testing.T, client *client.Client, params map[string]interface{
 	return result
 }
 
-func testBlockByHash(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultBlock) *coretypes.ResultBlock {
-	result := new(coretypes.ResultBlock)
-	_, err := client.Call(context.Background(), "block_by_hash", params, result)
+func testBlockByHash(t *testing.T, client rpcclient.Client, hash []byte, expected *coretypes.ResultBlock) *coretypes.ResultBlock {
+	result, err := client.BlockByHash(context.Background(), hash)
 	require.NoError(t, err)
 	require.Equal(t, expected.Block.ChainID, result.Block.ChainID)
 	require.Equal(t, expected.Block.Height, result.Block.Height)
@@ -287,18 +262,17 @@ func testBlockByHash(t *testing.T, client *client.Client, params map[string]inte
 	return result
 }
 
-func testBlockResults(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultBlockResults) {
-	result := new(coretypes.ResultBlockResults)
-	_, err := client.Call(context.Background(), "block_results", params, result)
+func testBlockResults(t *testing.T, client rpcclient.Client, height *int64, expected *coretypes.ResultBlockResults) {
+	result, err := client.BlockResults(context.Background(), height)
 	require.NoError(t, err)
+	require.NotNil(t, result)
 	//require.Equal(t, expected.Height, result.Height)
 	//require.Equal(t, expected.AppHash, result.AppHash)
 	//require.Equal(t, expected.TxsResults, result.TxsResults)
 }
 
-func testBlockSearch(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultBlockSearch) {
-	result := new(coretypes.ResultBlockSearch)
-	_, err := client.Call(context.Background(), "block_search", params, result)
+func testBlockSearch(t *testing.T, client rpcclient.Client, query string, page *int, perPage *int, orderBy string, expected *coretypes.ResultBlockSearch) {
+	result, err := client.BlockSearch(context.Background(), query, page, perPage, orderBy)
 	require.NoError(t, err)
 	require.Equal(t, expected.TotalCount, result.TotalCount)
 	sort.Slice(expected.Blocks, func(i, j int) bool {
@@ -310,9 +284,8 @@ func testBlockSearch(t *testing.T, client *client.Client, params map[string]inte
 	require.Equal(t, expected.Blocks, result.Blocks)
 }
 
-func testTx(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}, expected *coretypes.ResultTx) {
-	result := new(coretypes.ResultTx)
-	_, err := client.Call(context.Background(), "tx", params, result)
+func testTx(t *testing.T, client rpcclient.Client, hash []byte, prove bool, expected *coretypes.ResultTx) {
+	result, err := client.Tx(context.Background(), hash, prove)
 	require.NoError(t, err)
 	require.EqualValues(t, expected.Hash, result.Hash)
 	require.EqualValues(t, expected.Tx, result.Tx)
@@ -320,17 +293,15 @@ func testTx(t *testing.T, client *client.Client, vm *LandslideVM, params map[str
 	require.EqualValues(t, expected.TxResult, result.TxResult)
 }
 
-func testTxSearch(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}, expected *coretypes.ResultTxSearch) {
-	result := new(coretypes.ResultTxSearch)
-	_, err := client.Call(context.Background(), "tx_search", params, result)
+func testTxSearch(t *testing.T, client rpcclient.Client, query string, prove bool, page *int, perPage *int, orderBy string, expected *coretypes.ResultTxSearch) {
+	result, err := client.TxSearch(context.Background(), query, prove, page, perPage, orderBy)
 	require.NoError(t, err)
 	require.EqualValues(t, expected.TotalCount, result.TotalCount)
 	require.EqualValues(t, expected.Txs, result.Txs)
 }
 
-func testCommit(t *testing.T, client *client.Client, vm *LandslideVM, params map[string]interface{}, expected *coretypes.ResultCommit) {
-	result := new(coretypes.ResultCommit)
-	_, err := client.Call(context.Background(), "commit", params, result)
+func testCommit(t *testing.T, client rpcclient.Client, height *int64, expected *coretypes.ResultCommit) {
+	result, err := client.Commit(context.Background(), height)
 	require.NoError(t, err)
 	//TODO: implement tests for all fields of result
 	//require.Equal(t, expected.Version, result.Version)
@@ -354,33 +325,47 @@ func testCommit(t *testing.T, client *client.Client, vm *LandslideVM, params map
 	//require.EqualValues(t, expected.Commit.Signatures, result.Commit.Signatures)
 }
 
-func testUnconfirmedTxs(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultUnconfirmedTxs) {
-	result := new(coretypes.ResultUnconfirmedTxs)
-	_, err := client.Call(context.Background(), "unconfirmed_txs", params, result)
+func testUnconfirmedTxs(t *testing.T, client rpcclient.Client, limit *int, expected *coretypes.ResultUnconfirmedTxs) {
+	result, err := client.UnconfirmedTxs(context.Background(), limit)
 	require.NoError(t, err)
 	require.Equal(t, expected.Total, result.Total)
 	require.Equal(t, expected.Count, result.Count)
 	require.EqualValues(t, expected.Txs, result.Txs)
 }
 
-func testNumUnconfirmedTxs(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultUnconfirmedTxs) {
-	result := new(coretypes.ResultUnconfirmedTxs)
-	_, err := client.Call(context.Background(), "num_unconfirmed_txs", params, result)
+func testNumUnconfirmedTxs(t *testing.T, client rpcclient.Client, expected *coretypes.ResultUnconfirmedTxs) {
+	result, err := client.NumUnconfirmedTxs(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, expected.Total, result.Total)
 	require.Equal(t, expected.Count, result.Count)
 }
 
-func testCheckTx(t *testing.T, client *client.Client, params map[string]interface{}, expected *coretypes.ResultCheckTx) {
-	result := new(coretypes.ResultCheckTx)
-	_, err := client.Call(context.Background(), "check_tx", params, result)
+func testCheckTx(t *testing.T, client rpcclient.Client, tx types.Tx, expected *coretypes.ResultCheckTx) {
+	result, err := client.CheckTx(context.Background(), tx)
 	require.NoError(t, err)
 	require.Equal(t, result.Code, expected.Code)
 }
 
-func testSubscribe(t *testing.T, client *client.WSClient, params map[string]interface{}) {
-	err := client.Call(context.Background(), "subscribe", params)
+func testSubscribe(t *testing.T, client rpcclient.Client) {
+	const subscriber = "test-client"
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	newBlockSub, err := client.Subscribe(ctx, subscriber, types.EventQueryNewBlock.String())
 	require.NoError(t, err)
+	// make sure to unregister after the test is over
+	defer func() {
+		if deferErr := client.UnsubscribeAll(ctx, subscriber); deferErr != nil {
+			panic(deferErr)
+		}
+	}()
+
+	select {
+	case event := <-newBlockSub:
+		t.Log("EVENT:", event)
+	case <-ctx.Done():
+		t.Error("timed out waiting for event")
+	}
 }
 
 func waitForStateUpdate(expectedHeight int64, vm *LandslideVM) {
@@ -392,7 +377,7 @@ func waitForStateUpdate(expectedHeight int64, vm *LandslideVM) {
 	}
 }
 
-func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *txRuntimeEnv) {
+func checkTxResult(t *testing.T, client rpcclient.Client, vm *LandslideVM, env *txRuntimeEnv) {
 	ctx, cancelCtx := context.WithTimeout(context.Background(), 10*time.Second)
 	for {
 		select {
@@ -402,7 +387,7 @@ func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *tx
 		default:
 			if vm.state.LastBlockHeight() == env.initHeight+1 {
 				cancelCtx()
-				testABCIQuery(t, client, map[string]interface{}{"path": "/key", "data": fmt.Sprintf("%x", env.key)}, env.value)
+				testABCIQuery(t, client, "/key", env.key, env.value)
 				//testABCIQuery(t, client, map[string]interface{}{"path": "/hash", "data": fmt.Sprintf("%x", env.hash)}, env.value)
 				return
 			}
@@ -411,8 +396,8 @@ func checkTxResult(t *testing.T, client *client.Client, vm *LandslideVM, env *tx
 	}
 }
 
-func checkCommittedTxResult(t *testing.T, client *client.Client, env *txRuntimeEnv) {
-	testABCIQuery(t, client, map[string]interface{}{"path": "/key", "data": fmt.Sprintf("%x", env.key)}, env.value)
+func checkCommittedTxResult(t *testing.T, client rpcclient.Client, env *txRuntimeEnv) {
+	testABCIQuery(t, client, "/key", env.key, env.value)
 	//testABCIQuery(t, client, map[string]interface{}{"path": "/hash", "data": fmt.Sprintf("%x", env.hash)}, env.value)
 }
 
@@ -436,9 +421,9 @@ func TestBlockProduction(t *testing.T) {
 		// write something
 		_, _, tx := MakeTxKV()
 		previousAppHash := vm.state.AppHash()
-		bres := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+		bres := testBroadcastTxCommit(t, client, vm, tx)
 
-		testBlock(t, client, map[string]interface{}{"height": bres.Height}, &coretypes.ResultBlock{
+		testBlock(t, client, &bres.Height, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
 					ChainID: vm.state.ChainID(),
@@ -467,7 +452,7 @@ func TestABCIService(t *testing.T) {
 				},
 			})
 			_, _, tx := MakeTxKV()
-			testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+			testBroadcastTxCommit(t, client, vm, tx)
 			testABCIInfo(t, client, &coretypes.ResultABCIInfo{
 				Response: abcitypes.ResponseInfo{
 					Version:         version.ABCIVersion,
@@ -481,17 +466,16 @@ func TestABCIService(t *testing.T) {
 	t.Run("ABCIQuery", func(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			k, v, tx := MakeTxKV()
-			testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+			testBroadcastTxCommit(t, client, vm, tx)
 			path := "/key"
-			params := map[string]interface{}{"path": path, "data": fmt.Sprintf("%x", k)}
-			testABCIQuery(t, client, params, v)
+			testABCIQuery(t, client, path, k, v)
 		}
 	})
 
 	t.Run("BroadcastTxCommit", func(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			k, v, tx := MakeTxKV()
-			result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+			result := testBroadcastTxCommit(t, client, vm, tx)
 			checkCommittedTxResult(t, client, &txRuntimeEnv{key: k, value: v, hash: result.Hash})
 		}
 	})
@@ -500,7 +484,7 @@ func TestABCIService(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			k, v, tx := MakeTxKV()
 			initHeight := vm.state.LastBlockHeight()
-			result := testBroadcastTxAsync(t, client, vm, map[string]interface{}{"tx": tx})
+			result := testBroadcastTxAsync(t, client, tx)
 			checkTxResult(t, client, vm, &txRuntimeEnv{key: k, value: v, hash: result.Hash, initHeight: initHeight})
 		}
 	})
@@ -509,13 +493,13 @@ func TestABCIService(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			k, v, tx := MakeTxKV()
 			initHeight := vm.state.LastBlockHeight()
-			result := testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
+			result := testBroadcastTxSync(t, client, tx)
 			checkTxResult(t, client, vm, &txRuntimeEnv{key: k, value: v, hash: result.Hash, initHeight: initHeight})
 		}
 		cancel()
 		_, _, tx := MakeTxKV()
 		initMempoolSize := vm.mempool.Size()
-		testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
+		testBroadcastTxSync(t, client, tx)
 		//result := testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
 		require.Equal(t, initMempoolSize+1, vm.mempool.Size())
 		//TODO: kvstore return empty check tx result, use another app or implement missing methods
@@ -534,7 +518,7 @@ func TestStatusService(t *testing.T) {
 		initialHeight := vm.state.LastBlockHeight()
 		for i := 0; i < 3; i++ {
 			_, _, tx := MakeTxKV()
-			result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+			result := testBroadcastTxCommit(t, client, vm, tx)
 			require.EqualValues(t, result.Height, initialHeight+int64(1)+int64(i))
 			testStatus(t, client, &coretypes.ResultStatus{
 				NodeInfo: p2p.DefaultNodeInfo{},
@@ -579,9 +563,10 @@ func TestNetworkService(t *testing.T) {
 		initialHeight := vm.state.LastBlockHeight()
 		for i := 0; i < 3; i++ {
 			_, _, tx := MakeTxKV()
-			result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+			result := testBroadcastTxCommit(t, client, vm, tx)
 			require.EqualValues(t, result.Height, initialHeight+int64(1)+int64(i))
-			testConsensusParams(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight()}, &coretypes.ResultConsensusParams{
+			lastBlockHeight := vm.state.LastBlockHeight()
+			testConsensusParams(t, client, &lastBlockHeight, &coretypes.ResultConsensusParams{
 				BlockHeight: result.Height,
 				//TODO: compare consensus params
 				//ConsensusParams: types.ConsensusParams{},
@@ -600,26 +585,22 @@ func TestHistoryService(t *testing.T) {
 	defer cancel()
 
 	t.Run("Genesis", func(t *testing.T) {
-		result := new(coretypes.ResultGenesis)
-		_, err := client.Call(context.Background(), "genesis", map[string]interface{}{}, result)
+		result, err := client.Genesis(context.Background())
 		require.NoError(t, err)
 		require.Equal(t, vm.genesis, result.Genesis)
 	})
 
 	t.Run("GenesisChunked", func(t *testing.T) {
-		first := new(coretypes.ResultGenesisChunk)
-		_, err := client.Call(context.Background(), "genesis_chunked", map[string]interface{}{"height": 0}, first)
+		first, err := client.GenesisChunked(context.Background(), 0)
 		require.NoError(t, err)
 
 		decoded := make([]string, 0, first.TotalChunks)
 		for i := 0; i < first.TotalChunks; i++ {
-			chunk := new(coretypes.ResultGenesisChunk)
-			_, err := client.Call(context.Background(), "genesis_chunked", map[string]interface{}{"height": uint(i)}, chunk)
+			chunk, err := client.GenesisChunked(context.Background(), uint(i))
 			require.NoError(t, err)
 			data, err := base64.StdEncoding.DecodeString(chunk.Data)
 			require.NoError(t, err)
 			decoded = append(decoded, string(data))
-
 		}
 		doc := []byte(strings.Join(decoded, ""))
 
@@ -630,7 +611,7 @@ func TestHistoryService(t *testing.T) {
 	t.Run("BlockchainInfo", func(t *testing.T) {
 		blkMetas := make([]*types.BlockMeta, 0)
 		for i := int64(1); i <= vm.state.LastBlockHeight(); i++ {
-			blk := testBlock(t, client, map[string]interface{}{"height": i}, &coretypes.ResultBlock{
+			blk := testBlock(t, client, &i, &coretypes.ResultBlock{
 				Block: &types.Block{
 					Header: types.Header{
 						ChainID: vm.state.ChainID(),
@@ -649,14 +630,14 @@ func TestHistoryService(t *testing.T) {
 			})
 		}
 		initialHeight := vm.state.LastBlockHeight()
-		testBlockchainInfo(t, client, &coretypes.ResultBlockchainInfo{
+		testBlockchainInfo(t, client, 0, 0, &coretypes.ResultBlockchainInfo{
 			LastHeight: initialHeight,
 			BlockMetas: blkMetas,
 		})
 		_, _, tx := MakeTxKV()
 		prevStateAppHash := vm.state.AppHash()
-		bres := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-		blk := testBlock(t, client, map[string]interface{}{"height": bres.Height}, &coretypes.ResultBlock{
+		bres := testBroadcastTxCommit(t, client, vm, tx)
+		blk := testBlock(t, client, &bres.Height, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
 					ChainID: vm.state.ChainID(),
@@ -674,7 +655,7 @@ func TestHistoryService(t *testing.T) {
 			NumTxs:    len(blk.Block.Data.Txs),
 		})
 		//TODO: fix test blockchain info, unexpected height, uncomment this block of code
-		testBlockchainInfo(t, client, &coretypes.ResultBlockchainInfo{
+		testBlockchainInfo(t, client, 0, 0, &coretypes.ResultBlockchainInfo{
 			LastHeight: initialHeight + 1,
 			BlockMetas: blkMetas,
 		})
@@ -691,9 +672,10 @@ func TestSignService(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			_, _, tx := MakeTxKV()
 			prevAppHash := vm.state.AppHash()
-			result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
+			result := testBroadcastTxCommit(t, client, vm, tx)
 			require.EqualValues(t, result.Height, initialHeight+int64(1)+int64(i))
-			testBlock(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight()}, &coretypes.ResultBlock{
+			lastBlockHeight := vm.state.LastBlockHeight()
+			testBlock(t, client, &lastBlockHeight, &coretypes.ResultBlock{
 				Block: &types.Block{
 					Header: types.Header{
 						ChainID: vm.state.ChainID(),
@@ -708,8 +690,8 @@ func TestSignService(t *testing.T) {
 	t.Run("BlockByHash", func(t *testing.T) {
 		prevAppHash := vm.state.AppHash()
 		_, _, tx := MakeTxKV()
-		result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-		blk := testBlock(t, client, map[string]interface{}{"height": result.Height}, &coretypes.ResultBlock{
+		result := testBroadcastTxCommit(t, client, vm, tx)
+		blk := testBlock(t, client, &result.Height, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
 					ChainID: vm.state.ChainID(),
@@ -721,7 +703,7 @@ func TestSignService(t *testing.T) {
 
 		hash := blk.Block.Hash()
 		//TODO: fix block search by hash: calcBlockHash give hash of different length in comparison of store and get block
-		reply := testBlockByHash(t, client, map[string]interface{}{"hash": hash.Bytes()}, &coretypes.ResultBlock{
+		reply := testBlockByHash(t, client, hash.Bytes(), &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
 					ChainID: vm.state.ChainID(),
@@ -737,14 +719,14 @@ func TestSignService(t *testing.T) {
 	t.Run("BlockResults", func(t *testing.T) {
 		prevAppHash := vm.state.AppHash()
 		_, _, tx := MakeTxKV()
-		result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-		testBlockResults(t, client, map[string]interface{}{}, &coretypes.ResultBlockResults{
+		result := testBroadcastTxCommit(t, client, vm, tx)
+		testBlockResults(t, client, nil, &coretypes.ResultBlockResults{
 			Height:     result.Height,
 			AppHash:    prevAppHash,
 			TxsResults: []*abcitypes.ExecTxResult{&result.TxResult},
 		})
 
-		testBlockResults(t, client, map[string]interface{}{"height": result.Height}, &coretypes.ResultBlockResults{
+		testBlockResults(t, client, &result.Height, &coretypes.ResultBlockResults{
 			Height:     result.Height,
 			AppHash:    prevAppHash,
 			TxsResults: []*abcitypes.ExecTxResult{&result.TxResult},
@@ -754,8 +736,8 @@ func TestSignService(t *testing.T) {
 	t.Run("Tx", func(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			_, _, tx := MakeTxKV()
-			result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-			testTx(t, client, vm, map[string]interface{}{"hash": result.Hash.Bytes()}, &coretypes.ResultTx{
+			result := testBroadcastTxCommit(t, client, vm, tx)
+			testTx(t, client, result.Hash.Bytes(), false, &coretypes.ResultTx{
 				Hash:     result.Hash,
 				Height:   result.Height,
 				Index:    0,
@@ -768,8 +750,8 @@ func TestSignService(t *testing.T) {
 
 	t.Run("TxSearch", func(t *testing.T) {
 		_, _, tx := MakeTxKV()
-		txReply := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-		testTxSearch(t, client, vm, map[string]interface{}{"query": fmt.Sprintf("tx.hash='%s'", txReply.Hash)}, &coretypes.ResultTxSearch{
+		txReply := testBroadcastTxCommit(t, client, vm, tx)
+		testTxSearch(t, client, fmt.Sprintf("tx.hash='%s'", txReply.Hash), false, nil, nil, "asc", &coretypes.ResultTxSearch{
 			Txs: []*coretypes.ResultTx{{
 				Hash:   txReply.Hash,
 				Height: txReply.Height,
@@ -782,7 +764,7 @@ func TestSignService(t *testing.T) {
 			}},
 			TotalCount: 1,
 		})
-		testTxSearch(t, client, vm, map[string]interface{}{"query": fmt.Sprintf("tx.height=%d", txReply.Height)}, &coretypes.ResultTxSearch{
+		testTxSearch(t, client, fmt.Sprintf("tx.height=%d", txReply.Height), false, nil, nil, "asc", &coretypes.ResultTxSearch{
 			Txs: []*coretypes.ResultTx{{
 				Hash:   txReply.Hash,
 				Height: txReply.Height,
@@ -800,8 +782,9 @@ func TestSignService(t *testing.T) {
 	t.Run("Commit", func(t *testing.T) {
 		prevAppHash := vm.state.AppHash()
 		_, _, tx := MakeTxKV()
-		txReply := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-		blk := testBlock(t, client, map[string]interface{}{"height": vm.state.LastBlockHeight()}, &coretypes.ResultBlock{
+		txReply := testBroadcastTxCommit(t, client, vm, tx)
+		lastBlockHeight := vm.state.LastBlockHeight()
+		blk := testBlock(t, client, &lastBlockHeight, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
 					ChainID: vm.state.ChainID(),
@@ -811,7 +794,7 @@ func TestSignService(t *testing.T) {
 			},
 		})
 		//TODO: implement check for all result commit fields
-		testCommit(t, client, vm, map[string]interface{}{"height": txReply.Height}, &coretypes.ResultCommit{
+		testCommit(t, client, &txReply.Height, &coretypes.ResultCommit{
 			SignedHeader: types.SignedHeader{
 				Header: &types.Header{
 					//Version:            bftversion.Consensus{},
@@ -844,8 +827,8 @@ func TestSignService(t *testing.T) {
 		initialHeight := vm.state.LastBlockHeight()
 		prevAppHash := vm.state.AppHash()
 		_, _, tx := MakeTxKV()
-		result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-		blk := testBlock(t, client, map[string]interface{}{"height": result.Height}, &coretypes.ResultBlock{
+		result := testBroadcastTxCommit(t, client, vm, tx)
+		blk := testBlock(t, client, &result.Height, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
 					ChainID: vm.state.ChainID(),
@@ -854,14 +837,14 @@ func TestSignService(t *testing.T) {
 				},
 			},
 		})
-		testBlockSearch(t, client, map[string]interface{}{"query": fmt.Sprintf("block.height=%d", initialHeight+1)}, &coretypes.ResultBlockSearch{
+		testBlockSearch(t, client, fmt.Sprintf("block.height=%d", initialHeight+1), nil, nil, "asc", &coretypes.ResultBlockSearch{
 			Blocks:     []*coretypes.ResultBlock{blk},
 			TotalCount: 1,
 		})
 		prevAppHash = vm.state.AppHash()
 		_, _, tx = MakeTxKV()
-		result = testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-		blk2 := testBlock(t, client, map[string]interface{}{"height": result.Height}, &coretypes.ResultBlock{
+		result = testBroadcastTxCommit(t, client, vm, tx)
+		blk2 := testBlock(t, client, &result.Height, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
 					ChainID: vm.state.ChainID(),
@@ -870,7 +853,7 @@ func TestSignService(t *testing.T) {
 				},
 			},
 		})
-		testBlockSearch(t, client, map[string]interface{}{"query": fmt.Sprintf("block.height>%d", initialHeight)}, &coretypes.ResultBlockSearch{
+		testBlockSearch(t, client, fmt.Sprintf("block.height>%d", initialHeight), nil, nil, "asc", &coretypes.ResultBlockSearch{
 			Blocks:     []*coretypes.ResultBlock{blk, blk2},
 			TotalCount: 2,
 		})
@@ -887,13 +870,13 @@ func TestMempoolService(t *testing.T) {
 		var count int
 		_, _, tx := MakeTxKV()
 		txs := []types.Tx{tx}
-		testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
+		testBroadcastTxSync(t, client, tx)
 		if vm.mempool.Size() < limit {
 			count = vm.mempool.Size()
 		} else {
 			count = limit
 		}
-		testUnconfirmedTxs(t, client, map[string]interface{}{"limit": limit}, &coretypes.ResultUnconfirmedTxs{
+		testUnconfirmedTxs(t, client, &limit, &coretypes.ResultUnconfirmedTxs{
 			Count: count,
 			Total: vm.mempool.Size(),
 			Txs:   txs,
@@ -901,14 +884,14 @@ func TestMempoolService(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			_, _, tx = MakeTxKV()
 			txs = append(txs, tx)
-			testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
+			testBroadcastTxSync(t, client, tx)
 		}
 		if vm.mempool.Size() < limit {
 			count = vm.mempool.Size()
 		} else {
 			count = limit
 		}
-		testUnconfirmedTxs(t, client, map[string]interface{}{"limit": limit}, &coretypes.ResultUnconfirmedTxs{
+		testUnconfirmedTxs(t, client, &limit, &coretypes.ResultUnconfirmedTxs{
 			Count: count,
 			Total: vm.mempool.Size(),
 			Txs:   txs,
@@ -918,17 +901,17 @@ func TestMempoolService(t *testing.T) {
 	t.Run("NumUnconfirmedTxs", func(t *testing.T) {
 		_, _, tx := MakeTxKV()
 		txs := []types.Tx{tx}
-		testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
-		testNumUnconfirmedTxs(t, client, map[string]interface{}{}, &coretypes.ResultUnconfirmedTxs{
+		testBroadcastTxSync(t, client, tx)
+		testNumUnconfirmedTxs(t, client, &coretypes.ResultUnconfirmedTxs{
 			Count: vm.mempool.Size(),
 			Total: vm.mempool.Size(),
 		})
 		for i := 0; i < 3; i++ {
 			_, _, tx = MakeTxKV()
 			txs = append(txs, tx)
-			testBroadcastTxSync(t, client, vm, map[string]interface{}{"tx": tx})
+			testBroadcastTxSync(t, client, tx)
 		}
-		testNumUnconfirmedTxs(t, client, map[string]interface{}{}, &coretypes.ResultUnconfirmedTxs{
+		testNumUnconfirmedTxs(t, client, &coretypes.ResultUnconfirmedTxs{
 			Count: vm.mempool.Size(),
 			Total: vm.mempool.Size(),
 		})
@@ -936,10 +919,10 @@ func TestMempoolService(t *testing.T) {
 
 	t.Run("CheckTx", func(t *testing.T) {
 		_, _, tx := MakeTxKV()
-		testCheckTx(t, client, map[string]interface{}{"tx": tx}, &coretypes.ResultCheckTx{
+		testCheckTx(t, client, tx, &coretypes.ResultCheckTx{
 			ResponseCheckTx: abcitypes.ResponseCheckTx{Code: kvstore.CodeTypeOK},
 		})
-		testCheckTx(t, client, map[string]interface{}{"tx": []byte("inappropriate tx")}, &coretypes.ResultCheckTx{
+		testCheckTx(t, client, []byte("inappropriate tx"), &coretypes.ResultCheckTx{
 			ResponseCheckTx: abcitypes.ResponseCheckTx{Code: kvstore.CodeTypeInvalidTxFormat},
 		})
 	})
@@ -959,6 +942,36 @@ func TestWSRPC(t *testing.T) {
 	t.Log(vm)
 	t.Log(client)
 
+	wsc := &WSClient{
+		WSClient: client,
+	}
+	err := wsc.Start()
+	require.Nil(t, err)
+	testSubscribe(t, wsc)
+	//go func() {
+	//	_, _, tx := MakeTxKV()
+	//	testBroadcastTxCommit(t, client, vm, tx)
+	//}()
+
+	//cl3, err := client.NewWS(addr, websocketEndpoint)
+	//require.Nil(t, err)
+	//cl3.SetLogger(log.TestingLogger())
+	//err = cl3.Start()
+	//require.Nil(t, err)
+	//fmt.Printf("=== testing server on %s using WS client", addr)
+	//testWithWSClient(t, cl3)
+	err = wsc.Stop()
+	require.NoError(t, err)
+
+	//msg := <-cl.ResponsesCh
+	//if msg.Error != nil {
+	//	return "", err
+	//}
+	//result := new(ResultEcho)
+	//err = json.Unmarshal(msg.Result, result)
+	//if err != nil {
+	//	return "", nil
+	//}
 	//err := client.Start()
 	//defer client.Stop()
 	//require.Nil(t, err)
