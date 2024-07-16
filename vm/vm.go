@@ -165,7 +165,16 @@ func NewViaDB(database dbm.DB, creator AppCreator, options ...func(*LandslideVM)
 	return vm
 }
 
-func WithClientConn(clientConn *grpc.ClientConn) func(vm *LandslideVM) {
+// WithClientConn sets the client connection for the VM.
+func WithClientConn(clientConn grpc.ClientConnInterface) func(vm *LandslideVM) {
+	return func(vm *LandslideVM) {
+		vm.clientConn = clientConn
+	}
+}
+
+// WithOptClientConn sets the optional client connection for the VM.
+// it overrides the client connection set by WithClientConn.
+func WithOptClientConn(clientConn *grpc.ClientConn) func(vm *LandslideVM) {
 	return func(vm *LandslideVM) {
 		vm.optClientConn = clientConn
 	}
