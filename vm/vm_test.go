@@ -3,12 +3,15 @@ package vm
 import (
 	"context"
 	_ "embed"
+	"net"
 	"testing"
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/abci/example/kvstore"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	vmpb "github.com/consideritdone/landslidevm/proto/vm"
@@ -19,22 +22,41 @@ var (
 	kvstorevmGenesis []byte
 )
 
-type mockClientConn struct {
+const bufSize = 1024 * 1024
+
+var lis *bufconn.Listener
+
+func initBufConListener() {
+	lis = bufconn.Listen(bufSize)
+	s := grpc.NewServer()
+	// Register your server implementations here, e.g., pb.RegisterGreeterServer(s, &server{})
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			panic("Server exited with error: " + err.Error())
+		}
+	}()
 }
 
-func (m *mockClientConn) Invoke(ctx context.Context, method string, args any, reply any, opts ...grpc.CallOption) error {
-	return nil
-}
-
-func (m *mockClientConn) NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-	return nil, nil
+func bufDialer(context.Context, string) (net.Conn, error) {
+	return lis.Dial()
 }
 
 func newKvApp(t *testing.T, vmdb, appdb dbm.DB) vmpb.VMServer {
-	mockConn := &mockClientConn{}
+	ctx := context.Background()
+	initBufConListener()
+	mockConn, err := grpc.DialContext(
+		ctx,
+		"bufnet",
+		grpc.WithContextDialer(bufDialer),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		t.Fatalf("Failed to dial bufnet: %v", err)
+	}
+
 	vm := NewViaDB(vmdb, func(*AppCreatorOpts) (Application, error) {
 		return kvstore.NewApplication(appdb), nil
-	}, WithClientConn(mockConn))
+	}, WithOptClientConn(mockConn))
 	require.NotNil(t, vm)
 	initRes, err := vm.Initialize(context.TODO(), &vmpb.InitializeRequest{
 		DbServerAddr: "inmemory",
@@ -127,12 +149,24 @@ func TestAcceptBlock(t *testing.T) {
 func TestShutdownWithoutInit(t *testing.T) {
 	vmdb := dbm.NewMemDB()
 	appdb := dbm.NewMemDB()
-	mockConn := &mockClientConn{}
+	ctx := context.Background()
+
+	initBufConListener()
+	mockConn, err := grpc.DialContext(
+		ctx,
+		"bufnet",
+		grpc.WithContextDialer(bufDialer),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		t.Fatalf("Failed to dial bufnet: %v", err)
+	}
+
 	vm := NewViaDB(vmdb, func(*AppCreatorOpts) (Application, error) {
 		return kvstore.NewApplication(appdb), nil
-	}, WithClientConn(mockConn))
+	}, WithOptClientConn(mockConn))
 	require.NotNil(t, vm)
-	_, err := vm.Shutdown(context.Background(), &emptypb.Empty{})
+	_, err = vm.Shutdown(context.Background(), &emptypb.Empty{})
 	require.NoError(t, err)
 }
 
