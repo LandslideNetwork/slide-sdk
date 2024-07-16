@@ -26,7 +26,7 @@ const bufSize = 1024 * 1024
 
 var lis *bufconn.Listener
 
-func initBufConListener() {
+func init() {
 	lis = bufconn.Listen(bufSize)
 	s := grpc.NewServer()
 	// Register your server implementations here, e.g., pb.RegisterGreeterServer(s, &server{})
@@ -43,7 +43,6 @@ func bufDialer(context.Context, string) (net.Conn, error) {
 
 func newKvApp(t *testing.T, vmdb, appdb dbm.DB) vmpb.VMServer {
 	ctx := context.Background()
-	initBufConListener()
 	mockConn, err := grpc.DialContext(
 		ctx,
 		"bufnet",
@@ -151,7 +150,6 @@ func TestShutdownWithoutInit(t *testing.T) {
 	appdb := dbm.NewMemDB()
 	ctx := context.Background()
 
-	initBufConListener()
 	mockConn, err := grpc.DialContext(
 		ctx,
 		"bufnet",
