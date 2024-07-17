@@ -10,6 +10,7 @@ import (
 	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/libs/pubsub"
 	"github.com/cometbft/cometbft/libs/rand"
+	tmsync "github.com/cometbft/cometbft/libs/sync"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	rpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
@@ -35,6 +36,8 @@ import (
 type HandlerRPC func(vmLnd *LandslideVM) http.Handler
 
 type BlockBuilder func(*testing.T, context.Context, *LandslideVM)
+
+type setupServerAndTransport func(t *testing.T, blockBuilder BlockBuilder) (*http.Server, *LandslideVM, rpcclient.Client, context.CancelFunc)
 
 type txRuntimeEnv struct {
 	key, value, hash []byte
@@ -87,18 +90,25 @@ func setupServer(t *testing.T, handler HandlerRPC, blockBuilder BlockBuilder) (*
 	return server, vmLnd, address, cancel
 }
 
-func setupRPCServer(t *testing.T, handler HandlerRPC, blockBuilder BlockBuilder) (*http.Server, *LandslideVM, rpcclient.Client, context.CancelFunc) {
-	server, vmLnd, address, cancel := setupServer(t, handler, blockBuilder)
+func setupRPCServer(t *testing.T, blockBuilder BlockBuilder) (*http.Server, *LandslideVM, rpcclient.Client, context.CancelFunc) {
+	server, vmLnd, address, cancel := setupServer(t, setupRPC, blockBuilder)
 	client, err := rpcclienthttp.New("tcp://"+address, "/websocket")
 	require.NoError(t, err)
 	return server, vmLnd, client, cancel
 }
 
-func setupWSRPCServer(t *testing.T, handler HandlerRPC, blockBuilder BlockBuilder) (*http.Server, *LandslideVM, *client.WSClient, context.CancelFunc) {
-	server, vmLnd, address, cancel := setupServer(t, handler, blockBuilder)
+func setupWSRPCServer(t *testing.T, blockBuilder BlockBuilder) (*http.Server, *LandslideVM, rpcclient.Client, context.CancelFunc) {
+	server, vmLnd, address, cancel := setupServer(t, setupWSRPC, blockBuilder)
 	client, err := client.NewWS("tcp://"+address, "/websocket")
 	require.NoError(t, err)
-	return server, vmLnd, client, cancel
+	wsc := &WSClient{
+		WSClient:      client,
+		mtx:           tmsync.RWMutex{},
+		subscriptions: make(map[string]chan coretypes.ResultEvent),
+	}
+	err = wsc.Start()
+	require.Nil(t, err)
+	return server, vmLnd, wsc, cancel
 }
 
 func setupRPC(vmLnd *LandslideVM) http.Handler {
@@ -346,28 +356,6 @@ func testCheckTx(t *testing.T, client rpcclient.Client, tx types.Tx, expected *c
 	require.Equal(t, result.Code, expected.Code)
 }
 
-func testSubscribe(t *testing.T, client rpcclient.Client) {
-	const subscriber = "test-client"
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	newBlockSub, err := client.Subscribe(ctx, subscriber, types.EventQueryNewBlock.String())
-	require.NoError(t, err)
-	// make sure to unregister after the test is over
-	defer func() {
-		if deferErr := client.UnsubscribeAll(ctx, subscriber); deferErr != nil {
-			panic(deferErr)
-		}
-	}()
-
-	select {
-	case event := <-newBlockSub:
-		t.Log("EVENT:", event)
-	case <-ctx.Done():
-		t.Error("timed out waiting for event")
-	}
-}
-
 func waitForStateUpdate(expectedHeight int64, vm *LandslideVM) {
 	for {
 		if vm.state.LastBlockHeight() == expectedHeight {
@@ -402,9 +390,19 @@ func checkCommittedTxResult(t *testing.T, client rpcclient.Client, env *txRuntim
 }
 
 func TestBlockProduction(t *testing.T) {
-	server, vm, client, cancel := setupRPCServer(t, setupRPC, buildAccept)
+	t.Run("JSONRPC", func(t *testing.T) {
+		testBlockProduction(t, setupRPCServer)
+	})
+	t.Run("WebSocket", func(t *testing.T) {
+		testBlockProduction(t, setupWSRPCServer)
+	})
+}
+
+func testBlockProduction(t *testing.T, serverBuilder setupServerAndTransport) {
+	server, vm, client, cancel := serverBuilder(t, buildAccept)
 	defer server.Close()
 	defer vm.mempool.Flush()
+	defer client.Stop()
 	defer cancel()
 
 	initialHeight := vm.state.LastBlockHeight()
@@ -436,7 +434,16 @@ func TestBlockProduction(t *testing.T) {
 }
 
 func TestABCIService(t *testing.T) {
-	server, vm, client, cancel := setupRPCServer(t, setupRPC, buildAccept)
+	t.Run("JSONRPC", func(t *testing.T) {
+		testABCIService(t, setupRPCServer)
+	})
+	t.Run("WebSocket", func(t *testing.T) {
+		testABCIService(t, setupWSRPCServer)
+	})
+}
+
+func testABCIService(t *testing.T, serverBuilder setupServerAndTransport) {
+	server, vm, client, cancel := serverBuilder(t, buildAccept)
 	defer server.Close()
 	defer vm.mempool.Flush()
 	defer cancel()
@@ -509,7 +516,16 @@ func TestABCIService(t *testing.T) {
 }
 
 func TestStatusService(t *testing.T) {
-	server, vm, client, cancel := setupRPCServer(t, setupRPC, buildAccept)
+	t.Run("JSONRPC", func(t *testing.T) {
+		testStatusService(t, setupRPCServer)
+	})
+	t.Run("WebSocket", func(t *testing.T) {
+		testStatusService(t, setupWSRPCServer)
+	})
+}
+
+func testStatusService(t *testing.T, serverBuilder setupServerAndTransport) {
+	server, vm, client, cancel := serverBuilder(t, buildAccept)
 	defer server.Close()
 	defer vm.mempool.Flush()
 	defer cancel()
@@ -532,7 +548,16 @@ func TestStatusService(t *testing.T) {
 }
 
 func TestNetworkService(t *testing.T) {
-	server, vm, client, cancel := setupRPCServer(t, setupRPC, buildAccept)
+	t.Run("JSONRPC", func(t *testing.T) {
+		testNetworkService(t, setupRPCServer)
+	})
+	t.Run("WebSocket", func(t *testing.T) {
+		testNetworkService(t, setupWSRPCServer)
+	})
+}
+
+func testNetworkService(t *testing.T, serverBuilder setupServerAndTransport) {
+	server, vm, client, cancel := serverBuilder(t, buildAccept)
 	defer server.Close()
 	defer cancel()
 
@@ -580,7 +605,16 @@ func TestNetworkService(t *testing.T) {
 }
 
 func TestHistoryService(t *testing.T) {
-	server, vm, client, cancel := setupRPCServer(t, setupRPC, buildAccept)
+	t.Run("JSONRPC", func(t *testing.T) {
+		testHistoryService(t, setupRPCServer)
+	})
+	t.Run("WebSocket", func(t *testing.T) {
+		testHistoryService(t, setupWSRPCServer)
+	})
+}
+
+func testHistoryService(t *testing.T, serverBuilder setupServerAndTransport) {
+	server, vm, client, cancel := serverBuilder(t, buildAccept)
 	defer server.Close()
 	defer cancel()
 
@@ -663,7 +697,16 @@ func TestHistoryService(t *testing.T) {
 }
 
 func TestSignService(t *testing.T) {
-	server, vm, client, cancel := setupRPCServer(t, setupRPC, buildAccept)
+	t.Run("JSONRPC", func(t *testing.T) {
+		testSignService(t, setupRPCServer)
+	})
+	t.Run("WebSocket", func(t *testing.T) {
+		testSignService(t, setupWSRPCServer)
+	})
+}
+
+func testSignService(t *testing.T, serverBuilder setupServerAndTransport) {
+	server, vm, client, cancel := serverBuilder(t, buildAccept)
 	defer server.Close()
 	defer cancel()
 
@@ -861,7 +904,16 @@ func TestSignService(t *testing.T) {
 }
 
 func TestMempoolService(t *testing.T) {
-	server, vm, client, cancel := setupRPCServer(t, setupRPC, noAction)
+	t.Run("JSONRPC", func(t *testing.T) {
+		testMempoolService(t, setupRPCServer)
+	})
+	t.Run("WebSocket", func(t *testing.T) {
+		testMempoolService(t, setupWSRPCServer)
+	})
+}
+
+func testMempoolService(t *testing.T, serverBuilder setupServerAndTransport) {
+	server, vm, client, cancel := serverBuilder(t, noAction)
 	defer server.Close()
 	defer cancel()
 
@@ -933,62 +985,3 @@ func TestMempoolService(t *testing.T) {
 //{"Header", "header", map[string]interface{}{}, new(ctypes.ResultHeader)},
 //{"HeaderByHash", "header_by_hash", map[string]interface{}{}, new(ctypes.ResultHeader)},
 //{"Validators", "validators", map[string]interface{}{}, new(ctypes.ResultValidators)},
-
-func TestWSRPC(t *testing.T) {
-	server, vm, client, cancel := setupWSRPCServer(t, setupWSRPC, buildAccept)
-	defer server.Close()
-	defer cancel()
-
-	t.Log(vm)
-	t.Log(client)
-
-	wsc := &WSClient{
-		WSClient: client,
-	}
-	err := wsc.Start()
-	require.Nil(t, err)
-	testSubscribe(t, wsc)
-	//go func() {
-	//	_, _, tx := MakeTxKV()
-	//	testBroadcastTxCommit(t, client, vm, tx)
-	//}()
-
-	//cl3, err := client.NewWS(addr, websocketEndpoint)
-	//require.Nil(t, err)
-	//cl3.SetLogger(log.TestingLogger())
-	//err = cl3.Start()
-	//require.Nil(t, err)
-	//fmt.Printf("=== testing server on %s using WS client", addr)
-	//testWithWSClient(t, cl3)
-	err = wsc.Stop()
-	require.NoError(t, err)
-
-	//msg := <-cl.ResponsesCh
-	//if msg.Error != nil {
-	//	return "", err
-	//}
-	//result := new(ResultEcho)
-	//err = json.Unmarshal(msg.Result, result)
-	//if err != nil {
-	//	return "", nil
-	//}
-	//err := client.Start()
-	//defer client.Stop()
-	//require.Nil(t, err)
-	//fmt.Println(vm)
-	//
-	//// on Subscribe
-	//testSubscribe(t, client, map[string]interface{}{"query": "TestHeaderEvents"})
-	//result := testBroadcastTxCommit(t, client, vm, map[string]interface{}{"tx": tx})
-	//
-	////// on Unsubscribe
-	////err = client.Unsubscribe(context.Background(), "TestHeaderEvents",
-	////	types.QueryForEvent(types.EventNewBlockHeader).String())
-	////require.NoError(t, err)
-	////
-	////// on UnsubscribeAll
-	////err = client.UnsubscribeAll(context.Background(), "TestHeaderEvents")
-	////require.NoError(t, err)
-	//err = client.Stop()
-	//require.Nil(t, err)
-}

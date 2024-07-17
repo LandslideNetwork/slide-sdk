@@ -2,17 +2,24 @@ package vm
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"github.com/cometbft/cometbft/libs/bytes"
+	tmjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cometbft/cometbft/libs/pubsub"
+	tmsync "github.com/cometbft/cometbft/libs/sync"
 	rpcclient "github.com/cometbft/cometbft/rpc/client"
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	"github.com/cometbft/cometbft/types"
+	"strings"
+	"time"
 )
 
 type WSClient struct {
 	*client.WSClient
+
+	mtx           tmsync.RWMutex
+	subscriptions map[string]chan ctypes.ResultEvent // query -> chan
 }
 
 func (ws *WSClient) Status(ctx context.Context) (*ctypes.ResultStatus, error) {
@@ -27,9 +34,9 @@ func (ws *WSClient) Status(ctx context.Context) (*ctypes.ResultStatus, error) {
 		return nil, err
 	}
 	result := new(ctypes.ResultStatus)
-	err = json.Unmarshal(msg.Result, result)
+	err = tmjson.Unmarshal(msg.Result, result)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 	return result, nil
 }
@@ -46,9 +53,9 @@ func (ws *WSClient) ABCIInfo(ctx context.Context) (*ctypes.ResultABCIInfo, error
 		return nil, err
 	}
 	result := new(ctypes.ResultABCIInfo)
-	err = json.Unmarshal(msg.Result, result)
+	err = tmjson.Unmarshal(msg.Result, result)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 	return result, nil
 }
@@ -78,9 +85,9 @@ func (ws *WSClient) ABCIQueryWithOptions(
 		return nil, err
 	}
 	result := new(ctypes.ResultABCIQuery)
-	err = json.Unmarshal(msg.Result, result)
+	err = tmjson.Unmarshal(msg.Result, result)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 	return result, nil
 }
@@ -100,9 +107,9 @@ func (ws *WSClient) BroadcastTxCommit(
 		return nil, err
 	}
 	result := new(ctypes.ResultBroadcastTxCommit)
-	err = json.Unmarshal(msg.Result, result)
+	err = tmjson.Unmarshal(msg.Result, result)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 	return result, nil
 }
@@ -132,8 +139,15 @@ func (ws *WSClient) broadcastTX(
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultBroadcastTx)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -150,8 +164,15 @@ func (ws *WSClient) UnconfirmedTxs(
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultUnconfirmedTxs)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -162,8 +183,15 @@ func (ws *WSClient) NumUnconfirmedTxs(ctx context.Context) (*ctypes.ResultUnconf
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultUnconfirmedTxs)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -174,7 +202,15 @@ func (ws *WSClient) CheckTx(ctx context.Context, tx types.Tx) (*ctypes.ResultChe
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultCheckTx)
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -185,8 +221,15 @@ func (ws *WSClient) NetInfo(ctx context.Context) (*ctypes.ResultNetInfo, error) 
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultNetInfo)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -197,8 +240,15 @@ func (ws *WSClient) DumpConsensusState(ctx context.Context) (*ctypes.ResultDumpC
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultDumpConsensusState)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -209,8 +259,15 @@ func (ws *WSClient) ConsensusState(ctx context.Context) (*ctypes.ResultConsensus
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultConsensusState)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -227,7 +284,15 @@ func (ws *WSClient) ConsensusParams(
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultConsensusParams)
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -239,8 +304,15 @@ func (ws *WSClient) Health(ctx context.Context) (*ctypes.ResultHealth, error) {
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultHealth)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -255,8 +327,15 @@ func (ws *WSClient) BlockchainInfo(
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultBlockchainInfo)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -267,8 +346,15 @@ func (ws *WSClient) Genesis(ctx context.Context) (*ctypes.ResultGenesis, error) 
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultGenesis)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -279,8 +365,15 @@ func (ws *WSClient) GenesisChunked(ctx context.Context, id uint) (*ctypes.Result
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultGenesisChunk)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -294,8 +387,15 @@ func (ws *WSClient) Block(ctx context.Context, height *int64) (*ctypes.ResultBlo
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultBlock)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -307,7 +407,16 @@ func (ws *WSClient) BlockByHash(ctx context.Context, hash []byte) (*ctypes.Resul
 	if err != nil {
 		return nil, err
 	}
+
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultBlock)
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -323,7 +432,16 @@ func (ws *WSClient) BlockResults(
 	if err != nil {
 		return nil, err
 	}
+
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultBlockResults)
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -336,7 +454,16 @@ func (ws *WSClient) Header(ctx context.Context, height *int64) (*ctypes.ResultHe
 	if err != nil {
 		return nil, err
 	}
+
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultHeader)
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -348,7 +475,16 @@ func (ws *WSClient) HeaderByHash(ctx context.Context, hash bytes.HexBytes) (*cty
 	if err != nil {
 		return nil, err
 	}
+
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultHeader)
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -361,7 +497,16 @@ func (ws *WSClient) Commit(ctx context.Context, height *int64) (*ctypes.ResultCo
 	if err != nil {
 		return nil, err
 	}
+
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultCommit)
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -374,7 +519,16 @@ func (ws *WSClient) Tx(ctx context.Context, hash []byte, prove bool) (*ctypes.Re
 	if err != nil {
 		return nil, err
 	}
+
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultTx)
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -404,8 +558,15 @@ func (ws *WSClient) TxSearch(
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultTxSearch)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -432,8 +593,15 @@ func (ws *WSClient) BlockSearch(
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultBlockSearch)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -458,8 +626,15 @@ func (ws *WSClient) Validators(
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultValidators)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -473,8 +648,15 @@ func (ws *WSClient) BroadcastEvidence(
 		return nil, err
 	}
 
+	msg := <-ws.ResponsesCh
+	if msg.Error != nil {
+		return nil, err
+	}
 	result := new(ctypes.ResultBroadcastEvidence)
-
+	err = tmjson.Unmarshal(msg.Result, result)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -483,153 +665,163 @@ func (ws *WSClient) BroadcastEvidence(
 
 var errNotRunning = errors.New("client is not running. Use .Start() method to start")
 
-// Subscribe to a query. Note the server must have a "subscribe" route
-// defined.
-func (ws *WSClient) Subscribe(ctx context.Context, subscriber string, query string, outCapacity ...int) (out <-chan ctypes.ResultEvent, err error) {
-	params := map[string]interface{}{"query": query}
-	err = ws.Call(ctx, "subscribe", params)
-	if err != nil {
+// OnStart implements service.Service by starting WSClient and event loop.
+func (ws *WSClient) OnStart() error {
+	if err := ws.WSClient.Start(); err != nil {
+		return err
+	}
+
+	go ws.eventListener()
+
+	return nil
+}
+
+// OnStop implements service.Service by stopping WSClient.
+func (ws *WSClient) OnStop() {
+	if err := ws.WSClient.Stop(); err != nil {
+		ws.Logger.Error("Can't stop ws client", "err", err)
+	}
+}
+
+func (ws *WSClient) eventListener() {
+	for {
+		select {
+		case resp, ok := <-ws.ResponsesCh:
+			if !ok {
+				return
+			}
+
+			if resp.Error != nil {
+				ws.Logger.Error("WS error", "err", resp.Error.Error())
+				// Error can be ErrAlreadySubscribed or max client (subscriptions per
+				// client) reached or CometBFT exited.
+				// We can ignore ErrAlreadySubscribed, but need to retry in other
+				// cases.
+				if !isErrAlreadySubscribed(resp.Error) {
+					// Resubscribe after 1 second to give CometBFT time to restart (if
+					// crashed).
+					ws.redoSubscriptionsAfter(1 * time.Second)
+				}
+				continue
+			}
+
+			result := new(ctypes.ResultEvent)
+			err := tmjson.Unmarshal(resp.Result, result)
+			if err != nil {
+				ws.Logger.Error("failed to unmarshal response", "err", err)
+				continue
+			}
+
+			ws.mtx.RLock()
+			if out, ok := ws.subscriptions[result.Query]; ok {
+				if cap(out) == 0 {
+					out <- *result
+				} else {
+					select {
+					case out <- *result:
+					default:
+						ws.Logger.Error("wanted to publish ResultEvent, but out channel is full", "result", result, "query", result.Query)
+					}
+				}
+			}
+			ws.mtx.RUnlock()
+		case <-ws.Quit():
+			return
+		}
+	}
+}
+
+func isErrAlreadySubscribed(err error) bool {
+	return strings.Contains(err.Error(), pubsub.ErrAlreadySubscribed.Error())
+}
+
+// After being reconnected, it is necessary to redo subscription to server
+// otherwise no data will be automatically received.
+func (ws *WSClient) redoSubscriptionsAfter(d time.Duration) {
+	time.Sleep(d)
+
+	ws.mtx.RLock()
+	defer ws.mtx.RUnlock()
+	for q := range ws.subscriptions {
+		err := ws.WSClient.Subscribe(context.Background(), q)
+		if err != nil {
+			ws.Logger.Error("Failed to resubscribe", "err", err)
+		}
+	}
+}
+
+// Subscribe implements EventsClient by using WSClient to subscribe given
+// subscriber to query. By default, returns a channel with cap=1. Error is
+// returned if it fails to subscribe.
+//
+// Channel is never closed to prevent clients from seeing an erroneous event.
+//
+// It returns an error if WSEvents is not running.
+func (ws *WSClient) Subscribe(ctx context.Context, _, query string,
+	outCapacity ...int,
+) (out <-chan ctypes.ResultEvent, err error) {
+	if !ws.IsRunning() {
+		return nil, errNotRunning
+	}
+
+	if err := ws.WSClient.Subscribe(ctx, query); err != nil {
 		return nil, err
 	}
-	return ws., nil
+
+	outCap := 1
+	if len(outCapacity) > 0 {
+		outCap = outCapacity[0]
+	}
+
+	outc := make(chan ctypes.ResultEvent, outCap)
+	ws.mtx.Lock()
+	// subscriber param is ignored because CometBFT will override it with
+	// remote IP anyway.
+	ws.subscriptions[query] = outc
+	ws.mtx.Unlock()
+
+	return outc, nil
 }
 
-// Unsubscribe from a query. Note the server must have a "unsubscribe" route
-// defined.
-func (ws *WSClient) Unsubscribe(ctx context.Context, subscriber string, query string) error {
-	params := map[string]interface{}{"query": query}
-	return ws.Call(ctx, "unsubscribe", params)
+// Unsubscribe implements EventsClient by using WSClient to unsubscribe given
+// subscriber from query.
+//
+// It returns an error if WSEvents is not running.
+func (ws *WSClient) Unsubscribe(ctx context.Context, _, query string) error {
+	if !ws.IsRunning() {
+		return errNotRunning
+	}
+
+	if err := ws.WSClient.Unsubscribe(ctx, query); err != nil {
+		return err
+	}
+
+	ws.mtx.Lock()
+	_, ok := ws.subscriptions[query]
+	if ok {
+		delete(ws.subscriptions, query)
+	}
+	ws.mtx.Unlock()
+
+	return nil
 }
 
-// UnsubscribeAll from all. Note the server must have a "unsubscribe_all" route
-// defined.
+// UnsubscribeAll implements EventsClient by using WSClient to unsubscribe
+// given subscriber from all the queries.
+//
+// It returns an error if WSEvents is not running.
 func (ws *WSClient) UnsubscribeAll(ctx context.Context, _ string) error {
-	params := map[string]interface{}{}
-	return ws.Call(ctx, "unsubscribe_all", params)
+	if !ws.IsRunning() {
+		return errNotRunning
+	}
+
+	if err := ws.WSClient.UnsubscribeAll(ctx); err != nil {
+		return err
+	}
+
+	ws.mtx.Lock()
+	ws.subscriptions = make(map[string]chan ctypes.ResultEvent)
+	ws.mtx.Unlock()
+
+	return nil
 }
-
-//// WSEvents is a wrapper around WSClient, which implements EventsClient.
-//type WSEvents struct {
-//	service.BaseService
-//	remote   string
-//	endpoint string
-//	ws       *jsonrpcclient.WSClient
-//
-//	mtx           cmtsync.RWMutex
-//	subscriptions map[string]chan ctypes.ResultEvent // query -> chan
-//}
-//
-//func newWSEvents(remote, endpoint string) (*WSEvents, error) {
-//	w := &WSEvents{
-//		endpoint:      endpoint,
-//		remote:        remote,
-//		subscriptions: make(map[string]chan ctypes.ResultEvent),
-//	}
-//	w.BaseService = *service.NewBaseService(nil, "WSEvents", w)
-//
-//	var err error
-//	w.ws, err = jsonrpcclient.NewWS(w.remote, w.endpoint, jsonrpcclient.OnReconnect(func() {
-//		// resubscribe immediately
-//		w.redoSubscriptionsAfter(0 * time.Second)
-//	}))
-//	if err != nil {
-//		return nil, err
-//	}
-//	w.ws.SetLogger(w.Logger)
-//
-//	return w, nil
-//}
-//
-//// OnStart implements service.Service by starting WSClient and event loop.
-//func (w *WSEvents) OnStart() error {
-//	if err := w.ws.Start(); err != nil {
-//		return err
-//	}
-//
-//	go w.eventListener()
-//
-//	return nil
-//}
-//
-//// OnStop implements service.Service by stopping WSClient.
-//func (w *WSEvents) OnStop() {
-//	if err := w.ws.Stop(); err != nil {
-//		w.Logger.Error("Can't stop ws client", "err", err)
-//	}
-//}
-
-//// Subscribe implements EventsClient by using WSClient to subscribe given
-//// subscriber to query. By default, returns a channel with cap=1. Error is
-//// returned if it fails to subscribe.
-////
-//// Channel is never closed to prevent clients from seeing an erroneous event.
-////
-//// It returns an error if WSEvents is not running.
-//func (ws *WSClient) Subscribe(ctx context.Context, _, query string,
-//	outCapacity ...int,
-//) (out <-chan ctypes.ResultEvent, err error) {
-//	if !w.IsRunning() {
-//		return nil, errNotRunning
-//	}
-//
-//	if err := w.ws.Subscribe(ctx, query); err != nil {
-//		return nil, err
-//	}
-//
-//	outCap := 1
-//	if len(outCapacity) > 0 {
-//		outCap = outCapacity[0]
-//	}
-//
-//	outc := make(chan ctypes.ResultEvent, outCap)
-//	w.mtx.Lock()
-//	// subscriber param is ignored because CometBFT will override it with
-//	// remote IP anyway.
-//	w.subscriptions[query] = outc
-//	w.mtx.Unlock()
-//
-//	return outc, nil
-//}
-//
-//// Unsubscribe implements EventsClient by using WSClient to unsubscribe given
-//// subscriber from query.
-////
-//// It returns an error if WSEvents is not running.
-//func (ws *WSClient) Unsubscribe(ctx context.Context, _, query string) error {
-//	if !w.IsRunning() {
-//		return errNotRunning
-//	}
-//
-//	if err := w.ws.Unsubscribe(ctx, query); err != nil {
-//		return err
-//	}
-//
-//	w.mtx.Lock()
-//	_, ok := w.subscriptions[query]
-//	if ok {
-//		delete(w.subscriptions, query)
-//	}
-//	w.mtx.Unlock()
-//
-//	return nil
-//}
-//
-//// UnsubscribeAll implements EventsClient by using WSClient to unsubscribe
-//// given subscriber from all the queries.
-////
-//// It returns an error if WSEvents is not running.
-//func (ws *WSClient) UnsubscribeAll(ctx context.Context, _ string) error {
-//	if !ws.IsRunning() {
-//		return errNotRunning
-//	}
-//
-//	if err := ws.UnsubscribeAll(ctx); err != nil {
-//		return err
-//	}
-//
-//	ws.mtx.Lock()
-//	w.subscriptions = make(map[string]chan ctypes.ResultEvent)
-//	w.mtx.Unlock()
-//
-//	return nil
-//}
