@@ -41,5 +41,8 @@ jobs:
       with:
         version: v1.60
 
+    - name: Run golint
+      run: golint ./...
+
     - name: Test
       run: go test -race -vet=off -v ./...
