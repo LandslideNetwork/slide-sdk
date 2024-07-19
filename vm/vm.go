@@ -79,14 +79,14 @@ type (
 	Application = abcitypes.Application
 
 	AppCreatorOpts struct {
-		NetworkId    uint32
-		SubnetId     []byte
-		ChainId      []byte
-		NodeId       []byte
+		NetworkID    uint32
+		SubnetID     []byte
+		ChainID      []byte
+		NodeID       []byte
 		PublicKey    []byte
-		XChainId     []byte
-		CChainId     []byte
-		AvaxAssetId  []byte
+		XChainID     []byte
+		CChainID     []byte
+		AvaxAssetID  []byte
 		GenesisBytes []byte
 		UpgradeBytes []byte
 		ConfigBytes  []byte
@@ -256,14 +256,14 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	vm.stateStore = state.NewStore(dbStateStore, state.StoreOptions{DiscardABCIResponses: false})
 
 	vm.appOpts = &AppCreatorOpts{
-		NetworkId:    req.NetworkId,
-		SubnetId:     req.SubnetId,
-		ChainId:      req.ChainId,
-		NodeId:       req.NodeId,
+		NetworkID:    req.NetworkId,
+		SubnetID:     req.SubnetId,
+		ChainID:      req.ChainId,
+		NodeID:       req.NodeId,
 		PublicKey:    req.PublicKey,
-		XChainId:     req.XChainId,
-		CChainId:     req.CChainId,
-		AvaxAssetId:  req.AvaxAssetId,
+		XChainID:     req.XChainId,
+		CChainID:     req.CChainId,
+		AvaxAssetID:  req.AvaxAssetId,
 		GenesisBytes: req.GenesisBytes,
 		UpgradeBytes: req.UpgradeBytes,
 		ConfigBytes:  req.ConfigBytes,
@@ -275,7 +275,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}
 
 	// Set the default configuration
-	var vmCfg vmtypes.VmConfig
+	var vmCfg vmtypes.VMConfig
 	vmCfg.SetDefaults()
 	if len(vm.appOpts.ConfigBytes) > 0 {
 		if err := json.Unmarshal(vm.appOpts.ConfigBytes, &vmCfg); err != nil {
@@ -405,10 +405,10 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	//vm.logger.Debug("initialize block", "bytes ", blockBytes)
+	// vm.logger.Debug("initialize block", "bytes ", blockBytes)
 	vm.logger.Info("vm initialization completed")
 
-	parentHash := block.BlockParentHash(blk)
+	parentHash := block.ParentHash(blk)
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
@@ -437,7 +437,7 @@ func (vm *LandslideVM) SetState(_ context.Context, req *vmpb.SetStateRequest) (*
 	}
 
 	vm.logger.Debug("SetState", "LastAcceptedId", vm.state.LastBlockID.Hash, "block", blk.Hash())
-	parentHash := block.BlockParentHash(blk)
+	parentHash := block.ParentHash(blk)
 	res := vmpb.SetStateResponse{
 		LastAcceptedId:       blk.Hash(),
 		LastAcceptedParentId: parentHash[:],
@@ -583,7 +583,7 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 // ParseBlock attempt to create a block from a stream of bytes.
 func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest) (*vmpb.ParseBlockResponse, error) {
 	vm.logger.Info("ParseBlock")
-	//vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
+	// vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
 	var (
 		blk       *types.Block
 		blkStatus vmpb.Status
@@ -839,7 +839,7 @@ func (vm *LandslideVM) GetStateSummary(context.Context, *vmpb.GetStateSummaryReq
 
 func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyRequest) (*vmpb.BlockVerifyResponse, error) {
 	vm.logger.Info("BlockVerify")
-	//vm.logger.Debug("block verify", "bytes", req.Bytes)
+	// vm.logger.Debug("block verify", "bytes", req.Bytes)
 
 	blk, blkStatus, err := vmstate.DecodeBlockWithStatus(req.Bytes)
 	if err != nil {

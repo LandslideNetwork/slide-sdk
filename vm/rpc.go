@@ -346,17 +346,17 @@ func (rpc *RPC) GenesisChunked(_ *rpctypes.Context, chunk uint) (*ctypes.ResultG
 	}, nil
 }
 
-// ToDo: no peers, because it's vm
+// NetInfo ToDo: no peers, because it's vm
 func (rpc *RPC) NetInfo(_ *rpctypes.Context) (*ctypes.ResultNetInfo, error) {
 	return nil, nil
 }
 
-// ToDo: we doesn't have consensusState
+// DumpConsensusState ToDo: we doesn't have consensusState
 func (rpc *RPC) DumpConsensusState(_ *rpctypes.Context) (*ctypes.ResultDumpConsensusState, error) {
 	return nil, nil
 }
 
-// ToDo: we doesn't have consensusState
+// GetConsensusState ToDo: we doesn't have consensusState
 func (rpc *RPC) GetConsensusState(_ *rpctypes.Context) (*ctypes.ResultConsensusState, error) {
 	return nil, nil
 }
@@ -375,7 +375,7 @@ func (rpc *RPC) Health(*rpctypes.Context) (*ctypes.ResultHealth, error) {
 	return &ctypes.ResultHealth{}, nil
 }
 
-// bsHeight can be either latest committed or uncommitted (+1) height.
+// getHeight bsHeight can be either latest committed or uncommitted (+1) height.
 func getHeight(bs *store.BlockStore, heightPtr *int64) (int64, error) {
 	bsHeight := bs.Height()
 	if heightPtr != nil {
@@ -747,7 +747,7 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 				version.BlockProtocol,
 				0,
 			),
-			DefaultNodeID: p2p.ID(rpc.vm.appOpts.NodeId),
+			DefaultNodeID: p2p.ID(rpc.vm.appOpts.NodeID),
 			ListenAddr:    "",
 			Network:       rpc.vm.networkName,
 			Version:       version.TMCoreSemVer,

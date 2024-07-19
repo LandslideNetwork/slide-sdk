@@ -12,9 +12,10 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	httppb "github.com/consideritdone/landslidevm/proto/http"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
+
+	httppb "github.com/consideritdone/landslidevm/proto/http"
 )
 
 func Errorf(code int, tmpl string, args ...interface{}) error {
@@ -24,7 +25,7 @@ func Errorf(code int, tmpl string, args ...interface{}) error {
 	})
 }
 
-// GetGRPCErrorFromHTTPRespone takes an HandleSimpleHTTPResponse as input and returns a gRPC error.
+// GetGRPCErrorFromHTTPResponse takes an HandleSimpleHTTPResponse as input and returns a gRPC error.
 func GetGRPCErrorFromHTTPResponse(resp *httppb.HandleSimpleHTTPResponse) error {
 	a, err := anypb.New(resp)
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 
 var _ Iter[int, struct{}] = (*iterator[int, struct{}])(nil)
 
-// Iterates over the keys and values in a LinkedHashmap
+// Iter Iterates over the keys and values in a LinkedHashmap
 // from oldest to newest elements.
 // Assumes the underlying LinkedHashmap is not modified while
 // the iterator is in use, except to delete elements that

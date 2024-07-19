@@ -14,12 +14,12 @@ type Sortable[T any] interface {
 	Compare(T) int
 }
 
-// Sorts the elements of [s].
+// Sort sorts the elements of [s].
 func Sort[T Sortable[T]](s []T) {
 	slices.SortFunc(s, T.Compare)
 }
 
-// Sorts the elements of [s] based on their hashes.
+// SortByHash sorts the elements of [s] based on their hashes.
 func SortByHash[T ~[]byte](s []T) {
 	slices.SortFunc(s, func(i, j T) int {
 		iHash := hashing.ComputeHash256(i)
@@ -28,7 +28,7 @@ func SortByHash[T ~[]byte](s []T) {
 	})
 }
 
-// Returns true iff the elements in [s] are sorted.
+// IsSortedBytes returns true iff the elements in [s] are sorted.
 func IsSortedBytes[T ~[]byte](s []T) bool {
 	for i := 0; i < len(s)-1; i++ {
 		if bytes.Compare(s[i], s[i+1]) == 1 {
@@ -38,7 +38,7 @@ func IsSortedBytes[T ~[]byte](s []T) bool {
 	return true
 }
 
-// Returns true iff the elements in [s] are unique and sorted.
+// IsSortedAndUnique returns true iff the elements in [s] are unique and sorted.
 func IsSortedAndUnique[T Sortable[T]](s []T) bool {
 	for i := 0; i < len(s)-1; i++ {
 		if s[i].Compare(s[i+1]) >= 0 {
@@ -48,7 +48,7 @@ func IsSortedAndUnique[T Sortable[T]](s []T) bool {
 	return true
 }
 
-// Returns true iff the elements in [s] are unique and sorted.
+// IsSortedAndUniqueOrdered returns true iff the elements in [s] are unique and sorted.
 func IsSortedAndUniqueOrdered[T cmp.Ordered](s []T) bool {
 	for i := 0; i < len(s)-1; i++ {
 		if s[i] >= s[i+1] {
@@ -58,7 +58,7 @@ func IsSortedAndUniqueOrdered[T cmp.Ordered](s []T) bool {
 	return true
 }
 
-// Returns true iff the elements in [s] are unique and sorted
+// IsSortedAndUniqueByHash returns true iff the elements in [s] are unique and sorted
 // based by their hashes.
 func IsSortedAndUniqueByHash[T ~[]byte](s []T) bool {
 	if len(s) <= 1 {

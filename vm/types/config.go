@@ -12,8 +12,8 @@ const (
 	defaultTimeoutBroadcastTxCommit time.Duration = 30 * time.Second
 )
 
-// VmConfig ...
-type VmConfig struct {
+// VMConfig ...
+type VMConfig struct {
 	RPCPort                  uint16        `json:"rpc_port"`
 	GRPCPort                 uint16        `json:"grpc_port"`
 	GRPCMaxOpenConnections   int           `json:"grpc_max_open_connections"`
@@ -22,7 +22,7 @@ type VmConfig struct {
 }
 
 // SetDefaults sets the default values for the config.
-func (c *VmConfig) SetDefaults() {
+func (c *VMConfig) SetDefaults() {
 	c.RPCPort = defaultRPCPort
 	c.GRPCPort = defaultGRPCPort
 	c.GRPCMaxOpenConnections = defaultMaxOpenConnections
@@ -31,7 +31,7 @@ func (c *VmConfig) SetDefaults() {
 }
 
 // Validate returns an error if this is an invalid config.
-func (c *VmConfig) Validate() error {
+func (c *VMConfig) Validate() error {
 	if c.GRPCMaxOpenConnections < 0 {
 		return fmt.Errorf("grpc_max_open_connections can't be negative")
 	}

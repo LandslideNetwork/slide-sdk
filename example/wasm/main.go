@@ -58,7 +58,7 @@ func WasmCreator() vm.AppCreator {
 
 		srvCfg := *srvconfig.DefaultConfig()
 		grpcCfg := srvCfg.GRPC
-		var vmCfg vmtypes.VmConfig
+		var vmCfg vmtypes.VMConfig
 		vmCfg.SetDefaults()
 		if len(config.ConfigBytes) > 0 {
 			if err := json.Unmarshal(config.ConfigBytes, &vmCfg); err != nil {
@@ -101,7 +101,7 @@ func WasmCreator() vm.AppCreator {
 			WithInterfaceRegistry(interfaceRegistry).
 			WithChainID(chainID)
 
-		avaChainID, err := ids.ToID(config.ChainId)
+		avaChainID, err := ids.ToID(config.ChainID)
 		if err != nil {
 			return nil, err
 		}
