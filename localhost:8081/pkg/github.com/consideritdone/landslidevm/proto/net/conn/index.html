@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>conn - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="http://localhost:8081/pkg/">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="http://localhost:8081/pkg/">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8081/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package conn
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "github.com/consideritdone/landslidevm/proto/net/conn"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#RegisterConnServer">func RegisterConnServer(s grpc.ServiceRegistrar, srv ConnServer)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#ConnClient">type ConnClient</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewConnClient">func NewConnClient(cc grpc.ClientConnInterface) ConnClient</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ConnServer">type ConnServer</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ReadRequest">type ReadRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadRequest.Descriptor">func (*ReadRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadRequest.GetLength">func (x *ReadRequest) GetLength() int32</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadRequest.ProtoMessage">func (*ReadRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadRequest.ProtoReflect">func (x *ReadRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadRequest.Reset">func (x *ReadRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadRequest.String">func (x *ReadRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ReadResponse">type ReadResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadResponse.Descriptor">func (*ReadResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadResponse.GetError">func (x *ReadResponse) GetError() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadResponse.GetRead">func (x *ReadResponse) GetRead() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadResponse.ProtoMessage">func (*ReadResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadResponse.ProtoReflect">func (x *ReadResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadResponse.Reset">func (x *ReadResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadResponse.String">func (x *ReadResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#SetDeadlineRequest">type SetDeadlineRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#SetDeadlineRequest.Descriptor">func (*SetDeadlineRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#SetDeadlineRequest.GetTime">func (x *SetDeadlineRequest) GetTime() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#SetDeadlineRequest.ProtoMessage">func (*SetDeadlineRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#SetDeadlineRequest.ProtoReflect">func (x *SetDeadlineRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#SetDeadlineRequest.Reset">func (x *SetDeadlineRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#SetDeadlineRequest.String">func (x *SetDeadlineRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#UnimplementedConnServer">type UnimplementedConnServer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedConnServer.Close">func (UnimplementedConnServer) Close(context.Context, *emptypb.Empty) (*emptypb.Empty, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedConnServer.Read">func (UnimplementedConnServer) Read(context.Context, *ReadRequest) (*ReadResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedConnServer.SetDeadline">func (UnimplementedConnServer) SetDeadline(context.Context, *SetDeadlineRequest) (*emptypb.Empty, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedConnServer.SetReadDeadline">func (UnimplementedConnServer) SetReadDeadline(context.Context, *SetDeadlineRequest) (*emptypb.Empty, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedConnServer.SetWriteDeadline">func (UnimplementedConnServer) SetWriteDeadline(context.Context, *SetDeadlineRequest) (*emptypb.Empty, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedConnServer.Write">func (UnimplementedConnServer) Write(context.Context, *WriteRequest) (*WriteResponse, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#UnsafeConnServer">type UnsafeConnServer</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#WriteRequest">type WriteRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.Descriptor">func (*WriteRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.GetPayload">func (x *WriteRequest) GetPayload() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.ProtoMessage">func (*WriteRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.ProtoReflect">func (x *WriteRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.Reset">func (x *WriteRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.String">func (x *WriteRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#WriteResponse">type WriteResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.Descriptor">func (*WriteResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.GetError">func (x *WriteResponse) GetError() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.GetLength">func (x *WriteResponse) GetLength() int32</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.ProtoMessage">func (*WriteResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.ProtoReflect">func (x *WriteResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.Reset">func (x *WriteResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.String">func (x *WriteResponse) String() string</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go">conn.pb.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go">conn_grpc.pb.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				
+				<pre>const (
+    <span id="Conn_Read_FullMethodName">Conn_Read_FullMethodName</span>             = &#34;/net.conn.Conn/Read&#34;
+    <span id="Conn_Write_FullMethodName">Conn_Write_FullMethodName</span>            = &#34;/net.conn.Conn/Write&#34;
+    <span id="Conn_Close_FullMethodName">Conn_Close_FullMethodName</span>            = &#34;/net.conn.Conn/Close&#34;
+    <span id="Conn_SetDeadline_FullMethodName">Conn_SetDeadline_FullMethodName</span>      = &#34;/net.conn.Conn/SetDeadline&#34;
+    <span id="Conn_SetReadDeadline_FullMethodName">Conn_SetReadDeadline_FullMethodName</span>  = &#34;/net.conn.Conn/SetReadDeadline&#34;
+    <span id="Conn_SetWriteDeadline_FullMethodName">Conn_SetWriteDeadline_FullMethodName</span> = &#34;/net.conn.Conn/SetWriteDeadline&#34;
+)</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>Conn_ServiceDesc is the grpc.ServiceDesc for Conn service.
+It&apos;s only intended for direct use with grpc.RegisterService,
+and not to be introspected or modified (even as a copy)
+
+				<pre>var <span id="Conn_ServiceDesc">Conn_ServiceDesc</span> = <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc">ServiceDesc</a>{
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.ServiceName">ServiceName</a>: &#34;net.conn.Conn&#34;,
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.HandlerType">HandlerType</a>: (*<a href="index.html#ConnServer">ConnServer</a>)(<a href="http://localhost:8081/pkg/builtin/#nil">nil</a>),
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.Methods">Methods</a>: []<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#MethodDesc">MethodDesc</a>{
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Read&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Conn_Read_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Write&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Conn_Write_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Close&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Conn_Close_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;SetDeadline&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Conn_SetDeadline_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;SetReadDeadline&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Conn_SetReadDeadline_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;SetWriteDeadline&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Conn_SetWriteDeadline_Handler,
+        },
+    },
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.Streams">Streams</a>:  []<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#StreamDesc">StreamDesc</a>{},
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.Metadata">Metadata</a>: &#34;net/conn/conn.proto&#34;,
+}</pre>
+			
+				
+				<pre>var <span id="File_net_conn_conn_proto">File_net_conn_conn_proto</span> <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#FileDescriptor">FileDescriptor</a></pre>
+			
+		
+		
+			
+			
+			<h2 id="RegisterConnServer">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go?s=6651:6715#L155">RegisterConnServer</a>
+				<a class="permalink" href="index.html#RegisterConnServer">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RegisterConnServer(s <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceRegistrar">ServiceRegistrar</a>, srv <a href="index.html#ConnServer">ConnServer</a>)</pre>
+			
+			
+			
+
+		
+		
+			
+			
+			<h2 id="ConnClient">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go?s=1219:2267#L24">ConnClient</a>
+				<a class="permalink" href="index.html#ConnClient">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ConnClient is the client API for Conn service.
+<p>For semantics around ctx use and closing/ending streaming RPCs, please refer to <a href="https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream">https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream</a>.
+
+			<pre>type ConnClient interface {
+    <span class="comment">// Read reads data from the connection.</span>
+    Read(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#ReadRequest">ReadRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#ReadResponse">ReadResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// Write writes data to the connection.</span>
+    Write(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#WriteRequest">WriteRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#WriteResponse">WriteResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// Close closes the connection.</span>
+    Close(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// SetDeadline sets the read and write deadlines associated</span>
+    <span class="comment">// with the connection.</span>
+    SetDeadline(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// SetReadDeadline sets the deadline for future Read calls</span>
+    <span class="comment">// and any currently-blocked Read call.</span>
+    SetReadDeadline(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// SetWriteDeadline sets the deadline for future Write calls</span>
+    <span class="comment">// and any currently-blocked Write call.</span>
+    SetWriteDeadline(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewConnClient">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go?s=2326:2384#L46">NewConnClient</a>
+					<a class="permalink" href="index.html#NewConnClient">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewConnClient(cc <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ClientConnInterface">ClientConnInterface</a>) <a href="index.html#ConnClient">ConnClient</a></pre>
+				
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="ConnServer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go?s=4253:5109#L107">ConnServer</a>
+				<a class="permalink" href="index.html#ConnServer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ConnServer is the server API for Conn service.
+All implementations should embed UnimplementedConnServer
+for forward compatibility
+
+			<pre>type ConnServer interface {
+    <span class="comment">// Read reads data from the connection.</span>
+    Read(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#ReadRequest">ReadRequest</a>) (*<a href="index.html#ReadResponse">ReadResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// Write writes data to the connection.</span>
+    Write(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#WriteRequest">WriteRequest</a>) (*<a href="index.html#WriteResponse">WriteResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// Close closes the connection.</span>
+    Close(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// SetDeadline sets the read and write deadlines associated</span>
+    <span class="comment">// with the connection.</span>
+    SetDeadline(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// SetReadDeadline sets the deadline for future Read calls</span>
+    <span class="comment">// and any currently-blocked Read call.</span>
+    SetReadDeadline(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// SetWriteDeadline sets the deadline for future Write calls</span>
+    <span class="comment">// and any currently-blocked Write call.</span>
+    SetWriteDeadline(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ReadRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=637:895#L14">ReadRequest</a>
+				<a class="permalink" href="index.html#ReadRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ReadRequest struct {
+
+    <span class="comment">// length of the request in bytes</span>
+<span id="ReadRequest.Length"></span>    Length <a href="http://localhost:8081/pkg/builtin/#int32">int32</a> `protobuf:&#34;varint,1,opt,name=length,proto3&#34; json:&#34;length,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ReadRequest.Descriptor">func (*ReadRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=1611:1659#L51">Descriptor</a>
+					<a class="permalink" href="index.html#ReadRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#ReadRequest">ReadRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use ReadRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="ReadRequest.GetLength">func (*ReadRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=1722:1761#L55">GetLength</a>
+					<a class="permalink" href="index.html#ReadRequest.GetLength">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#ReadRequest">ReadRequest</a>) GetLength() <a href="http://localhost:8081/pkg/builtin/#int32">int32</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ReadRequest.ProtoMessage">func (*ReadRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=1196:1230#L36">ProtoMessage</a>
+					<a class="permalink" href="index.html#ReadRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#ReadRequest">ReadRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ReadRequest.ProtoReflect">func (*ReadRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=1235:1292#L38">ProtoReflect</a>
+					<a class="permalink" href="index.html#ReadRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#ReadRequest">ReadRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ReadRequest.Reset">func (*ReadRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=897:926#L23">Reset</a>
+					<a class="permalink" href="index.html#ReadRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#ReadRequest">ReadRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ReadRequest.String">func (*ReadRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=1114:1151#L32">String</a>
+					<a class="permalink" href="index.html#ReadRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#ReadRequest">ReadRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ReadResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=1813:2181#L62">ReadResponse</a>
+				<a class="permalink" href="index.html#ReadResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ReadResponse struct {
+
+    <span class="comment">// read is the payload in bytes</span>
+<span id="ReadResponse.Read"></span>    Read []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,1,opt,name=read,proto3&#34; json:&#34;read,omitempty&#34;`
+    <span class="comment">// error is an error message</span>
+<span id="ReadResponse.Error"></span>    Error *<a href="http://localhost:8081/pkg/builtin/#string">string</a> `protobuf:&#34;bytes,2,opt,name=error,proto3,oneof&#34; json:&#34;error,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ReadResponse.Descriptor">func (*ReadResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=2903:2952#L101">Descriptor</a>
+					<a class="permalink" href="index.html#ReadResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#ReadResponse">ReadResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use ReadResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="ReadResponse.GetError">func (*ReadResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=3106:3146#L112">GetError</a>
+					<a class="permalink" href="index.html#ReadResponse.GetError">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#ReadResponse">ReadResponse</a>) GetError() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ReadResponse.GetRead">func (*ReadResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=3015:3054#L105">GetRead</a>
+					<a class="permalink" href="index.html#ReadResponse.GetRead">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#ReadResponse">ReadResponse</a>) GetRead() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ReadResponse.ProtoMessage">func (*ReadResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=2485:2520#L86">ProtoMessage</a>
+					<a class="permalink" href="index.html#ReadResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#ReadResponse">ReadResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ReadResponse.ProtoReflect">func (*ReadResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=2525:2583#L88">ProtoReflect</a>
+					<a class="permalink" href="index.html#ReadResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#ReadResponse">ReadResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ReadResponse.Reset">func (*ReadResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=2183:2213#L73">Reset</a>
+					<a class="permalink" href="index.html#ReadResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#ReadResponse">ReadResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ReadResponse.String">func (*ReadResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=2402:2440#L82">String</a>
+					<a class="permalink" href="index.html#ReadResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#ReadResponse">ReadResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="SetDeadlineRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=5841:6113#L224">SetDeadlineRequest</a>
+				<a class="permalink" href="index.html#SetDeadlineRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type SetDeadlineRequest struct {
+
+    <span class="comment">// time represents an instant in time in bytes</span>
+<span id="SetDeadlineRequest.Time"></span>    Time []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,1,opt,name=time,proto3&#34; json:&#34;time,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="SetDeadlineRequest.Descriptor">func (*SetDeadlineRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=6871:6926#L261">Descriptor</a>
+					<a class="permalink" href="index.html#SetDeadlineRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use SetDeadlineRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="SetDeadlineRequest.GetTime">func (*SetDeadlineRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=6989:7034#L265">GetTime</a>
+					<a class="permalink" href="index.html#SetDeadlineRequest.GetTime">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>) GetTime() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="SetDeadlineRequest.ProtoMessage">func (*SetDeadlineRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=6435:6476#L246">ProtoMessage</a>
+					<a class="permalink" href="index.html#SetDeadlineRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="SetDeadlineRequest.ProtoReflect">func (*SetDeadlineRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=6481:6545#L248">ProtoReflect</a>
+					<a class="permalink" href="index.html#SetDeadlineRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="SetDeadlineRequest.Reset">func (*SetDeadlineRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=6115:6151#L233">Reset</a>
+					<a class="permalink" href="index.html#SetDeadlineRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="SetDeadlineRequest.String">func (*SetDeadlineRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=6346:6390#L242">String</a>
+					<a class="permalink" href="index.html#SetDeadlineRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="UnimplementedConnServer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go?s=5201:5240#L126">UnimplementedConnServer</a>
+				<a class="permalink" href="index.html#UnimplementedConnServer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UnimplementedConnServer should be embedded to have forward compatible implementations.
+
+			<pre>type UnimplementedConnServer struct {
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="UnimplementedConnServer.Close">func (UnimplementedConnServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go?s=5592:5685#L135">Close</a>
+					<a class="permalink" href="index.html#UnimplementedConnServer.Close">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedConnServer">UnimplementedConnServer</a>) Close(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedConnServer.Read">func (UnimplementedConnServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go?s=5242:5331#L129">Read</a>
+					<a class="permalink" href="index.html#UnimplementedConnServer.Read">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedConnServer">UnimplementedConnServer</a>) Read(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#ReadRequest">ReadRequest</a>) (*<a href="index.html#ReadResponse">ReadResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedConnServer.SetDeadline">func (UnimplementedConnServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go?s=5770:5874#L138">SetDeadline</a>
+					<a class="permalink" href="index.html#UnimplementedConnServer.SetDeadline">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedConnServer">UnimplementedConnServer</a>) SetDeadline(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedConnServer.SetReadDeadline">func (UnimplementedConnServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go?s=5965:6073#L141">SetReadDeadline</a>
+					<a class="permalink" href="index.html#UnimplementedConnServer.SetReadDeadline">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedConnServer">UnimplementedConnServer</a>) SetReadDeadline(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedConnServer.SetWriteDeadline">func (UnimplementedConnServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go?s=6168:6277#L144">SetWriteDeadline</a>
+					<a class="permalink" href="index.html#UnimplementedConnServer.SetWriteDeadline">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedConnServer">UnimplementedConnServer</a>) SetWriteDeadline(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#SetDeadlineRequest">SetDeadlineRequest</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedConnServer.Write">func (UnimplementedConnServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go?s=5415:5507#L132">Write</a>
+					<a class="permalink" href="index.html#UnimplementedConnServer.Write">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedConnServer">UnimplementedConnServer</a>) Write(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#WriteRequest">WriteRequest</a>) (*<a href="index.html#WriteResponse">WriteResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="UnsafeConnServer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn_grpc.pb.go?s=6578:6649#L151">UnsafeConnServer</a>
+				<a class="permalink" href="index.html#UnsafeConnServer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UnsafeConnServer may be embedded to opt out of forward compatibility for this service.
+Use of this interface is not recommended, as added methods to ConnServer will
+result in compilation errors.
+
+			<pre>type UnsafeConnServer interface {
+    <span class="comment">// contains filtered or unexported methods</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="WriteRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=3217:3486#L119">WriteRequest</a>
+				<a class="permalink" href="index.html#WriteRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type WriteRequest struct {
+
+    <span class="comment">// payload is the write request in bytes</span>
+<span id="WriteRequest.Payload"></span>    Payload []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,1,opt,name=payload,proto3&#34; json:&#34;payload,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="WriteRequest.Descriptor">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=4208:4257#L156">Descriptor</a>
+					<a class="permalink" href="index.html#WriteRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteRequest">WriteRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use WriteRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="WriteRequest.GetPayload">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=4320:4362#L160">GetPayload</a>
+					<a class="permalink" href="index.html#WriteRequest.GetPayload">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteRequest">WriteRequest</a>) GetPayload() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteRequest.ProtoMessage">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=3790:3825#L141">ProtoMessage</a>
+					<a class="permalink" href="index.html#WriteRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteRequest">WriteRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteRequest.ProtoReflect">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=3830:3888#L143">ProtoReflect</a>
+					<a class="permalink" href="index.html#WriteRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteRequest">WriteRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteRequest.Reset">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=3488:3518#L128">Reset</a>
+					<a class="permalink" href="index.html#WriteRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteRequest">WriteRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteRequest.String">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=3707:3745#L137">String</a>
+					<a class="permalink" href="index.html#WriteRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteRequest">WriteRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="WriteResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=4417:4795#L167">WriteResponse</a>
+				<a class="permalink" href="index.html#WriteResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type WriteResponse struct {
+
+    <span class="comment">// length of the response in bytes</span>
+<span id="WriteResponse.Length"></span>    Length <a href="http://localhost:8081/pkg/builtin/#int32">int32</a> `protobuf:&#34;varint,1,opt,name=length,proto3&#34; json:&#34;length,omitempty&#34;`
+    <span class="comment">// error is an error message</span>
+<span id="WriteResponse.Error"></span>    Error *<a href="http://localhost:8081/pkg/builtin/#string">string</a> `protobuf:&#34;bytes,2,opt,name=error,proto3,oneof&#34; json:&#34;error,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="WriteResponse.Descriptor">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=5523:5573#L206">Descriptor</a>
+					<a class="permalink" href="index.html#WriteResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteResponse">WriteResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use WriteResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="WriteResponse.GetError">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=5729:5770#L217">GetError</a>
+					<a class="permalink" href="index.html#WriteResponse.GetError">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteResponse">WriteResponse</a>) GetError() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteResponse.GetLength">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=5636:5677#L210">GetLength</a>
+					<a class="permalink" href="index.html#WriteResponse.GetLength">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteResponse">WriteResponse</a>) GetLength() <a href="http://localhost:8081/pkg/builtin/#int32">int32</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteResponse.ProtoMessage">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=5102:5138#L191">ProtoMessage</a>
+					<a class="permalink" href="index.html#WriteResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteResponse">WriteResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteResponse.ProtoReflect">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=5143:5202#L193">ProtoReflect</a>
+					<a class="permalink" href="index.html#WriteResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteResponse">WriteResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteResponse.Reset">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=4797:4828#L178">Reset</a>
+					<a class="permalink" href="index.html#WriteResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteResponse">WriteResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteResponse.String">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/net/conn/conn.pb.go?s=5018:5057#L187">String</a>
+					<a class="permalink" href="index.html#WriteResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteResponse">WriteResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8081/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

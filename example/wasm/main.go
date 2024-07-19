@@ -74,7 +74,6 @@ func WasmCreator() vm.AppCreator {
 			appCfg AppConfig
 		)
 		vmCfg.VMConfig.SetDefaults()
-
 		if len(config.ConfigBytes) > 0 {
 			if err := json.Unmarshal(config.ConfigBytes, &vmCfg); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal config %s: %w", string(config.ConfigBytes), err)

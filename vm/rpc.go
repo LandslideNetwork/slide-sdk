@@ -399,7 +399,7 @@ func (rpc *RPC) Health(*rpctypes.Context) (*ctypes.ResultHealth, error) {
 	return &ctypes.ResultHealth{}, nil
 }
 
-// bsHeight can be either latest committed or uncommitted (+1) height.
+// getHeight bsHeight can be either latest committed or uncommitted (+1) height.
 func getHeight(bs *store.BlockStore, heightPtr *int64) (int64, error) {
 	if heightPtr == nil {
 		return bs.Height(), nil

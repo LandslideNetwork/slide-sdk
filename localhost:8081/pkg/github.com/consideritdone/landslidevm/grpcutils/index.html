@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>grpcutils - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="http://localhost:8081/pkg/">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="http://localhost:8081/pkg/">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8081/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package grpcutils
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "github.com/consideritdone/landslidevm/grpcutils"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Dial">func Dial(addr string, opts ...DialOption) (*grpc.ClientConn, error)</a></dd>
+			
+				
+				<dd><a href="index.html#EnsureValidResponseCode">func EnsureValidResponseCode(code int) int</a></dd>
+			
+				
+				<dd><a href="index.html#Errorf">func Errorf(code int, tmpl string, args ...interface{}) error</a></dd>
+			
+				
+				<dd><a href="index.html#GetGRPCErrorFromHTTPResponse">func GetGRPCErrorFromHTTPResponse(resp *httppb.HandleSimpleHTTPResponse) error</a></dd>
+			
+				
+				<dd><a href="index.html#GetHTTPHeader">func GetHTTPHeader(hs http.Header) []*httppb.Element</a></dd>
+			
+				
+				<dd><a href="index.html#GetHTTPResponseFromError">func GetHTTPResponseFromError(err error) (*httppb.HandleSimpleHTTPResponse, bool)</a></dd>
+			
+				
+				<dd><a href="index.html#MergeHTTPHeader">func MergeHTTPHeader(hs []*httppb.Element, header http.Header)</a></dd>
+			
+				
+				<dd><a href="index.html#NewListener">func NewListener() (net.Listener, error)</a></dd>
+			
+				
+				<dd><a href="index.html#NewServer">func NewServer(opts ...ServerOption) *grpc.Server</a></dd>
+			
+				
+				<dd><a href="index.html#Serve">func Serve(listener net.Listener, grpcServer *grpc.Server)</a></dd>
+			
+				
+				<dd><a href="index.html#TimestampAsTime">func TimestampAsTime(ts *tspb.Timestamp) (time.Time, error)</a></dd>
+			
+				
+				<dd><a href="index.html#TimestampFromTime">func TimestampFromTime(time time.Time) *tspb.Timestamp</a></dd>
+			
+			
+				
+				<dd><a href="index.html#DialOption">type DialOption</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WithChainStreamInterceptor">func WithChainStreamInterceptor(interceptors ...grpc.StreamClientInterceptor) DialOption</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WithChainUnaryInterceptor">func WithChainUnaryInterceptor(interceptors ...grpc.UnaryClientInterceptor) DialOption</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#DialOptions">type DialOptions</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ServerCloser">type ServerCloser</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ServerCloser.Add">func (s *ServerCloser) Add(server *grpc.Server)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ServerCloser.GracefulStop">func (s *ServerCloser) GracefulStop()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ServerCloser.Stop">func (s *ServerCloser) Stop()</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ServerOption">type ServerOption</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WithStreamInterceptor">func WithStreamInterceptor(streamInterceptor grpc.StreamServerInterceptor) ServerOption</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WithUnaryInterceptor">func WithUnaryInterceptor(unaryInterceptor grpc.UnaryServerInterceptor) ServerOption</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ServerOptions">type ServerOptions</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/client.go">client.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server.go">server.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server_closer.go">server_closer.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/util.go">util.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				
+				<pre>var <span id="DefaultDialOptions">DefaultDialOptions</span> = []<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#DialOption">DialOption</a>{
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#WithDefaultCallOptions">WithDefaultCallOptions</a>(
+        <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#MaxCallRecvMsgSize">MaxCallRecvMsgSize</a>(<a href="http://localhost:8081/pkg/math/">math</a>.<a href="http://localhost:8081/pkg/math/#MaxInt">MaxInt</a>),
+        <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#MaxCallSendMsgSize">MaxCallSendMsgSize</a>(<a href="http://localhost:8081/pkg/math/">math</a>.<a href="http://localhost:8081/pkg/math/#MaxInt">MaxInt</a>),
+        <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#WaitForReady">WaitForReady</a>(defaultWaitForReady),
+    ),
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#WithKeepaliveParams">WithKeepaliveParams</a>(<a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/">keepalive</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/#ClientParameters">ClientParameters</a>{
+        <a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/#ClientParameters.Time">Time</a>:                defaultClientKeepAliveTime,
+        <a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/#ClientParameters.Timeout">Timeout</a>:             defaultClientKeepAliveTimeOut,
+        <a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/#ClientParameters.PermitWithoutStream">PermitWithoutStream</a>: defaultPermitWithoutStream,
+    }),
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#WithTransportCredentials">WithTransportCredentials</a>(<a href="http://localhost:8081/pkg/google.golang.org/grpc/credentials/insecure/">insecure</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/credentials/insecure/#NewCredentials">NewCredentials</a>()),
+}</pre>
+			
+				
+				<pre>var <span id="DefaultServerOptions">DefaultServerOptions</span> = []<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServerOption">ServerOption</a>{
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#MaxRecvMsgSize">MaxRecvMsgSize</a>(<a href="http://localhost:8081/pkg/math/">math</a>.<a href="http://localhost:8081/pkg/math/#MaxInt">MaxInt</a>),
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#MaxSendMsgSize">MaxSendMsgSize</a>(<a href="http://localhost:8081/pkg/math/">math</a>.<a href="http://localhost:8081/pkg/math/#MaxInt">MaxInt</a>),
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#MaxConcurrentStreams">MaxConcurrentStreams</a>(<a href="http://localhost:8081/pkg/math/">math</a>.<a href="http://localhost:8081/pkg/math/#MaxUint32">MaxUint32</a>),
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#KeepaliveEnforcementPolicy">KeepaliveEnforcementPolicy</a>(<a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/">keepalive</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/#EnforcementPolicy">EnforcementPolicy</a>{
+        <a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/#EnforcementPolicy.MinTime">MinTime</a>:             defaultServerKeepAliveMinTime,
+        <a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/#EnforcementPolicy.PermitWithoutStream">PermitWithoutStream</a>: defaultPermitWithoutStream,
+    }),
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#KeepaliveParams">KeepaliveParams</a>(<a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/">keepalive</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/#ServerParameters">ServerParameters</a>{
+        <a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/#ServerParameters.Time">Time</a>:    defaultServerKeepAliveInterval,
+        <a href="http://localhost:8081/pkg/google.golang.org/grpc/keepalive/#ServerParameters.Timeout">Timeout</a>: defaultServerKeepAliveTimeout,
+    }),
+}</pre>
+			
+		
+		
+			
+			
+			<h2 id="Dial">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/client.go?s=2464:2532#L50">Dial</a>
+				<a class="permalink" href="index.html#Dial">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Dial(addr <a href="http://localhost:8081/pkg/builtin/#string">string</a>, opts ...<a href="index.html#DialOption">DialOption</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ClientConn">ClientConn</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+			<p>gRPC clients created from this ClientConn will wait forever for the Server to
+become Ready. If you desire a dial timeout ensure context is properly plumbed
+to the client and use context.WithTimeout.
+<p>Dial returns a gRPC ClientConn with the dial options as defined by
+DefaultDialOptions. DialOption can also optionally be passed.
+
+			
+			
+
+		
+			
+			
+			<h2 id="EnsureValidResponseCode">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/util.go?s=2567:2609#L85">EnsureValidResponseCode</a>
+				<a class="permalink" href="index.html#EnsureValidResponseCode">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func EnsureValidResponseCode(code <a href="http://localhost:8081/pkg/builtin/#int">int</a>) <a href="http://localhost:8081/pkg/builtin/#int">int</a></pre>
+			<p>EnsureValidResponseCode ensures that the response code is valid otherwise it returns 500.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Errorf">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/util.go?s=461:522#L10">Errorf</a>
+				<a class="permalink" href="index.html#Errorf">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Errorf(code <a href="http://localhost:8081/pkg/builtin/#int">int</a>, tmpl <a href="http://localhost:8081/pkg/builtin/#string">string</a>, args ...interface{}) <a href="http://localhost:8081/pkg/builtin/#error">error</a></pre>
+			
+			
+			
+
+		
+			
+			
+			<h2 id="GetGRPCErrorFromHTTPResponse">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/util.go?s=768:846#L18">GetGRPCErrorFromHTTPResponse</a>
+				<a class="permalink" href="index.html#GetGRPCErrorFromHTTPResponse">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func GetGRPCErrorFromHTTPResponse(resp *<a href="../proto/http/index.html">httppb</a>.<a href="../proto/http/index.html#HandleSimpleHTTPResponse">HandleSimpleHTTPResponse</a>) <a href="http://localhost:8081/pkg/builtin/#error">error</a></pre>
+			<p>GetGRPCErrorFromHTTPRespone takes an HandleSimpleHTTPResponse as input and returns a gRPC error.
+
+			
+			
+
+		
+			
+			
+			<h2 id="GetHTTPHeader">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/util.go?s=1629:1681#L53">GetHTTPHeader</a>
+				<a class="permalink" href="index.html#GetHTTPHeader">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func GetHTTPHeader(hs <a href="http://localhost:8081/pkg/net/http/">http</a>.<a href="http://localhost:8081/pkg/net/http/#Header">Header</a>) []*<a href="../proto/http/index.html">httppb</a>.<a href="../proto/http/index.html#Element">Element</a></pre>
+			<p>GetHTTPHeader takes an http.Header as input and returns a slice of Header.
+
+			
+			
+
+		
+			
+			
+			<h2 id="GetHTTPResponseFromError">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/util.go?s=1141:1222#L33">GetHTTPResponseFromError</a>
+				<a class="permalink" href="index.html#GetHTTPResponseFromError">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func GetHTTPResponseFromError(err <a href="http://localhost:8081/pkg/builtin/#error">error</a>) (*<a href="../proto/http/index.html">httppb</a>.<a href="../proto/http/index.html#HandleSimpleHTTPResponse">HandleSimpleHTTPResponse</a>, <a href="http://localhost:8081/pkg/builtin/#bool">bool</a>)</pre>
+			<p>GetHTTPResponseFromError takes an gRPC error as input and returns a gRPC
+HandleSimpleHTTPResponse.
+
+			
+			
+
+		
+			
+			
+			<h2 id="MergeHTTPHeader">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/util.go?s=1930:1992#L65">MergeHTTPHeader</a>
+				<a class="permalink" href="index.html#MergeHTTPHeader">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func MergeHTTPHeader(hs []*<a href="../proto/http/index.html">httppb</a>.<a href="../proto/http/index.html#Element">Element</a>, header <a href="http://localhost:8081/pkg/net/http/">http</a>.<a href="http://localhost:8081/pkg/net/http/#Header">Header</a>)</pre>
+			<p>MergeHTTPHeader takes a slice of Header and merges with http.Header map.
+
+			
+			
+
+		
+			
+			
+			<h2 id="NewListener">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server.go?s=2908:2948#L78">NewListener</a>
+				<a class="permalink" href="index.html#NewListener">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewListener() (<a href="http://localhost:8081/pkg/net/">net</a>.<a href="http://localhost:8081/pkg/net/#Listener">Listener</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+			<p>NewListener returns a TCP listener listening against the next available port
+on the system bound to localhost.
+
+			
+			
+
+		
+			
+			
+			<h2 id="NewServer">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server.go?s=1427:1476#L33">NewServer</a>
+				<a class="permalink" href="index.html#NewServer">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewServer(opts ...<a href="index.html#ServerOption">ServerOption</a>) *<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#Server">Server</a></pre>
+			<p>NewServer will return a gRPC server with server options as defined by
+DefaultServerOptions. ServerOption can also optionally be passed.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Serve">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server.go?s=3070:3128#L83">Serve</a>
+				<a class="permalink" href="index.html#Serve">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Serve(listener <a href="http://localhost:8081/pkg/net/">net</a>.<a href="http://localhost:8081/pkg/net/#Listener">Listener</a>, grpcServer *<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#Server">Server</a>)</pre>
+			<p>Serve will start a gRPC server and block until it errors or is shutdown.
+
+			
+			
+
+		
+			
+			
+			<h2 id="TimestampAsTime">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/util.go?s=2126:2185#L72">TimestampAsTime</a>
+				<a class="permalink" href="index.html#TimestampAsTime">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TimestampAsTime(ts *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/timestamppb/">tspb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/timestamppb/#Timestamp">Timestamp</a>) (<a href="http://localhost:8081/pkg/time/">time</a>.<a href="http://localhost:8081/pkg/time/#Time">Time</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+			<p>TimestampAsTime validates timestamppb timestamp and returns time.Time.
+
+			
+			
+
+		
+			
+			
+			<h2 id="TimestampFromTime">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/util.go?s=2391:2445#L80">TimestampFromTime</a>
+				<a class="permalink" href="index.html#TimestampFromTime">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TimestampFromTime(time <a href="http://localhost:8081/pkg/time/">time</a>.<a href="http://localhost:8081/pkg/time/#Time">Time</a>) *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/timestamppb/">tspb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/timestamppb/#Timestamp">Timestamp</a></pre>
+			<p>TimestampFromTime converts time.Time to a timestamppb timestamp.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="DialOption">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/client.go?s=3243:3277#L75">DialOption</a>
+				<a class="permalink" href="index.html#DialOption">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type DialOption func(*<a href="index.html#DialOptions">DialOptions</a>)</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="WithChainStreamInterceptor">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/client.go?s=3704:3792#L87">WithChainStreamInterceptor</a>
+					<a class="permalink" href="index.html#WithChainStreamInterceptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func WithChainStreamInterceptor(interceptors ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#StreamClientInterceptor">StreamClientInterceptor</a>) <a href="index.html#DialOption">DialOption</a></pre>
+				<p>WithChainStreamInterceptor takes a list of stream client interceptors which
+are added to the dial options.
+
+				
+				
+			
+				
+				<h3 id="WithChainUnaryInterceptor">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/client.go?s=3390:3476#L79">WithChainUnaryInterceptor</a>
+					<a class="permalink" href="index.html#WithChainUnaryInterceptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func WithChainUnaryInterceptor(interceptors ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#UnaryClientInterceptor">UnaryClientInterceptor</a>) <a href="index.html#DialOption">DialOption</a></pre>
+				<p>WithChainUnaryInterceptor takes a list of unary client interceptors which
+are added to the dial options.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="DialOptions">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/client.go?s=2733:2784#L56">DialOptions</a>
+				<a class="permalink" href="index.html#DialOptions">&#xb6;</a>
+				
+				
+			</h2>
+			<p>DialOptions are options which can be applied to a gRPC client in addition to
+the defaults set by DefaultDialOptions.
+
+			<pre>type DialOptions struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ServerCloser">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server_closer.go?s=66:152#L1">ServerCloser</a>
+				<a class="permalink" href="index.html#ServerCloser">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ServerCloser struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ServerCloser.Add">func (*ServerCloser) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server_closer.go?s=154:201#L5">Add</a>
+					<a class="permalink" href="index.html#ServerCloser.Add">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#ServerCloser">ServerCloser</a>) Add(server *<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#Server">Server</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ServerCloser.GracefulStop">func (*ServerCloser) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server_closer.go?s=493:530#L27">GracefulStop</a>
+					<a class="permalink" href="index.html#ServerCloser.GracefulStop">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#ServerCloser">ServerCloser</a>) GracefulStop()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ServerCloser.Stop">func (*ServerCloser) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server_closer.go?s=330:359#L16">Stop</a>
+					<a class="permalink" href="index.html#ServerCloser.Stop">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#ServerCloser">ServerCloser</a>) Stop()</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ServerOption">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server.go?s=2184:2222#L58">ServerOption</a>
+				<a class="permalink" href="index.html#ServerOption">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ServerOption are options which can be applied to a gRPC server in addition to
+the defaults set by DefaultServerOPtions.
+
+			<pre>type ServerOption func(*<a href="index.html#ServerOptions">ServerOptions</a>)</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="WithStreamInterceptor">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server.go?s=2593:2680#L70">WithStreamInterceptor</a>
+					<a class="permalink" href="index.html#WithStreamInterceptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func WithStreamInterceptor(streamInterceptor <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#StreamServerInterceptor">StreamServerInterceptor</a>) <a href="index.html#ServerOption">ServerOption</a></pre>
+				<p>WithStreamInterceptor adds a single stream interceptor to the gRPC server
+options.
+
+				
+				
+			
+				
+				<h3 id="WithUnaryInterceptor">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server.go?s=2311:2395#L62">WithUnaryInterceptor</a>
+					<a class="permalink" href="index.html#WithUnaryInterceptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func WithUnaryInterceptor(unaryInterceptor <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#UnaryServerInterceptor">UnaryServerInterceptor</a>) <a href="index.html#ServerOption">ServerOption</a></pre>
+				<p>WithUnaryInterceptor adds a single unary interceptor to the gRPC server
+options.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="ServerOptions">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/grpcutils/server.go?s=1529:1584#L37">ServerOptions</a>
+				<a class="permalink" href="index.html#ServerOptions">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ServerOptions struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8081/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

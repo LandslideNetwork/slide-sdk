@@ -1,0 +1,3745 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>rpcdb - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="http://localhost:8081/pkg/">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="http://localhost:8081/pkg/">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8081/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package rpcdb
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "github.com/consideritdone/landslidevm/proto/rpcdb"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#RegisterDatabaseServer">func RegisterDatabaseServer(s grpc.ServiceRegistrar, srv DatabaseServer)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#CloseRequest">type CloseRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CloseRequest.Descriptor">func (*CloseRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CloseRequest.ProtoMessage">func (*CloseRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CloseRequest.ProtoReflect">func (x *CloseRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CloseRequest.Reset">func (x *CloseRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CloseRequest.String">func (x *CloseRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#CloseResponse">type CloseResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CloseResponse.Descriptor">func (*CloseResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CloseResponse.GetErr">func (x *CloseResponse) GetErr() Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CloseResponse.ProtoMessage">func (*CloseResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CloseResponse.ProtoReflect">func (x *CloseResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CloseResponse.Reset">func (x *CloseResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CloseResponse.String">func (x *CloseResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#CompactRequest">type CompactRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactRequest.Descriptor">func (*CompactRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactRequest.GetLimit">func (x *CompactRequest) GetLimit() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactRequest.GetStart">func (x *CompactRequest) GetStart() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactRequest.ProtoMessage">func (*CompactRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactRequest.ProtoReflect">func (x *CompactRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactRequest.Reset">func (x *CompactRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactRequest.String">func (x *CompactRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#CompactResponse">type CompactResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactResponse.Descriptor">func (*CompactResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactResponse.GetErr">func (x *CompactResponse) GetErr() Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactResponse.ProtoMessage">func (*CompactResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactResponse.ProtoReflect">func (x *CompactResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactResponse.Reset">func (x *CompactResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CompactResponse.String">func (x *CompactResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#DatabaseClient">type DatabaseClient</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewDatabaseClient">func NewDatabaseClient(cc grpc.ClientConnInterface) DatabaseClient</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#DatabaseServer">type DatabaseServer</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#DeleteRequest">type DeleteRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DeleteRequest.Descriptor">func (*DeleteRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DeleteRequest.GetKey">func (x *DeleteRequest) GetKey() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DeleteRequest.ProtoMessage">func (*DeleteRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DeleteRequest.ProtoReflect">func (x *DeleteRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DeleteRequest.Reset">func (x *DeleteRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DeleteRequest.String">func (x *DeleteRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#DeleteResponse">type DeleteResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DeleteResponse.Descriptor">func (*DeleteResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DeleteResponse.GetErr">func (x *DeleteResponse) GetErr() Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DeleteResponse.ProtoMessage">func (*DeleteResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DeleteResponse.ProtoReflect">func (x *DeleteResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DeleteResponse.Reset">func (x *DeleteResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DeleteResponse.String">func (x *DeleteResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Error">type Error</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Error.Descriptor">func (Error) Descriptor() protoreflect.EnumDescriptor</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Error.Enum">func (x Error) Enum() *Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Error.EnumDescriptor">func (Error) EnumDescriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Error.Number">func (x Error) Number() protoreflect.EnumNumber</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Error.String">func (x Error) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Error.Type">func (Error) Type() protoreflect.EnumType</a></dd>
+				
+			
+				
+				<dd><a href="index.html#GetRequest">type GetRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetRequest.Descriptor">func (*GetRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetRequest.GetKey">func (x *GetRequest) GetKey() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetRequest.ProtoMessage">func (*GetRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetRequest.ProtoReflect">func (x *GetRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetRequest.Reset">func (x *GetRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetRequest.String">func (x *GetRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#GetResponse">type GetResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetResponse.Descriptor">func (*GetResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetResponse.GetErr">func (x *GetResponse) GetErr() Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetResponse.GetValue">func (x *GetResponse) GetValue() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetResponse.ProtoMessage">func (*GetResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetResponse.ProtoReflect">func (x *GetResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetResponse.Reset">func (x *GetResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetResponse.String">func (x *GetResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#HasRequest">type HasRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasRequest.Descriptor">func (*HasRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasRequest.GetKey">func (x *HasRequest) GetKey() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasRequest.ProtoMessage">func (*HasRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasRequest.ProtoReflect">func (x *HasRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasRequest.Reset">func (x *HasRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasRequest.String">func (x *HasRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#HasResponse">type HasResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasResponse.Descriptor">func (*HasResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasResponse.GetErr">func (x *HasResponse) GetErr() Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasResponse.GetHas">func (x *HasResponse) GetHas() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasResponse.ProtoMessage">func (*HasResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasResponse.ProtoReflect">func (x *HasResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasResponse.Reset">func (x *HasResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HasResponse.String">func (x *HasResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#HealthCheckResponse">type HealthCheckResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HealthCheckResponse.Descriptor">func (*HealthCheckResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HealthCheckResponse.GetDetails">func (x *HealthCheckResponse) GetDetails() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HealthCheckResponse.ProtoMessage">func (*HealthCheckResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HealthCheckResponse.ProtoReflect">func (x *HealthCheckResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HealthCheckResponse.Reset">func (x *HealthCheckResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HealthCheckResponse.String">func (x *HealthCheckResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#IteratorErrorRequest">type IteratorErrorRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorErrorRequest.Descriptor">func (*IteratorErrorRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorErrorRequest.GetId">func (x *IteratorErrorRequest) GetId() uint64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorErrorRequest.ProtoMessage">func (*IteratorErrorRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorErrorRequest.ProtoReflect">func (x *IteratorErrorRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorErrorRequest.Reset">func (x *IteratorErrorRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorErrorRequest.String">func (x *IteratorErrorRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#IteratorErrorResponse">type IteratorErrorResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorErrorResponse.Descriptor">func (*IteratorErrorResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorErrorResponse.GetErr">func (x *IteratorErrorResponse) GetErr() Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorErrorResponse.ProtoMessage">func (*IteratorErrorResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorErrorResponse.ProtoReflect">func (x *IteratorErrorResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorErrorResponse.Reset">func (x *IteratorErrorResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorErrorResponse.String">func (x *IteratorErrorResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#IteratorNextRequest">type IteratorNextRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorNextRequest.Descriptor">func (*IteratorNextRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorNextRequest.GetId">func (x *IteratorNextRequest) GetId() uint64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorNextRequest.ProtoMessage">func (*IteratorNextRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorNextRequest.ProtoReflect">func (x *IteratorNextRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorNextRequest.Reset">func (x *IteratorNextRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorNextRequest.String">func (x *IteratorNextRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#IteratorNextResponse">type IteratorNextResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorNextResponse.Descriptor">func (*IteratorNextResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorNextResponse.GetData">func (x *IteratorNextResponse) GetData() []*PutRequest</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorNextResponse.ProtoMessage">func (*IteratorNextResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorNextResponse.ProtoReflect">func (x *IteratorNextResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorNextResponse.Reset">func (x *IteratorNextResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorNextResponse.String">func (x *IteratorNextResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#IteratorReleaseRequest">type IteratorReleaseRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorReleaseRequest.Descriptor">func (*IteratorReleaseRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorReleaseRequest.GetId">func (x *IteratorReleaseRequest) GetId() uint64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorReleaseRequest.ProtoMessage">func (*IteratorReleaseRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorReleaseRequest.ProtoReflect">func (x *IteratorReleaseRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorReleaseRequest.Reset">func (x *IteratorReleaseRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorReleaseRequest.String">func (x *IteratorReleaseRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#IteratorReleaseResponse">type IteratorReleaseResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorReleaseResponse.Descriptor">func (*IteratorReleaseResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorReleaseResponse.GetErr">func (x *IteratorReleaseResponse) GetErr() Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorReleaseResponse.ProtoMessage">func (*IteratorReleaseResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorReleaseResponse.ProtoReflect">func (x *IteratorReleaseResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorReleaseResponse.Reset">func (x *IteratorReleaseResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IteratorReleaseResponse.String">func (x *IteratorReleaseResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#NewIteratorRequest">type NewIteratorRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorRequest.Descriptor">func (*NewIteratorRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorRequest.ProtoMessage">func (*NewIteratorRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorRequest.ProtoReflect">func (x *NewIteratorRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorRequest.Reset">func (x *NewIteratorRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorRequest.String">func (x *NewIteratorRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#NewIteratorWithStartAndPrefixRequest">type NewIteratorWithStartAndPrefixRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixRequest.Descriptor">func (*NewIteratorWithStartAndPrefixRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixRequest.GetPrefix">func (x *NewIteratorWithStartAndPrefixRequest) GetPrefix() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixRequest.GetStart">func (x *NewIteratorWithStartAndPrefixRequest) GetStart() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixRequest.ProtoMessage">func (*NewIteratorWithStartAndPrefixRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixRequest.ProtoReflect">func (x *NewIteratorWithStartAndPrefixRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixRequest.Reset">func (x *NewIteratorWithStartAndPrefixRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixRequest.String">func (x *NewIteratorWithStartAndPrefixRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#NewIteratorWithStartAndPrefixResponse">type NewIteratorWithStartAndPrefixResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixResponse.Descriptor">func (*NewIteratorWithStartAndPrefixResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixResponse.GetId">func (x *NewIteratorWithStartAndPrefixResponse) GetId() uint64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixResponse.ProtoMessage">func (*NewIteratorWithStartAndPrefixResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixResponse.ProtoReflect">func (x *NewIteratorWithStartAndPrefixResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixResponse.Reset">func (x *NewIteratorWithStartAndPrefixResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIteratorWithStartAndPrefixResponse.String">func (x *NewIteratorWithStartAndPrefixResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#PutRequest">type PutRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutRequest.Descriptor">func (*PutRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutRequest.GetKey">func (x *PutRequest) GetKey() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutRequest.GetValue">func (x *PutRequest) GetValue() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutRequest.ProtoMessage">func (*PutRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutRequest.ProtoReflect">func (x *PutRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutRequest.Reset">func (x *PutRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutRequest.String">func (x *PutRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#PutResponse">type PutResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutResponse.Descriptor">func (*PutResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutResponse.GetErr">func (x *PutResponse) GetErr() Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutResponse.ProtoMessage">func (*PutResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutResponse.ProtoReflect">func (x *PutResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutResponse.Reset">func (x *PutResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PutResponse.String">func (x *PutResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#UnimplementedDatabaseServer">type UnimplementedDatabaseServer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedDatabaseServer.Close">func (UnimplementedDatabaseServer) Close(context.Context, *CloseRequest) (*CloseResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedDatabaseServer.Compact">func (UnimplementedDatabaseServer) Compact(context.Context, *CompactRequest) (*CompactResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedDatabaseServer.Delete">func (UnimplementedDatabaseServer) Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedDatabaseServer.Get">func (UnimplementedDatabaseServer) Get(context.Context, *GetRequest) (*GetResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedDatabaseServer.Has">func (UnimplementedDatabaseServer) Has(context.Context, *HasRequest) (*HasResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedDatabaseServer.HealthCheck">func (UnimplementedDatabaseServer) HealthCheck(context.Context, *emptypb.Empty) (*HealthCheckResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedDatabaseServer.IteratorError">func (UnimplementedDatabaseServer) IteratorError(context.Context, *IteratorErrorRequest) (*IteratorErrorResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedDatabaseServer.IteratorNext">func (UnimplementedDatabaseServer) IteratorNext(context.Context, *IteratorNextRequest) (*IteratorNextResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedDatabaseServer.IteratorRelease">func (UnimplementedDatabaseServer) IteratorRelease(context.Context, *IteratorReleaseRequest) (*IteratorReleaseResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedDatabaseServer.NewIteratorWithStartAndPrefix">func (UnimplementedDatabaseServer) NewIteratorWithStartAndPrefix(context.Context, *NewIteratorWithStartAndPrefixRequest) (*NewIteratorWithStartAndPrefixResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedDatabaseServer.Put">func (UnimplementedDatabaseServer) Put(context.Context, *PutRequest) (*PutResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedDatabaseServer.WriteBatch">func (UnimplementedDatabaseServer) WriteBatch(context.Context, *WriteBatchRequest) (*WriteBatchResponse, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#UnsafeDatabaseServer">type UnsafeDatabaseServer</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#WriteBatchRequest">type WriteBatchRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchRequest.Descriptor">func (*WriteBatchRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchRequest.GetDeletes">func (x *WriteBatchRequest) GetDeletes() []*DeleteRequest</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchRequest.GetPuts">func (x *WriteBatchRequest) GetPuts() []*PutRequest</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchRequest.ProtoMessage">func (*WriteBatchRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchRequest.ProtoReflect">func (x *WriteBatchRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchRequest.Reset">func (x *WriteBatchRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchRequest.String">func (x *WriteBatchRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#WriteBatchResponse">type WriteBatchResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchResponse.Descriptor">func (*WriteBatchResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchResponse.GetErr">func (x *WriteBatchResponse) GetErr() Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchResponse.ProtoMessage">func (*WriteBatchResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchResponse.ProtoReflect">func (x *WriteBatchResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchResponse.Reset">func (x *WriteBatchResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteBatchResponse.String">func (x *WriteBatchResponse) String() string</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go">rpcdb.pb.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go">rpcdb_grpc.pb.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				
+				<pre>const (
+    <span id="Database_Has_FullMethodName">Database_Has_FullMethodName</span>                           = &#34;/rpcdb.Database/Has&#34;
+    <span id="Database_Get_FullMethodName">Database_Get_FullMethodName</span>                           = &#34;/rpcdb.Database/Get&#34;
+    <span id="Database_Put_FullMethodName">Database_Put_FullMethodName</span>                           = &#34;/rpcdb.Database/Put&#34;
+    <span id="Database_Delete_FullMethodName">Database_Delete_FullMethodName</span>                        = &#34;/rpcdb.Database/Delete&#34;
+    <span id="Database_Compact_FullMethodName">Database_Compact_FullMethodName</span>                       = &#34;/rpcdb.Database/Compact&#34;
+    <span id="Database_Close_FullMethodName">Database_Close_FullMethodName</span>                         = &#34;/rpcdb.Database/Close&#34;
+    <span id="Database_HealthCheck_FullMethodName">Database_HealthCheck_FullMethodName</span>                   = &#34;/rpcdb.Database/HealthCheck&#34;
+    <span id="Database_WriteBatch_FullMethodName">Database_WriteBatch_FullMethodName</span>                    = &#34;/rpcdb.Database/WriteBatch&#34;
+    <span id="Database_NewIteratorWithStartAndPrefix_FullMethodName">Database_NewIteratorWithStartAndPrefix_FullMethodName</span> = &#34;/rpcdb.Database/NewIteratorWithStartAndPrefix&#34;
+    <span id="Database_IteratorNext_FullMethodName">Database_IteratorNext_FullMethodName</span>                  = &#34;/rpcdb.Database/IteratorNext&#34;
+    <span id="Database_IteratorError_FullMethodName">Database_IteratorError_FullMethodName</span>                 = &#34;/rpcdb.Database/IteratorError&#34;
+    <span id="Database_IteratorRelease_FullMethodName">Database_IteratorRelease_FullMethodName</span>               = &#34;/rpcdb.Database/IteratorRelease&#34;
+)</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>Enum value maps for Error.
+
+				<pre>var (
+    <span id="Error_name">Error_name</span> = map[<a href="http://localhost:8081/pkg/builtin/#int32">int32</a>]<a href="http://localhost:8081/pkg/builtin/#string">string</a>{
+        0: &#34;ERROR_UNSPECIFIED&#34;,
+        1: &#34;ERROR_CLOSED&#34;,
+        2: &#34;ERROR_NOT_FOUND&#34;,
+    }
+    <span id="Error_value">Error_value</span> = map[<a href="http://localhost:8081/pkg/builtin/#string">string</a>]<a href="http://localhost:8081/pkg/builtin/#int32">int32</a>{
+        &#34;ERROR_UNSPECIFIED&#34;: 0,
+        &#34;ERROR_CLOSED&#34;:      1,
+        &#34;ERROR_NOT_FOUND&#34;:   2,
+    }
+)</pre>
+			
+				<p>Database_ServiceDesc is the grpc.ServiceDesc for Database service.
+It&apos;s only intended for direct use with grpc.RegisterService,
+and not to be introspected or modified (even as a copy)
+
+				<pre>var <span id="Database_ServiceDesc">Database_ServiceDesc</span> = <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc">ServiceDesc</a>{
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.ServiceName">ServiceName</a>: &#34;rpcdb.Database&#34;,
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.HandlerType">HandlerType</a>: (*<a href="index.html#DatabaseServer">DatabaseServer</a>)(<a href="http://localhost:8081/pkg/builtin/#nil">nil</a>),
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.Methods">Methods</a>: []<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#MethodDesc">MethodDesc</a>{
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Has&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Database_Has_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Get&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Database_Get_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Put&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Database_Put_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Delete&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Database_Delete_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Compact&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Database_Compact_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Close&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Database_Close_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;HealthCheck&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Database_HealthCheck_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;WriteBatch&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Database_WriteBatch_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;NewIteratorWithStartAndPrefix&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Database_NewIteratorWithStartAndPrefix_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;IteratorNext&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Database_IteratorNext_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;IteratorError&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Database_IteratorError_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;IteratorRelease&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Database_IteratorRelease_Handler,
+        },
+    },
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.Streams">Streams</a>:  []<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#StreamDesc">StreamDesc</a>{},
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.Metadata">Metadata</a>: &#34;rpcdb/rpcdb.proto&#34;,
+}</pre>
+			
+				
+				<pre>var <span id="File_rpcdb_rpcdb_proto">File_rpcdb_rpcdb_proto</span> <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#FileDescriptor">FileDescriptor</a></pre>
+			
+		
+		
+			
+			
+			<h2 id="RegisterDatabaseServer">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=10929:11001#L227">RegisterDatabaseServer</a>
+				<a class="permalink" href="index.html#RegisterDatabaseServer">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RegisterDatabaseServer(s <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceRegistrar">ServiceRegistrar</a>, srv <a href="index.html#DatabaseServer">DatabaseServer</a>)</pre>
+			
+			
+			
+
+		
+		
+			
+			
+			<h2 id="CloseRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=13910:14050#L566">CloseRequest</a>
+				<a class="permalink" href="index.html#CloseRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type CloseRequest struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="CloseRequest.Descriptor">func (*CloseRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=14770:14819#L600">Descriptor</a>
+					<a class="permalink" href="index.html#CloseRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#CloseRequest">CloseRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use CloseRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="CloseRequest.ProtoMessage">func (*CloseRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=14353:14388#L585">ProtoMessage</a>
+					<a class="permalink" href="index.html#CloseRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#CloseRequest">CloseRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CloseRequest.ProtoReflect">func (*CloseRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=14393:14451#L587">ProtoReflect</a>
+					<a class="permalink" href="index.html#CloseRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CloseRequest">CloseRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CloseRequest.Reset">func (*CloseRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=14052:14082#L572">Reset</a>
+					<a class="permalink" href="index.html#CloseRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CloseRequest">CloseRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CloseRequest.String">func (*CloseRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=14270:14308#L581">String</a>
+					<a class="permalink" href="index.html#CloseRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CloseRequest">CloseRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="CloseResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=14881:15114#L604">CloseResponse</a>
+				<a class="permalink" href="index.html#CloseResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type CloseResponse struct {
+<span id="CloseResponse.Err"></span>    Err <a href="index.html#Error">Error</a> `protobuf:&#34;varint,1,opt,name=err,proto3,enum=rpcdb.Error&#34; json:&#34;err,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="CloseResponse.Descriptor">func (*CloseResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=15840:15890#L640">Descriptor</a>
+					<a class="permalink" href="index.html#CloseResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#CloseResponse">CloseResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use CloseResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="CloseResponse.GetErr">func (*CloseResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=15952:15990#L644">GetErr</a>
+					<a class="permalink" href="index.html#CloseResponse.GetErr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CloseResponse">CloseResponse</a>) GetErr() <a href="index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CloseResponse.ProtoMessage">func (*CloseResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=15420:15456#L625">ProtoMessage</a>
+					<a class="permalink" href="index.html#CloseResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#CloseResponse">CloseResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CloseResponse.ProtoReflect">func (*CloseResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=15461:15520#L627">ProtoReflect</a>
+					<a class="permalink" href="index.html#CloseResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CloseResponse">CloseResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CloseResponse.Reset">func (*CloseResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=15116:15147#L612">Reset</a>
+					<a class="permalink" href="index.html#CloseResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CloseResponse">CloseResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CloseResponse.String">func (*CloseResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=15336:15375#L621">String</a>
+					<a class="permalink" href="index.html#CloseResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CloseResponse">CloseResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="CompactRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=11380:11683#L464">CompactRequest</a>
+				<a class="permalink" href="index.html#CompactRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type CompactRequest struct {
+<span id="CompactRequest.Start"></span>    Start []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,1,opt,name=start,proto3&#34; json:&#34;start,omitempty&#34;`
+<span id="CompactRequest.Limit"></span>    Limit []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,2,opt,name=limit,proto3&#34; json:&#34;limit,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="CompactRequest.Descriptor">func (*CompactRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=12413:12464#L501">Descriptor</a>
+					<a class="permalink" href="index.html#CompactRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#CompactRequest">CompactRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use CompactRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="CompactRequest.GetLimit">func (*CompactRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=12620:12662#L512">GetLimit</a>
+					<a class="permalink" href="index.html#CompactRequest.GetLimit">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CompactRequest">CompactRequest</a>) GetLimit() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CompactRequest.GetStart">func (*CompactRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=12525:12567#L505">GetStart</a>
+					<a class="permalink" href="index.html#CompactRequest.GetStart">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CompactRequest">CompactRequest</a>) GetStart() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CompactRequest.ProtoMessage">func (*CompactRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=11991:12028#L486">ProtoMessage</a>
+					<a class="permalink" href="index.html#CompactRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#CompactRequest">CompactRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CompactRequest.ProtoReflect">func (*CompactRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=12033:12093#L488">ProtoReflect</a>
+					<a class="permalink" href="index.html#CompactRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CompactRequest">CompactRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CompactRequest.Reset">func (*CompactRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=11685:11717#L473">Reset</a>
+					<a class="permalink" href="index.html#CompactRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CompactRequest">CompactRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CompactRequest.String">func (*CompactRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=11906:11946#L482">String</a>
+					<a class="permalink" href="index.html#CompactRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CompactRequest">CompactRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="CompactResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=12715:12950#L519">CompactResponse</a>
+				<a class="permalink" href="index.html#CompactResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type CompactResponse struct {
+<span id="CompactResponse.Err"></span>    Err <a href="index.html#Error">Error</a> `protobuf:&#34;varint,1,opt,name=err,proto3,enum=rpcdb.Error&#34; json:&#34;err,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="CompactResponse.Descriptor">func (*CompactResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=13686:13738#L555">Descriptor</a>
+					<a class="permalink" href="index.html#CompactResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#CompactResponse">CompactResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use CompactResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="CompactResponse.GetErr">func (*CompactResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=13799:13839#L559">GetErr</a>
+					<a class="permalink" href="index.html#CompactResponse.GetErr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CompactResponse">CompactResponse</a>) GetErr() <a href="index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CompactResponse.ProtoMessage">func (*CompactResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=13261:13299#L540">ProtoMessage</a>
+					<a class="permalink" href="index.html#CompactResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#CompactResponse">CompactResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CompactResponse.ProtoReflect">func (*CompactResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=13304:13365#L542">ProtoReflect</a>
+					<a class="permalink" href="index.html#CompactResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CompactResponse">CompactResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CompactResponse.Reset">func (*CompactResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=12952:12985#L527">Reset</a>
+					<a class="permalink" href="index.html#CompactResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CompactResponse">CompactResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CompactResponse.String">func (*CompactResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=13175:13216#L536">String</a>
+					<a class="permalink" href="index.html#CompactResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#CompactResponse">CompactResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="DatabaseClient">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=1851:3190#L30">DatabaseClient</a>
+				<a class="permalink" href="index.html#DatabaseClient">&#xb6;</a>
+				
+				
+			</h2>
+			<p>DatabaseClient is the client API for Database service.
+<p>For semantics around ctx use and closing/ending streaming RPCs, please refer to <a href="https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream">https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream</a>.
+
+			<pre>type DatabaseClient interface {
+    Has(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#HasRequest">HasRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#HasResponse">HasResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    Get(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#GetRequest">GetRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#GetResponse">GetResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    Put(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#PutRequest">PutRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#PutResponse">PutResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    Delete(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#DeleteRequest">DeleteRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#DeleteResponse">DeleteResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    Compact(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#CompactRequest">CompactRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#CompactResponse">CompactResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    Close(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#CloseRequest">CloseRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#CloseResponse">CloseResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    HealthCheck(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#HealthCheckResponse">HealthCheckResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    WriteBatch(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#WriteBatchRequest">WriteBatchRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#WriteBatchResponse">WriteBatchResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    NewIteratorWithStartAndPrefix(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#NewIteratorWithStartAndPrefixRequest">NewIteratorWithStartAndPrefixRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#NewIteratorWithStartAndPrefixResponse">NewIteratorWithStartAndPrefixResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    IteratorNext(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#IteratorNextRequest">IteratorNextRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#IteratorNextResponse">IteratorNextResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    IteratorError(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#IteratorErrorRequest">IteratorErrorRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#IteratorErrorResponse">IteratorErrorResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    IteratorRelease(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#IteratorReleaseRequest">IteratorReleaseRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#IteratorReleaseResponse">IteratorReleaseResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewDatabaseClient">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=3253:3319#L49">NewDatabaseClient</a>
+					<a class="permalink" href="index.html#NewDatabaseClient">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewDatabaseClient(cc <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ClientConnInterface">ClientConnInterface</a>) <a href="index.html#DatabaseClient">DatabaseClient</a></pre>
+				
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="DatabaseServer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=7144:8099#L164">DatabaseServer</a>
+				<a class="permalink" href="index.html#DatabaseServer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>DatabaseServer is the server API for Database service.
+All implementations should embed UnimplementedDatabaseServer
+for forward compatibility
+
+			<pre>type DatabaseServer interface {
+    Has(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#HasRequest">HasRequest</a>) (*<a href="index.html#HasResponse">HasResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    Get(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#GetRequest">GetRequest</a>) (*<a href="index.html#GetResponse">GetResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    Put(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#PutRequest">PutRequest</a>) (*<a href="index.html#PutResponse">PutResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    Delete(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#DeleteRequest">DeleteRequest</a>) (*<a href="index.html#DeleteResponse">DeleteResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    Compact(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#CompactRequest">CompactRequest</a>) (*<a href="index.html#CompactResponse">CompactResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    Close(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#CloseRequest">CloseRequest</a>) (*<a href="index.html#CloseResponse">CloseResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    HealthCheck(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>) (*<a href="index.html#HealthCheckResponse">HealthCheckResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    WriteBatch(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#WriteBatchRequest">WriteBatchRequest</a>) (*<a href="index.html#WriteBatchResponse">WriteBatchResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    NewIteratorWithStartAndPrefix(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#NewIteratorWithStartAndPrefixRequest">NewIteratorWithStartAndPrefixRequest</a>) (*<a href="index.html#NewIteratorWithStartAndPrefixResponse">NewIteratorWithStartAndPrefixResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    IteratorNext(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#IteratorNextRequest">IteratorNextRequest</a>) (*<a href="index.html#IteratorNextResponse">IteratorNextResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    IteratorError(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#IteratorErrorRequest">IteratorErrorRequest</a>) (*<a href="index.html#IteratorErrorResponse">IteratorErrorResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    IteratorRelease(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#IteratorReleaseRequest">IteratorReleaseRequest</a>) (*<a href="index.html#IteratorReleaseResponse">IteratorReleaseResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="DeleteRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=9053:9269#L370">DeleteRequest</a>
+				<a class="permalink" href="index.html#DeleteRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type DeleteRequest struct {
+<span id="DeleteRequest.Key"></span>    Key []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,1,opt,name=key,proto3&#34; json:&#34;key,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="DeleteRequest.Descriptor">func (*DeleteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=9993:10043#L406">Descriptor</a>
+					<a class="permalink" href="index.html#DeleteRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#DeleteRequest">DeleteRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use DeleteRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="DeleteRequest.GetKey">func (*DeleteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=10104:10143#L410">GetKey</a>
+					<a class="permalink" href="index.html#DeleteRequest.GetKey">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#DeleteRequest">DeleteRequest</a>) GetKey() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="DeleteRequest.ProtoMessage">func (*DeleteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=9574:9610#L391">ProtoMessage</a>
+					<a class="permalink" href="index.html#DeleteRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#DeleteRequest">DeleteRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="DeleteRequest.ProtoReflect">func (*DeleteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=9615:9674#L393">ProtoReflect</a>
+					<a class="permalink" href="index.html#DeleteRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#DeleteRequest">DeleteRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="DeleteRequest.Reset">func (*DeleteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=9271:9302#L378">Reset</a>
+					<a class="permalink" href="index.html#DeleteRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#DeleteRequest">DeleteRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="DeleteRequest.String">func (*DeleteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=9490:9529#L387">String</a>
+					<a class="permalink" href="index.html#DeleteRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#DeleteRequest">DeleteRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="DeleteResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=10194:10428#L417">DeleteResponse</a>
+				<a class="permalink" href="index.html#DeleteResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type DeleteResponse struct {
+<span id="DeleteResponse.Err"></span>    Err <a href="index.html#Error">Error</a> `protobuf:&#34;varint,1,opt,name=err,proto3,enum=rpcdb.Error&#34; json:&#34;err,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="DeleteResponse.Descriptor">func (*DeleteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=11158:11209#L453">Descriptor</a>
+					<a class="permalink" href="index.html#DeleteResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#DeleteResponse">DeleteResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use DeleteResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="DeleteResponse.GetErr">func (*DeleteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=11270:11309#L457">GetErr</a>
+					<a class="permalink" href="index.html#DeleteResponse.GetErr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#DeleteResponse">DeleteResponse</a>) GetErr() <a href="index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="DeleteResponse.ProtoMessage">func (*DeleteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=10736:10773#L438">ProtoMessage</a>
+					<a class="permalink" href="index.html#DeleteResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#DeleteResponse">DeleteResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="DeleteResponse.ProtoReflect">func (*DeleteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=10778:10838#L440">ProtoReflect</a>
+					<a class="permalink" href="index.html#DeleteResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#DeleteResponse">DeleteResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="DeleteResponse.Reset">func (*DeleteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=10430:10462#L425">Reset</a>
+					<a class="permalink" href="index.html#DeleteResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#DeleteResponse">DeleteResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="DeleteResponse.String">func (*DeleteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=10651:10691#L434">String</a>
+					<a class="permalink" href="index.html#DeleteResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#DeleteResponse">DeleteResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Error">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=636:652#L14">Error</a>
+				<a class="permalink" href="index.html#Error">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type Error <a href="http://localhost:8081/pkg/builtin/#int32">int32</a></pre>
+
+			
+				
+				<pre>const (
+    <span class="comment">// ERROR_UNSPECIFIED is used to indicate that no error occurred.</span>
+    <span id="Error_ERROR_UNSPECIFIED">Error_ERROR_UNSPECIFIED</span> <a href="index.html#Error">Error</a> = 0
+    <span id="Error_ERROR_CLOSED">Error_ERROR_CLOSED</span>      <a href="index.html#Error">Error</a> = 1
+    <span id="Error_ERROR_NOT_FOUND">Error_ERROR_NOT_FOUND</span>   <a href="index.html#Error">Error</a> = 2
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Error.Descriptor">func (Error) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=1277:1330#L47">Descriptor</a>
+					<a class="permalink" href="index.html#Error.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#Error">Error</a>) Descriptor() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#EnumDescriptor">EnumDescriptor</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Error.Enum">func (Error) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=1095:1123#L37">Enum</a>
+					<a class="permalink" href="index.html#Error.Enum">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#Error">Error</a>) Enum() *<a href="index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Error.EnumDescriptor">func (Error) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=1618:1663#L60">EnumDescriptor</a>
+					<a class="permalink" href="index.html#Error.EnumDescriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#Error">Error</a>) EnumDescriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use Error.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="Error.Number">func (Error) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=1485:1532#L55">Number</a>
+					<a class="permalink" href="index.html#Error.Number">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#Error">Error</a>) Number() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#EnumNumber">EnumNumber</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Error.String">func (Error) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=1164:1194#L43">String</a>
+					<a class="permalink" href="index.html#Error.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#Error">Error</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Error.Type">func (Error) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=1393:1434#L51">Type</a>
+					<a class="permalink" href="index.html#Error.Type">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#Error">Error</a>) Type() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#EnumType">EnumType</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="GetRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=4159:4372#L166">GetRequest</a>
+				<a class="permalink" href="index.html#GetRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type GetRequest struct {
+<span id="GetRequest.Key"></span>    Key []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,1,opt,name=key,proto3&#34; json:&#34;key,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="GetRequest.Descriptor">func (*GetRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=5078:5125#L202">Descriptor</a>
+					<a class="permalink" href="index.html#GetRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#GetRequest">GetRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use GetRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="GetRequest.GetKey">func (*GetRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=5186:5222#L206">GetKey</a>
+					<a class="permalink" href="index.html#GetRequest.GetKey">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#GetRequest">GetRequest</a>) GetKey() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="GetRequest.ProtoMessage">func (*GetRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=4668:4701#L187">ProtoMessage</a>
+					<a class="permalink" href="index.html#GetRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#GetRequest">GetRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="GetRequest.ProtoReflect">func (*GetRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=4706:4762#L189">ProtoReflect</a>
+					<a class="permalink" href="index.html#GetRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#GetRequest">GetRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="GetRequest.Reset">func (*GetRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=4374:4402#L174">Reset</a>
+					<a class="permalink" href="index.html#GetRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#GetRequest">GetRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="GetRequest.String">func (*GetRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=4587:4623#L183">String</a>
+					<a class="permalink" href="index.html#GetRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#GetRequest">GetRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="GetResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=5273:5587#L213">GetResponse</a>
+				<a class="permalink" href="index.html#GetResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type GetResponse struct {
+<span id="GetResponse.Value"></span>    Value []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,1,opt,name=value,proto3&#34; json:&#34;value,omitempty&#34;`
+<span id="GetResponse.Err"></span>    Err   <a href="index.html#Error">Error</a>  `protobuf:&#34;varint,2,opt,name=err,proto3,enum=rpcdb.Error&#34; json:&#34;err,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="GetResponse.Descriptor">func (*GetResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=6299:6347#L250">Descriptor</a>
+					<a class="permalink" href="index.html#GetResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#GetResponse">GetResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use GetResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="GetResponse.GetErr">func (*GetResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=6500:6536#L261">GetErr</a>
+					<a class="permalink" href="index.html#GetResponse.GetErr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#GetResponse">GetResponse</a>) GetErr() <a href="index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="GetResponse.GetValue">func (*GetResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=6408:6447#L254">GetValue</a>
+					<a class="permalink" href="index.html#GetResponse.GetValue">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#GetResponse">GetResponse</a>) GetValue() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="GetResponse.ProtoMessage">func (*GetResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=5886:5920#L235">ProtoMessage</a>
+					<a class="permalink" href="index.html#GetResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#GetResponse">GetResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="GetResponse.ProtoReflect">func (*GetResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=5925:5982#L237">ProtoReflect</a>
+					<a class="permalink" href="index.html#GetResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#GetResponse">GetResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="GetResponse.Reset">func (*GetResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=5589:5618#L222">Reset</a>
+					<a class="permalink" href="index.html#GetResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#GetResponse">GetResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="GetResponse.String">func (*GetResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=5804:5841#L231">String</a>
+					<a class="permalink" href="index.html#GetResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#GetResponse">GetResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="HasRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=1724:1937#L64">HasRequest</a>
+				<a class="permalink" href="index.html#HasRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type HasRequest struct {
+<span id="HasRequest.Key"></span>    Key []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,1,opt,name=key,proto3&#34; json:&#34;key,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="HasRequest.Descriptor">func (*HasRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=2643:2690#L100">Descriptor</a>
+					<a class="permalink" href="index.html#HasRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#HasRequest">HasRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use HasRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="HasRequest.GetKey">func (*HasRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=2751:2787#L104">GetKey</a>
+					<a class="permalink" href="index.html#HasRequest.GetKey">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HasRequest">HasRequest</a>) GetKey() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HasRequest.ProtoMessage">func (*HasRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=2233:2266#L85">ProtoMessage</a>
+					<a class="permalink" href="index.html#HasRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#HasRequest">HasRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HasRequest.ProtoReflect">func (*HasRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=2271:2327#L87">ProtoReflect</a>
+					<a class="permalink" href="index.html#HasRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HasRequest">HasRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HasRequest.Reset">func (*HasRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=1939:1967#L72">Reset</a>
+					<a class="permalink" href="index.html#HasRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HasRequest">HasRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HasRequest.String">func (*HasRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=2152:2188#L81">String</a>
+					<a class="permalink" href="index.html#HasRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HasRequest">HasRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="HasResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=2838:3143#L111">HasResponse</a>
+				<a class="permalink" href="index.html#HasResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type HasResponse struct {
+<span id="HasResponse.Has"></span>    Has <a href="http://localhost:8081/pkg/builtin/#bool">bool</a>  `protobuf:&#34;varint,1,opt,name=has,proto3&#34; json:&#34;has,omitempty&#34;`
+<span id="HasResponse.Err"></span>    Err <a href="index.html#Error">Error</a> `protobuf:&#34;varint,2,opt,name=err,proto3,enum=rpcdb.Error&#34; json:&#34;err,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="HasResponse.Descriptor">func (*HasResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=3855:3903#L148">Descriptor</a>
+					<a class="permalink" href="index.html#HasResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#HasResponse">HasResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use HasResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="HasResponse.GetErr">func (*HasResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=4052:4088#L159">GetErr</a>
+					<a class="permalink" href="index.html#HasResponse.GetErr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HasResponse">HasResponse</a>) GetErr() <a href="index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HasResponse.GetHas">func (*HasResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=3964:3999#L152">GetHas</a>
+					<a class="permalink" href="index.html#HasResponse.GetHas">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HasResponse">HasResponse</a>) GetHas() <a href="http://localhost:8081/pkg/builtin/#bool">bool</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HasResponse.ProtoMessage">func (*HasResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=3442:3476#L133">ProtoMessage</a>
+					<a class="permalink" href="index.html#HasResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#HasResponse">HasResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HasResponse.ProtoReflect">func (*HasResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=3481:3538#L135">ProtoReflect</a>
+					<a class="permalink" href="index.html#HasResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HasResponse">HasResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HasResponse.Reset">func (*HasResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=3145:3174#L120">Reset</a>
+					<a class="permalink" href="index.html#HasResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HasResponse">HasResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HasResponse.String">func (*HasResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=3360:3397#L129">String</a>
+					<a class="permalink" href="index.html#HasResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HasResponse">HasResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="HealthCheckResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=29996:30230#L1175">HealthCheckResponse</a>
+				<a class="permalink" href="index.html#HealthCheckResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type HealthCheckResponse struct {
+<span id="HealthCheckResponse.Details"></span>    Details []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,1,opt,name=details,proto3&#34; json:&#34;details,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="HealthCheckResponse.Descriptor">func (*HealthCheckResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=30992:31048#L1211">Descriptor</a>
+					<a class="permalink" href="index.html#HealthCheckResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#HealthCheckResponse">HealthCheckResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use HealthCheckResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="HealthCheckResponse.GetDetails">func (*HealthCheckResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=31110:31159#L1215">GetDetails</a>
+					<a class="permalink" href="index.html#HealthCheckResponse.GetDetails">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HealthCheckResponse">HealthCheckResponse</a>) GetDetails() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HealthCheckResponse.ProtoMessage">func (*HealthCheckResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=30554:30596#L1196">ProtoMessage</a>
+					<a class="permalink" href="index.html#HealthCheckResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#HealthCheckResponse">HealthCheckResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HealthCheckResponse.ProtoReflect">func (*HealthCheckResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=30601:30666#L1198">ProtoReflect</a>
+					<a class="permalink" href="index.html#HealthCheckResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HealthCheckResponse">HealthCheckResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HealthCheckResponse.Reset">func (*HealthCheckResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=30232:30269#L1183">Reset</a>
+					<a class="permalink" href="index.html#HealthCheckResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HealthCheckResponse">HealthCheckResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HealthCheckResponse.String">func (*HealthCheckResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=30464:30509#L1192">String</a>
+					<a class="permalink" href="index.html#HealthCheckResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HealthCheckResponse">HealthCheckResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="IteratorErrorRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=25054:25275#L987">IteratorErrorRequest</a>
+				<a class="permalink" href="index.html#IteratorErrorRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type IteratorErrorRequest struct {
+<span id="IteratorErrorRequest.Id"></span>    Id <a href="http://localhost:8081/pkg/builtin/#uint64">uint64</a> `protobuf:&#34;varint,1,opt,name=id,proto3&#34; json:&#34;id,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="IteratorErrorRequest.Descriptor">func (*IteratorErrorRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=26043:26100#L1023">Descriptor</a>
+					<a class="permalink" href="index.html#IteratorErrorRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#IteratorErrorRequest">IteratorErrorRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use IteratorErrorRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="IteratorErrorRequest.GetId">func (*IteratorErrorRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=26162:26207#L1027">GetId</a>
+					<a class="permalink" href="index.html#IteratorErrorRequest.GetId">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorErrorRequest">IteratorErrorRequest</a>) GetId() <a href="http://localhost:8081/pkg/builtin/#uint64">uint64</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorErrorRequest.ProtoMessage">func (*IteratorErrorRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=25602:25645#L1008">ProtoMessage</a>
+					<a class="permalink" href="index.html#IteratorErrorRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#IteratorErrorRequest">IteratorErrorRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorErrorRequest.ProtoReflect">func (*IteratorErrorRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=25650:25716#L1010">ProtoReflect</a>
+					<a class="permalink" href="index.html#IteratorErrorRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorErrorRequest">IteratorErrorRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorErrorRequest.Reset">func (*IteratorErrorRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=25277:25315#L995">Reset</a>
+					<a class="permalink" href="index.html#IteratorErrorRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorErrorRequest">IteratorErrorRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorErrorRequest.String">func (*IteratorErrorRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=25511:25557#L1004">String</a>
+					<a class="permalink" href="index.html#IteratorErrorRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorErrorRequest">IteratorErrorRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="IteratorErrorResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=26255:26496#L1034">IteratorErrorResponse</a>
+				<a class="permalink" href="index.html#IteratorErrorResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type IteratorErrorResponse struct {
+<span id="IteratorErrorResponse.Err"></span>    Err <a href="index.html#Error">Error</a> `protobuf:&#34;varint,1,opt,name=err,proto3,enum=rpcdb.Error&#34; json:&#34;err,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="IteratorErrorResponse.Descriptor">func (*IteratorErrorResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=27270:27328#L1070">Descriptor</a>
+					<a class="permalink" href="index.html#IteratorErrorResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#IteratorErrorResponse">IteratorErrorResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use IteratorErrorResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="IteratorErrorResponse.GetErr">func (*IteratorErrorResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=27390:27436#L1074">GetErr</a>
+					<a class="permalink" href="index.html#IteratorErrorResponse.GetErr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorErrorResponse">IteratorErrorResponse</a>) GetErr() <a href="index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorErrorResponse.ProtoMessage">func (*IteratorErrorResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=26826:26870#L1055">ProtoMessage</a>
+					<a class="permalink" href="index.html#IteratorErrorResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#IteratorErrorResponse">IteratorErrorResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorErrorResponse.ProtoReflect">func (*IteratorErrorResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=26875:26942#L1057">ProtoReflect</a>
+					<a class="permalink" href="index.html#IteratorErrorResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorErrorResponse">IteratorErrorResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorErrorResponse.Reset">func (*IteratorErrorResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=26498:26537#L1042">Reset</a>
+					<a class="permalink" href="index.html#IteratorErrorResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorErrorResponse">IteratorErrorResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorErrorResponse.String">func (*IteratorErrorResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=26734:26781#L1051">String</a>
+					<a class="permalink" href="index.html#IteratorErrorResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorErrorResponse">IteratorErrorResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="IteratorNextRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=22636:22856#L893">IteratorNextRequest</a>
+				<a class="permalink" href="index.html#IteratorNextRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type IteratorNextRequest struct {
+<span id="IteratorNextRequest.Id"></span>    Id <a href="http://localhost:8081/pkg/builtin/#uint64">uint64</a> `protobuf:&#34;varint,1,opt,name=id,proto3&#34; json:&#34;id,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="IteratorNextRequest.Descriptor">func (*IteratorNextRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=23618:23674#L929">Descriptor</a>
+					<a class="permalink" href="index.html#IteratorNextRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#IteratorNextRequest">IteratorNextRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use IteratorNextRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="IteratorNextRequest.GetId">func (*IteratorNextRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=23736:23780#L933">GetId</a>
+					<a class="permalink" href="index.html#IteratorNextRequest.GetId">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorNextRequest">IteratorNextRequest</a>) GetId() <a href="http://localhost:8081/pkg/builtin/#uint64">uint64</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorNextRequest.ProtoMessage">func (*IteratorNextRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=23180:23222#L914">ProtoMessage</a>
+					<a class="permalink" href="index.html#IteratorNextRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#IteratorNextRequest">IteratorNextRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorNextRequest.ProtoReflect">func (*IteratorNextRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=23227:23292#L916">ProtoReflect</a>
+					<a class="permalink" href="index.html#IteratorNextRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorNextRequest">IteratorNextRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorNextRequest.Reset">func (*IteratorNextRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=22858:22895#L901">Reset</a>
+					<a class="permalink" href="index.html#IteratorNextRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorNextRequest">IteratorNextRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorNextRequest.String">func (*IteratorNextRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=23090:23135#L910">String</a>
+					<a class="permalink" href="index.html#IteratorNextRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorNextRequest">IteratorNextRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="IteratorNextResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=23828:24061#L940">IteratorNextResponse</a>
+				<a class="permalink" href="index.html#IteratorNextResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type IteratorNextResponse struct {
+<span id="IteratorNextResponse.Data"></span>    Data []*<a href="index.html#PutRequest">PutRequest</a> `protobuf:&#34;bytes,1,rep,name=data,proto3&#34; json:&#34;data,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="IteratorNextResponse.Descriptor">func (*IteratorNextResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=24829:24886#L976">Descriptor</a>
+					<a class="permalink" href="index.html#IteratorNextResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#IteratorNextResponse">IteratorNextResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use IteratorNextResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="IteratorNextResponse.GetData">func (*IteratorNextResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=24948:25002#L980">GetData</a>
+					<a class="permalink" href="index.html#IteratorNextResponse.GetData">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorNextResponse">IteratorNextResponse</a>) GetData() []*<a href="index.html#PutRequest">PutRequest</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorNextResponse.ProtoMessage">func (*IteratorNextResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=24388:24431#L961">ProtoMessage</a>
+					<a class="permalink" href="index.html#IteratorNextResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#IteratorNextResponse">IteratorNextResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorNextResponse.ProtoReflect">func (*IteratorNextResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=24436:24502#L963">ProtoReflect</a>
+					<a class="permalink" href="index.html#IteratorNextResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorNextResponse">IteratorNextResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorNextResponse.Reset">func (*IteratorNextResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=24063:24101#L948">Reset</a>
+					<a class="permalink" href="index.html#IteratorNextResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorNextResponse">IteratorNextResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorNextResponse.String">func (*IteratorNextResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=24297:24343#L957">String</a>
+					<a class="permalink" href="index.html#IteratorNextResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorNextResponse">IteratorNextResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="IteratorReleaseRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=27507:27730#L1081">IteratorReleaseRequest</a>
+				<a class="permalink" href="index.html#IteratorReleaseRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type IteratorReleaseRequest struct {
+<span id="IteratorReleaseRequest.Id"></span>    Id <a href="http://localhost:8081/pkg/builtin/#uint64">uint64</a> `protobuf:&#34;varint,1,opt,name=id,proto3&#34; json:&#34;id,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="IteratorReleaseRequest.Descriptor">func (*IteratorReleaseRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=28510:28569#L1117">Descriptor</a>
+					<a class="permalink" href="index.html#IteratorReleaseRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#IteratorReleaseRequest">IteratorReleaseRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use IteratorReleaseRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="IteratorReleaseRequest.GetId">func (*IteratorReleaseRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=28631:28678#L1121">GetId</a>
+					<a class="permalink" href="index.html#IteratorReleaseRequest.GetId">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorReleaseRequest">IteratorReleaseRequest</a>) GetId() <a href="http://localhost:8081/pkg/builtin/#uint64">uint64</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorReleaseRequest.ProtoMessage">func (*IteratorReleaseRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=28063:28108#L1102">ProtoMessage</a>
+					<a class="permalink" href="index.html#IteratorReleaseRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#IteratorReleaseRequest">IteratorReleaseRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorReleaseRequest.ProtoReflect">func (*IteratorReleaseRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=28113:28181#L1104">ProtoReflect</a>
+					<a class="permalink" href="index.html#IteratorReleaseRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorReleaseRequest">IteratorReleaseRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorReleaseRequest.Reset">func (*IteratorReleaseRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=27732:27772#L1089">Reset</a>
+					<a class="permalink" href="index.html#IteratorReleaseRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorReleaseRequest">IteratorReleaseRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorReleaseRequest.String">func (*IteratorReleaseRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=27970:28018#L1098">String</a>
+					<a class="permalink" href="index.html#IteratorReleaseRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorReleaseRequest">IteratorReleaseRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="IteratorReleaseResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=28726:28969#L1128">IteratorReleaseResponse</a>
+				<a class="permalink" href="index.html#IteratorReleaseResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type IteratorReleaseResponse struct {
+<span id="IteratorReleaseResponse.Err"></span>    Err <a href="index.html#Error">Error</a> `protobuf:&#34;varint,1,opt,name=err,proto3,enum=rpcdb.Error&#34; json:&#34;err,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="IteratorReleaseResponse.Descriptor">func (*IteratorReleaseResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=29755:29815#L1164">Descriptor</a>
+					<a class="permalink" href="index.html#IteratorReleaseResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#IteratorReleaseResponse">IteratorReleaseResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use IteratorReleaseResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="IteratorReleaseResponse.GetErr">func (*IteratorReleaseResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=29877:29925#L1168">GetErr</a>
+					<a class="permalink" href="index.html#IteratorReleaseResponse.GetErr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorReleaseResponse">IteratorReleaseResponse</a>) GetErr() <a href="index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorReleaseResponse.ProtoMessage">func (*IteratorReleaseResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=29305:29351#L1149">ProtoMessage</a>
+					<a class="permalink" href="index.html#IteratorReleaseResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#IteratorReleaseResponse">IteratorReleaseResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorReleaseResponse.ProtoReflect">func (*IteratorReleaseResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=29356:29425#L1151">ProtoReflect</a>
+					<a class="permalink" href="index.html#IteratorReleaseResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorReleaseResponse">IteratorReleaseResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorReleaseResponse.Reset">func (*IteratorReleaseResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=28971:29012#L1136">Reset</a>
+					<a class="permalink" href="index.html#IteratorReleaseResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorReleaseResponse">IteratorReleaseResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IteratorReleaseResponse.String">func (*IteratorReleaseResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=29211:29260#L1145">String</a>
+					<a class="permalink" href="index.html#IteratorReleaseResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#IteratorReleaseResponse">IteratorReleaseResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="NewIteratorRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=18699:18845#L753">NewIteratorRequest</a>
+				<a class="permalink" href="index.html#NewIteratorRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type NewIteratorRequest struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NewIteratorRequest.Descriptor">func (*NewIteratorRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=19601:19656#L787">Descriptor</a>
+					<a class="permalink" href="index.html#NewIteratorRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#NewIteratorRequest">NewIteratorRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use NewIteratorRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorRequest.ProtoMessage">func (*NewIteratorRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=19166:19207#L772">ProtoMessage</a>
+					<a class="permalink" href="index.html#NewIteratorRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#NewIteratorRequest">NewIteratorRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorRequest.ProtoReflect">func (*NewIteratorRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=19212:19276#L774">ProtoReflect</a>
+					<a class="permalink" href="index.html#NewIteratorRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NewIteratorRequest">NewIteratorRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorRequest.Reset">func (*NewIteratorRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=18847:18883#L759">Reset</a>
+					<a class="permalink" href="index.html#NewIteratorRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NewIteratorRequest">NewIteratorRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorRequest.String">func (*NewIteratorRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=19077:19121#L768">String</a>
+					<a class="permalink" href="index.html#NewIteratorRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NewIteratorRequest">NewIteratorRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="NewIteratorWithStartAndPrefixRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=19718:20047#L791">NewIteratorWithStartAndPrefixRequest</a>
+				<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type NewIteratorWithStartAndPrefixRequest struct {
+<span id="NewIteratorWithStartAndPrefixRequest.Start"></span>    Start  []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,1,opt,name=start,proto3&#34; json:&#34;start,omitempty&#34;`
+<span id="NewIteratorWithStartAndPrefixRequest.Prefix"></span>    Prefix []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,2,opt,name=prefix,proto3&#34; json:&#34;prefix,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixRequest.Descriptor">func (*NewIteratorWithStartAndPrefixRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=20911:20984#L828">Descriptor</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#NewIteratorWithStartAndPrefixRequest">NewIteratorWithStartAndPrefixRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use NewIteratorWithStartAndPrefixRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixRequest.GetPrefix">func (*NewIteratorWithStartAndPrefixRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=21163:21228#L839">GetPrefix</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixRequest.GetPrefix">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NewIteratorWithStartAndPrefixRequest">NewIteratorWithStartAndPrefixRequest</a>) GetPrefix() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixRequest.GetStart">func (*NewIteratorWithStartAndPrefixRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=21046:21110#L832">GetStart</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixRequest.GetStart">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NewIteratorWithStartAndPrefixRequest">NewIteratorWithStartAndPrefixRequest</a>) GetStart() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixRequest.ProtoMessage">func (*NewIteratorWithStartAndPrefixRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=20422:20481#L813">ProtoMessage</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#NewIteratorWithStartAndPrefixRequest">NewIteratorWithStartAndPrefixRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixRequest.ProtoReflect">func (*NewIteratorWithStartAndPrefixRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=20486:20568#L815">ProtoReflect</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NewIteratorWithStartAndPrefixRequest">NewIteratorWithStartAndPrefixRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixRequest.Reset">func (*NewIteratorWithStartAndPrefixRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=20049:20103#L800">Reset</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NewIteratorWithStartAndPrefixRequest">NewIteratorWithStartAndPrefixRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixRequest.String">func (*NewIteratorWithStartAndPrefixRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=20315:20377#L809">String</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NewIteratorWithStartAndPrefixRequest">NewIteratorWithStartAndPrefixRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="NewIteratorWithStartAndPrefixResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=21282:21520#L846">NewIteratorWithStartAndPrefixResponse</a>
+				<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type NewIteratorWithStartAndPrefixResponse struct {
+<span id="NewIteratorWithStartAndPrefixResponse.Id"></span>    Id <a href="http://localhost:8081/pkg/builtin/#uint64">uint64</a> `protobuf:&#34;varint,1,opt,name=id,proto3&#34; json:&#34;id,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixResponse.Descriptor">func (*NewIteratorWithStartAndPrefixResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=22390:22464#L882">Descriptor</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#NewIteratorWithStartAndPrefixResponse">NewIteratorWithStartAndPrefixResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use NewIteratorWithStartAndPrefixResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixResponse.GetId">func (*NewIteratorWithStartAndPrefixResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=22526:22588#L886">GetId</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixResponse.GetId">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NewIteratorWithStartAndPrefixResponse">NewIteratorWithStartAndPrefixResponse</a>) GetId() <a href="http://localhost:8081/pkg/builtin/#uint64">uint64</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixResponse.ProtoMessage">func (*NewIteratorWithStartAndPrefixResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=21898:21958#L867">ProtoMessage</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#NewIteratorWithStartAndPrefixResponse">NewIteratorWithStartAndPrefixResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixResponse.ProtoReflect">func (*NewIteratorWithStartAndPrefixResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=21963:22046#L869">ProtoReflect</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NewIteratorWithStartAndPrefixResponse">NewIteratorWithStartAndPrefixResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixResponse.Reset">func (*NewIteratorWithStartAndPrefixResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=21522:21577#L854">Reset</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NewIteratorWithStartAndPrefixResponse">NewIteratorWithStartAndPrefixResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NewIteratorWithStartAndPrefixResponse.String">func (*NewIteratorWithStartAndPrefixResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=21790:21853#L863">String</a>
+					<a class="permalink" href="index.html#NewIteratorWithStartAndPrefixResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NewIteratorWithStartAndPrefixResponse">NewIteratorWithStartAndPrefixResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="PutRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=6607:6902#L268">PutRequest</a>
+				<a class="permalink" href="index.html#PutRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type PutRequest struct {
+<span id="PutRequest.Key"></span>    Key   []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,1,opt,name=key,proto3&#34; json:&#34;key,omitempty&#34;`
+<span id="PutRequest.Value"></span>    Value []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,2,opt,name=value,proto3&#34; json:&#34;value,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="PutRequest.Descriptor">func (*PutRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=7608:7655#L305">Descriptor</a>
+					<a class="permalink" href="index.html#PutRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#PutRequest">PutRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use PutRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="PutRequest.GetKey">func (*PutRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=7716:7752#L309">GetKey</a>
+					<a class="permalink" href="index.html#PutRequest.GetKey">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#PutRequest">PutRequest</a>) GetKey() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PutRequest.GetValue">func (*PutRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=7803:7841#L316">GetValue</a>
+					<a class="permalink" href="index.html#PutRequest.GetValue">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#PutRequest">PutRequest</a>) GetValue() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PutRequest.ProtoMessage">func (*PutRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=7198:7231#L290">ProtoMessage</a>
+					<a class="permalink" href="index.html#PutRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#PutRequest">PutRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PutRequest.ProtoReflect">func (*PutRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=7236:7292#L292">ProtoReflect</a>
+					<a class="permalink" href="index.html#PutRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#PutRequest">PutRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PutRequest.Reset">func (*PutRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=6904:6932#L277">Reset</a>
+					<a class="permalink" href="index.html#PutRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#PutRequest">PutRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PutRequest.String">func (*PutRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=7117:7153#L286">String</a>
+					<a class="permalink" href="index.html#PutRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#PutRequest">PutRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="PutResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=7894:8125#L323">PutResponse</a>
+				<a class="permalink" href="index.html#PutResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type PutResponse struct {
+<span id="PutResponse.Err"></span>    Err <a href="index.html#Error">Error</a> `protobuf:&#34;varint,1,opt,name=err,proto3,enum=rpcdb.Error&#34; json:&#34;err,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="PutResponse.Descriptor">func (*PutResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=8837:8885#L359">Descriptor</a>
+					<a class="permalink" href="index.html#PutResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#PutResponse">PutResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use PutResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="PutResponse.GetErr">func (*PutResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=8946:8982#L363">GetErr</a>
+					<a class="permalink" href="index.html#PutResponse.GetErr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#PutResponse">PutResponse</a>) GetErr() <a href="index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PutResponse.ProtoMessage">func (*PutResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=8424:8458#L344">ProtoMessage</a>
+					<a class="permalink" href="index.html#PutResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#PutResponse">PutResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PutResponse.ProtoReflect">func (*PutResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=8463:8520#L346">ProtoReflect</a>
+					<a class="permalink" href="index.html#PutResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#PutResponse">PutResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PutResponse.Reset">func (*PutResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=8127:8156#L331">Reset</a>
+					<a class="permalink" href="index.html#PutResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#PutResponse">PutResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PutResponse.String">func (*PutResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=8342:8379#L340">String</a>
+					<a class="permalink" href="index.html#PutResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#PutResponse">PutResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="UnimplementedDatabaseServer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=8195:8238#L180">UnimplementedDatabaseServer</a>
+				<a class="permalink" href="index.html#UnimplementedDatabaseServer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UnimplementedDatabaseServer should be embedded to have forward compatible implementations.
+
+			<pre>type UnimplementedDatabaseServer struct {
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="UnimplementedDatabaseServer.Close">func (UnimplementedDatabaseServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=9133:9229#L198">Close</a>
+					<a class="permalink" href="index.html#UnimplementedDatabaseServer.Close">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedDatabaseServer">UnimplementedDatabaseServer</a>) Close(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#CloseRequest">CloseRequest</a>) (*<a href="index.html#CloseResponse">CloseResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedDatabaseServer.Compact">func (UnimplementedDatabaseServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=8944:9046#L195">Compact</a>
+					<a class="permalink" href="index.html#UnimplementedDatabaseServer.Compact">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedDatabaseServer">UnimplementedDatabaseServer</a>) Compact(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#CompactRequest">CompactRequest</a>) (*<a href="index.html#CompactResponse">CompactResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedDatabaseServer.Delete">func (UnimplementedDatabaseServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=8759:8858#L192">Delete</a>
+					<a class="permalink" href="index.html#UnimplementedDatabaseServer.Delete">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedDatabaseServer">UnimplementedDatabaseServer</a>) Delete(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#DeleteRequest">DeleteRequest</a>) (*<a href="index.html#DeleteResponse">DeleteResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedDatabaseServer.Get">func (UnimplementedDatabaseServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=8413:8503#L186">Get</a>
+					<a class="permalink" href="index.html#UnimplementedDatabaseServer.Get">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedDatabaseServer">UnimplementedDatabaseServer</a>) Get(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#GetRequest">GetRequest</a>) (*<a href="index.html#GetResponse">GetResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedDatabaseServer.Has">func (UnimplementedDatabaseServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=8240:8330#L183">Has</a>
+					<a class="permalink" href="index.html#UnimplementedDatabaseServer.Has">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedDatabaseServer">UnimplementedDatabaseServer</a>) Has(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#HasRequest">HasRequest</a>) (*<a href="index.html#HasResponse">HasResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedDatabaseServer.HealthCheck">func (UnimplementedDatabaseServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=9314:9423#L201">HealthCheck</a>
+					<a class="permalink" href="index.html#UnimplementedDatabaseServer.HealthCheck">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedDatabaseServer">UnimplementedDatabaseServer</a>) HealthCheck(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>) (*<a href="index.html#HealthCheckResponse">HealthCheckResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedDatabaseServer.IteratorError">func (UnimplementedDatabaseServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=10201:10321#L213">IteratorError</a>
+					<a class="permalink" href="index.html#UnimplementedDatabaseServer.IteratorError">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedDatabaseServer">UnimplementedDatabaseServer</a>) IteratorError(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#IteratorErrorRequest">IteratorErrorRequest</a>) (*<a href="index.html#IteratorErrorResponse">IteratorErrorResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedDatabaseServer.IteratorNext">func (UnimplementedDatabaseServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=9992:10109#L210">IteratorNext</a>
+					<a class="permalink" href="index.html#UnimplementedDatabaseServer.IteratorNext">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedDatabaseServer">UnimplementedDatabaseServer</a>) IteratorNext(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#IteratorNextRequest">IteratorNextRequest</a>) (*<a href="index.html#IteratorNextResponse">IteratorNextResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedDatabaseServer.IteratorRelease">func (UnimplementedDatabaseServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=10414:10540#L216">IteratorRelease</a>
+					<a class="permalink" href="index.html#UnimplementedDatabaseServer.IteratorRelease">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedDatabaseServer">UnimplementedDatabaseServer</a>) IteratorRelease(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#IteratorReleaseRequest">IteratorReleaseRequest</a>) (*<a href="index.html#IteratorReleaseResponse">IteratorReleaseResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedDatabaseServer.NewIteratorWithStartAndPrefix">func (UnimplementedDatabaseServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=9715:9883#L207">NewIteratorWithStartAndPrefix</a>
+					<a class="permalink" href="index.html#UnimplementedDatabaseServer.NewIteratorWithStartAndPrefix">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedDatabaseServer">UnimplementedDatabaseServer</a>) NewIteratorWithStartAndPrefix(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#NewIteratorWithStartAndPrefixRequest">NewIteratorWithStartAndPrefixRequest</a>) (*<a href="index.html#NewIteratorWithStartAndPrefixResponse">NewIteratorWithStartAndPrefixResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedDatabaseServer.Put">func (UnimplementedDatabaseServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=8586:8676#L189">Put</a>
+					<a class="permalink" href="index.html#UnimplementedDatabaseServer.Put">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedDatabaseServer">UnimplementedDatabaseServer</a>) Put(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#PutRequest">PutRequest</a>) (*<a href="index.html#PutResponse">PutResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedDatabaseServer.WriteBatch">func (UnimplementedDatabaseServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=9514:9625#L204">WriteBatch</a>
+					<a class="permalink" href="index.html#UnimplementedDatabaseServer.WriteBatch">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedDatabaseServer">UnimplementedDatabaseServer</a>) WriteBatch(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#WriteBatchRequest">WriteBatchRequest</a>) (*<a href="index.html#WriteBatchResponse">WriteBatchResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="UnsafeDatabaseServer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb_grpc.pb.go?s=10848:10927#L223">UnsafeDatabaseServer</a>
+				<a class="permalink" href="index.html#UnsafeDatabaseServer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UnsafeDatabaseServer may be embedded to opt out of forward compatibility for this service.
+Use of this interface is not recommended, as added methods to DatabaseServer will
+result in compilation errors.
+
+			<pre>type UnsafeDatabaseServer interface {
+    <span class="comment">// contains filtered or unexported methods</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="WriteBatchRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=16061:16393#L651">WriteBatchRequest</a>
+				<a class="permalink" href="index.html#WriteBatchRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type WriteBatchRequest struct {
+<span id="WriteBatchRequest.Puts"></span>    Puts    []*<a href="index.html#PutRequest">PutRequest</a>    `protobuf:&#34;bytes,1,rep,name=puts,proto3&#34; json:&#34;puts,omitempty&#34;`
+<span id="WriteBatchRequest.Deletes"></span>    Deletes []*<a href="index.html#DeleteRequest">DeleteRequest</a> `protobuf:&#34;bytes,2,rep,name=deletes,proto3&#34; json:&#34;deletes,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="WriteBatchRequest.Descriptor">func (*WriteBatchRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=17143:17197#L688">Descriptor</a>
+					<a class="permalink" href="index.html#WriteBatchRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteBatchRequest">WriteBatchRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use WriteBatchRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="WriteBatchRequest.GetDeletes">func (*WriteBatchRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=17362:17419#L699">GetDeletes</a>
+					<a class="permalink" href="index.html#WriteBatchRequest.GetDeletes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteBatchRequest">WriteBatchRequest</a>) GetDeletes() []*<a href="index.html#DeleteRequest">DeleteRequest</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteBatchRequest.GetPuts">func (*WriteBatchRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=17259:17310#L692">GetPuts</a>
+					<a class="permalink" href="index.html#WriteBatchRequest.GetPuts">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteBatchRequest">WriteBatchRequest</a>) GetPuts() []*<a href="index.html#PutRequest">PutRequest</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteBatchRequest.ProtoMessage">func (*WriteBatchRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=16711:16751#L673">ProtoMessage</a>
+					<a class="permalink" href="index.html#WriteBatchRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteBatchRequest">WriteBatchRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteBatchRequest.ProtoReflect">func (*WriteBatchRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=16756:16819#L675">ProtoReflect</a>
+					<a class="permalink" href="index.html#WriteBatchRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteBatchRequest">WriteBatchRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteBatchRequest.Reset">func (*WriteBatchRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=16395:16430#L660">Reset</a>
+					<a class="permalink" href="index.html#WriteBatchRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteBatchRequest">WriteBatchRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteBatchRequest.String">func (*WriteBatchRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=16623:16666#L669">String</a>
+					<a class="permalink" href="index.html#WriteBatchRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteBatchRequest">WriteBatchRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="WriteBatchResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=17474:17712#L706">WriteBatchResponse</a>
+				<a class="permalink" href="index.html#WriteBatchResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type WriteBatchResponse struct {
+<span id="WriteBatchResponse.Err"></span>    Err <a href="index.html#Error">Error</a> `protobuf:&#34;varint,1,opt,name=err,proto3,enum=rpcdb.Error&#34; json:&#34;err,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="WriteBatchResponse.Descriptor">func (*WriteBatchResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=18468:18523#L742">Descriptor</a>
+					<a class="permalink" href="index.html#WriteBatchResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteBatchResponse">WriteBatchResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use WriteBatchResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="WriteBatchResponse.GetErr">func (*WriteBatchResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=18585:18628#L746">GetErr</a>
+					<a class="permalink" href="index.html#WriteBatchResponse.GetErr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteBatchResponse">WriteBatchResponse</a>) GetErr() <a href="index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteBatchResponse.ProtoMessage">func (*WriteBatchResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=18033:18074#L727">ProtoMessage</a>
+					<a class="permalink" href="index.html#WriteBatchResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteBatchResponse">WriteBatchResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteBatchResponse.ProtoReflect">func (*WriteBatchResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=18079:18143#L729">ProtoReflect</a>
+					<a class="permalink" href="index.html#WriteBatchResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteBatchResponse">WriteBatchResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteBatchResponse.Reset">func (*WriteBatchResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=17714:17750#L714">Reset</a>
+					<a class="permalink" href="index.html#WriteBatchResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteBatchResponse">WriteBatchResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteBatchResponse.String">func (*WriteBatchResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/rpcdb/rpcdb.pb.go?s=17944:17988#L723">String</a>
+					<a class="permalink" href="index.html#WriteBatchResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteBatchResponse">WriteBatchResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8081/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

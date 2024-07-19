@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>messenger - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="http://localhost:8081/pkg/">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="http://localhost:8081/pkg/">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8081/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package messenger
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "github.com/consideritdone/landslidevm/proto/messenger"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#RegisterMessengerServer">func RegisterMessengerServer(s grpc.ServiceRegistrar, srv MessengerServer)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Message">type Message</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Message.Descriptor">func (Message) Descriptor() protoreflect.EnumDescriptor</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Message.Enum">func (x Message) Enum() *Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Message.EnumDescriptor">func (Message) EnumDescriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Message.Number">func (x Message) Number() protoreflect.EnumNumber</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Message.String">func (x Message) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Message.Type">func (Message) Type() protoreflect.EnumType</a></dd>
+				
+			
+				
+				<dd><a href="index.html#MessengerClient">type MessengerClient</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewMessengerClient">func NewMessengerClient(cc grpc.ClientConnInterface) MessengerClient</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#MessengerServer">type MessengerServer</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#NotifyRequest">type NotifyRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotifyRequest.Descriptor">func (*NotifyRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotifyRequest.GetMessage">func (x *NotifyRequest) GetMessage() Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotifyRequest.ProtoMessage">func (*NotifyRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotifyRequest.ProtoReflect">func (x *NotifyRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotifyRequest.Reset">func (x *NotifyRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotifyRequest.String">func (x *NotifyRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#NotifyResponse">type NotifyResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotifyResponse.Descriptor">func (*NotifyResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotifyResponse.ProtoMessage">func (*NotifyResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotifyResponse.ProtoReflect">func (x *NotifyResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotifyResponse.Reset">func (x *NotifyResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotifyResponse.String">func (x *NotifyResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#UnimplementedMessengerServer">type UnimplementedMessengerServer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedMessengerServer.Notify">func (UnimplementedMessengerServer) Notify(context.Context, *NotifyRequest) (*NotifyResponse, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#UnsafeMessengerServer">type UnsafeMessengerServer</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go">messenger.pb.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger_grpc.pb.go">messenger_grpc.pb.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				
+				<pre>const (
+    <span id="Messenger_Notify_FullMethodName">Messenger_Notify_FullMethodName</span> = &#34;/messenger.Messenger/Notify&#34;
+)</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>Enum value maps for Message.
+
+				<pre>var (
+    <span id="Message_name">Message_name</span> = map[<a href="http://localhost:8081/pkg/builtin/#int32">int32</a>]<a href="http://localhost:8081/pkg/builtin/#string">string</a>{
+        0: &#34;MESSAGE_UNSPECIFIED&#34;,
+        1: &#34;MESSAGE_BUILD_BLOCK&#34;,
+        2: &#34;MESSAGE_STATE_SYNC_FINISHED&#34;,
+    }
+    <span id="Message_value">Message_value</span> = map[<a href="http://localhost:8081/pkg/builtin/#string">string</a>]<a href="http://localhost:8081/pkg/builtin/#int32">int32</a>{
+        &#34;MESSAGE_UNSPECIFIED&#34;:         0,
+        &#34;MESSAGE_BUILD_BLOCK&#34;:         1,
+        &#34;MESSAGE_STATE_SYNC_FINISHED&#34;: 2,
+    }
+)</pre>
+			
+				
+				<pre>var <span id="File_messenger_messenger_proto">File_messenger_messenger_proto</span> <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#FileDescriptor">FileDescriptor</a></pre>
+			
+				<p>Messenger_ServiceDesc is the grpc.ServiceDesc for Messenger service.
+It&apos;s only intended for direct use with grpc.RegisterService,
+and not to be introspected or modified (even as a copy)
+
+				<pre>var <span id="Messenger_ServiceDesc">Messenger_ServiceDesc</span> = <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc">ServiceDesc</a>{
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.ServiceName">ServiceName</a>: &#34;messenger.Messenger&#34;,
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.HandlerType">HandlerType</a>: (*<a href="index.html#MessengerServer">MessengerServer</a>)(<a href="http://localhost:8081/pkg/builtin/#nil">nil</a>),
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.Methods">Methods</a>: []<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#MethodDesc">MethodDesc</a>{
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Notify&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Messenger_Notify_Handler,
+        },
+    },
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.Streams">Streams</a>:  []<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#StreamDesc">StreamDesc</a>{},
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.Metadata">Metadata</a>: &#34;messenger/messenger.proto&#34;,
+}</pre>
+			
+		
+		
+			
+			
+			<h2 id="RegisterMessengerServer">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger_grpc.pb.go?s=2310:2384#L61">RegisterMessengerServer</a>
+				<a class="permalink" href="index.html#RegisterMessengerServer">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RegisterMessengerServer(s <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceRegistrar">ServiceRegistrar</a>, srv <a href="index.html#MessengerServer">MessengerServer</a>)</pre>
+			
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Message">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=590:608#L13">Message</a>
+				<a class="permalink" href="index.html#Message">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type Message <a href="http://localhost:8081/pkg/builtin/#int32">int32</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="Message_MESSAGE_UNSPECIFIED">Message_MESSAGE_UNSPECIFIED</span>         <a href="index.html#Message">Message</a> = 0
+    <span id="Message_MESSAGE_BUILD_BLOCK">Message_MESSAGE_BUILD_BLOCK</span>         <a href="index.html#Message">Message</a> = 1
+    <span id="Message_MESSAGE_STATE_SYNC_FINISHED">Message_MESSAGE_STATE_SYNC_FINISHED</span> <a href="index.html#Message">Message</a> = 2
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Message.Descriptor">func (Message) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=1274:1329#L45">Descriptor</a>
+					<a class="permalink" href="index.html#Message.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#Message">Message</a>) Descriptor() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#EnumDescriptor">EnumDescriptor</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Message.Enum">func (Message) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=1084:1116#L35">Enum</a>
+					<a class="permalink" href="index.html#Message.Enum">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#Message">Message</a>) Enum() *<a href="index.html#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Message.EnumDescriptor">func (Message) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=1639:1686#L58">EnumDescriptor</a>
+					<a class="permalink" href="index.html#Message.EnumDescriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#Message">Message</a>) EnumDescriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use Message.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="Message.Number">func (Message) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=1502:1551#L53">Number</a>
+					<a class="permalink" href="index.html#Message.Number">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#Message">Message</a>) Number() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#EnumNumber">EnumNumber</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Message.String">func (Message) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=1159:1191#L41">String</a>
+					<a class="permalink" href="index.html#Message.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#Message">Message</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Message.Type">func (Message) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=1400:1443#L49">Type</a>
+					<a class="permalink" href="index.html#Message.Type">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#Message">Message</a>) Type() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#EnumType">EnumType</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="MessengerClient">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger_grpc.pb.go?s=843:975#L18">MessengerClient</a>
+				<a class="permalink" href="index.html#MessengerClient">&#xb6;</a>
+				
+				
+			</h2>
+			<p>MessengerClient is the client API for Messenger service.
+<p>For semantics around ctx use and closing/ending streaming RPCs, please refer to <a href="https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream">https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream</a>.
+
+			<pre>type MessengerClient interface {
+    Notify(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#NotifyRequest">NotifyRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#NotifyResponse">NotifyResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewMessengerClient">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger_grpc.pb.go?s=1039:1107#L26">NewMessengerClient</a>
+					<a class="permalink" href="index.html#NewMessengerClient">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewMessengerClient(cc <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ClientConnInterface">ClientConnInterface</a>) <a href="index.html#MessengerClient">MessengerClient</a></pre>
+				
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="MessengerServer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger_grpc.pb.go?s=1583:1683#L42">MessengerServer</a>
+				<a class="permalink" href="index.html#MessengerServer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>MessengerServer is the server API for Messenger service.
+All implementations should embed UnimplementedMessengerServer
+for forward compatibility
+
+			<pre>type MessengerServer interface {
+    Notify(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#NotifyRequest">NotifyRequest</a>) (*<a href="index.html#NotifyResponse">NotifyResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="NotifyRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=1755:2008#L62">NotifyRequest</a>
+				<a class="permalink" href="index.html#NotifyRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type NotifyRequest struct {
+<span id="NotifyRequest.Message"></span>    Message <a href="index.html#Message">Message</a> `protobuf:&#34;varint,1,opt,name=message,proto3,enum=messenger.Message&#34; json:&#34;message,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NotifyRequest.Descriptor">func (*NotifyRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=2748:2798#L98">Descriptor</a>
+					<a class="permalink" href="index.html#NotifyRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#NotifyRequest">NotifyRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use NotifyRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="NotifyRequest.GetMessage">func (*NotifyRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=2867:2911#L102">GetMessage</a>
+					<a class="permalink" href="index.html#NotifyRequest.GetMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NotifyRequest">NotifyRequest</a>) GetMessage() <a href="index.html#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NotifyRequest.ProtoMessage">func (*NotifyRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=2321:2357#L83">ProtoMessage</a>
+					<a class="permalink" href="index.html#NotifyRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#NotifyRequest">NotifyRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NotifyRequest.ProtoReflect">func (*NotifyRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=2362:2421#L85">ProtoReflect</a>
+					<a class="permalink" href="index.html#NotifyRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NotifyRequest">NotifyRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NotifyRequest.Reset">func (*NotifyRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=2010:2041#L70">Reset</a>
+					<a class="permalink" href="index.html#NotifyRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NotifyRequest">NotifyRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NotifyRequest.String">func (*NotifyRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=2237:2276#L79">String</a>
+					<a class="permalink" href="index.html#NotifyRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NotifyRequest">NotifyRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="NotifyResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=2990:3132#L109">NotifyResponse</a>
+				<a class="permalink" href="index.html#NotifyResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type NotifyResponse struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NotifyResponse.Descriptor">func (*NotifyResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=3878:3929#L143">Descriptor</a>
+					<a class="permalink" href="index.html#NotifyResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#NotifyResponse">NotifyResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use NotifyResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="NotifyResponse.ProtoMessage">func (*NotifyResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=3448:3485#L128">ProtoMessage</a>
+					<a class="permalink" href="index.html#NotifyResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#NotifyResponse">NotifyResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NotifyResponse.ProtoReflect">func (*NotifyResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=3490:3550#L130">ProtoReflect</a>
+					<a class="permalink" href="index.html#NotifyResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NotifyResponse">NotifyResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NotifyResponse.Reset">func (*NotifyResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=3134:3166#L115">Reset</a>
+					<a class="permalink" href="index.html#NotifyResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NotifyResponse">NotifyResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NotifyResponse.String">func (*NotifyResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger.pb.go?s=3363:3403#L124">String</a>
+					<a class="permalink" href="index.html#NotifyResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NotifyResponse">NotifyResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="UnimplementedMessengerServer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger_grpc.pb.go?s=1780:1824#L47">UnimplementedMessengerServer</a>
+				<a class="permalink" href="index.html#UnimplementedMessengerServer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UnimplementedMessengerServer should be embedded to have forward compatible implementations.
+
+			<pre>type UnimplementedMessengerServer struct {
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="UnimplementedMessengerServer.Notify">func (UnimplementedMessengerServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger_grpc.pb.go?s=1826:1926#L50">Notify</a>
+					<a class="permalink" href="index.html#UnimplementedMessengerServer.Notify">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedMessengerServer">UnimplementedMessengerServer</a>) Notify(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#NotifyRequest">NotifyRequest</a>) (*<a href="index.html#NotifyResponse">NotifyResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="UnsafeMessengerServer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/messenger/messenger_grpc.pb.go?s=2227:2308#L57">UnsafeMessengerServer</a>
+				<a class="permalink" href="index.html#UnsafeMessengerServer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UnsafeMessengerServer may be embedded to opt out of forward compatibility for this service.
+Use of this interface is not recommended, as added methods to MessengerServer will
+result in compilation errors.
+
+			<pre>type UnsafeMessengerServer interface {
+    <span class="comment">// contains filtered or unexported methods</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8081/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

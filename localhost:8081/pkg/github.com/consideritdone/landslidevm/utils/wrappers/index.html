@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>wrappers - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="http://localhost:8081/pkg/">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="http://localhost:8081/pkg/">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8081/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package wrappers
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "github.com/consideritdone/landslidevm/utils/wrappers"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#StringLen">func StringLen(str string) int</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Closer">type Closer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Closer.Add">func (c *Closer) Add(closer io.Closer)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Closer.Close">func (c *Closer) Close() error</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Errs">type Errs</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Errs.Add">func (errs *Errs) Add(errors ...error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Errs.Errored">func (errs *Errs) Errored() bool</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Packer">type Packer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.PackBool">func (p *Packer) PackBool(b bool)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.PackByte">func (p *Packer) PackByte(val byte)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.PackBytes">func (p *Packer) PackBytes(bytes []byte)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.PackFixedBytes">func (p *Packer) PackFixedBytes(bytes []byte)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.PackInt">func (p *Packer) PackInt(val uint32)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.PackLong">func (p *Packer) PackLong(val uint64)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.PackShort">func (p *Packer) PackShort(val uint16)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.PackStr">func (p *Packer) PackStr(str string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.UnpackBool">func (p *Packer) UnpackBool() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.UnpackByte">func (p *Packer) UnpackByte() byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.UnpackBytes">func (p *Packer) UnpackBytes() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.UnpackFixedBytes">func (p *Packer) UnpackFixedBytes(size int) []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.UnpackInt">func (p *Packer) UnpackInt() uint32</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.UnpackLimitedBytes">func (p *Packer) UnpackLimitedBytes(limit uint32) []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.UnpackLimitedStr">func (p *Packer) UnpackLimitedStr(limit uint16) string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.UnpackLong">func (p *Packer) UnpackLong() uint64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.UnpackShort">func (p *Packer) UnpackShort() uint16</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Packer.UnpackStr">func (p *Packer) UnpackStr() string</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/closers.go">closers.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/errors.go">errors.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go">packing.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				
+				<pre>const (
+    <span id="MaxStringLen">MaxStringLen</span> = <a href="http://localhost:8081/pkg/math/">math</a>.<a href="http://localhost:8081/pkg/math/#MaxUint16">MaxUint16</a>
+
+    <span class="comment">// ByteLen is the number of bytes per byte...</span>
+    <span id="ByteLen">ByteLen</span> = 1
+    <span class="comment">// ShortLen is the number of bytes per short</span>
+    <span id="ShortLen">ShortLen</span> = 2
+    <span class="comment">// IntLen is the number of bytes per int</span>
+    <span id="IntLen">IntLen</span> = 4
+    <span class="comment">// LongLen is the number of bytes per long</span>
+    <span id="LongLen">LongLen</span> = 8
+    <span class="comment">// BoolLen is the number of bytes per bool</span>
+    <span id="BoolLen">BoolLen</span> = 1
+)</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				
+				<pre>var (
+    <span id="ErrInsufficientLength">ErrInsufficientLength</span> = <a href="http://localhost:8081/pkg/errors/">errors</a>.<a href="http://localhost:8081/pkg/errors/#New">New</a>(&#34;packer has insufficient length for input&#34;)
+)</pre>
+			
+		
+		
+			
+			
+			<h2 id="StringLen">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=398:428#L14">StringLen</a>
+				<a class="permalink" href="index.html#StringLen">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func StringLen(str <a href="http://localhost:8081/pkg/builtin/#string">string</a>) <a href="http://localhost:8081/pkg/builtin/#int">int</a></pre>
+			
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Closer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/closers.go?s=146:209#L1">Closer</a>
+				<a class="permalink" href="index.html#Closer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Closer is a nice utility for closing a group of objects while reporting an
+error if one occurs.
+
+			<pre>type Closer struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Closer.Add">func (*Closer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/closers.go?s=245:283#L6">Add</a>
+					<a class="permalink" href="index.html#Closer.Add">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#Closer">Closer</a>) Add(closer <a href="http://localhost:8081/pkg/io/">io</a>.<a href="http://localhost:8081/pkg/io/#Closer">Closer</a>)</pre>
+				<p>Add a new object to be closed.
+
+				
+				
+				
+			
+				
+				<h3 id="Closer.Close">func (*Closer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/closers.go?s=484:514#L15">Close</a>
+					<a class="permalink" href="index.html#Closer.Close">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#Closer">Closer</a>) Close() <a href="http://localhost:8081/pkg/builtin/#error">error</a></pre>
+				<p>Close closes each of the closers add to [c] and returns the first error
+that occurs or nil if no error occurs.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Errs">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/errors.go?s=18:47#L1">Errs</a>
+				<a class="permalink" href="index.html#Errs">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type Errs struct{ Err <a href="http://localhost:8081/pkg/builtin/#error">error</a> }
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Errs.Add">func (*Errs) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/errors.go?s=111:149#L1">Add</a>
+					<a class="permalink" href="index.html#Errs.Add">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (errs *<a href="index.html#Errs">Errs</a>) Add(errors ...<a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Errs.Errored">func (*Errs) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/errors.go?s=49:81#L1">Errored</a>
+					<a class="permalink" href="index.html#Errs.Errored">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (errs *<a href="index.html#Errs">Errs</a>) Errored() <a href="http://localhost:8081/pkg/builtin/#bool">bool</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Packer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=1013:1223#L29">Packer</a>
+				<a class="permalink" href="index.html#Packer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Packer packs and unpacks a byte array from/to standard values
+
+			<pre>type Packer struct {
+    <a href="index.html#Errs">Errs</a>
+
+    <span class="comment">// The largest allowed size of expanding the byte array</span>
+<span id="Packer.MaxSize"></span>    MaxSize <a href="http://localhost:8081/pkg/builtin/#int">int</a>
+    <span class="comment">// The current byte array</span>
+<span id="Packer.Bytes"></span>    Bytes []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>
+    <span class="comment">// The offset that is being written to in the byte array</span>
+<span id="Packer.Offset"></span>    Offset <a href="http://localhost:8081/pkg/builtin/#int">int</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Packer.PackBool">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=2973:3006#L133">PackBool</a>
+					<a class="permalink" href="index.html#Packer.PackBool">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) PackBool(b <a href="http://localhost:8081/pkg/builtin/#bool">bool</a>)</pre>
+				<p>PackBool packs a bool into the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.PackByte">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=1269:1304#L41">PackByte</a>
+					<a class="permalink" href="index.html#Packer.PackByte">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) PackByte(val <a href="http://localhost:8081/pkg/builtin/#byte">byte</a>)</pre>
+				<p>PackByte append a byte to the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.PackBytes">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=3857:3897#L181">PackBytes</a>
+					<a class="permalink" href="index.html#Packer.PackBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) PackBytes(bytes []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>)</pre>
+				<p>PackBytes append a byte slice to the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.PackFixedBytes">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=3368:3413#L157">PackFixedBytes</a>
+					<a class="permalink" href="index.html#Packer.PackFixedBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) PackFixedBytes(bytes []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>)</pre>
+				<p>PackFixedBytes append a byte slice, with no length descriptor to the byte
+array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.PackInt">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=2095:2131#L87">PackInt</a>
+					<a class="permalink" href="index.html#Packer.PackInt">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) PackInt(val <a href="http://localhost:8081/pkg/builtin/#uint32">uint32</a>)</pre>
+				<p>PackInt append an int to the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.PackLong">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=2530:2567#L110">PackLong</a>
+					<a class="permalink" href="index.html#Packer.PackLong">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) PackLong(val <a href="http://localhost:8081/pkg/builtin/#uint64">uint64</a>)</pre>
+				<p>PackLong append a long to the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.PackShort">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=1646:1684#L64">PackShort</a>
+					<a class="permalink" href="index.html#Packer.PackShort">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) PackShort(val <a href="http://localhost:8081/pkg/builtin/#uint16">uint16</a>)</pre>
+				<p>PackShort append a short to the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.PackStr">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=4491:4527#L204">PackStr</a>
+					<a class="permalink" href="index.html#Packer.PackStr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) PackStr(str <a href="http://localhost:8081/pkg/builtin/#string">string</a>)</pre>
+				<p>PackStr append a string to the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.UnpackBool">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=3114:3148#L142">UnpackBool</a>
+					<a class="permalink" href="index.html#Packer.UnpackBool">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) UnpackBool() <a href="http://localhost:8081/pkg/builtin/#bool">bool</a></pre>
+				<p>UnpackBool unpacks a bool from the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.UnpackByte">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=1445:1479#L52">UnpackByte</a>
+					<a class="permalink" href="index.html#Packer.UnpackByte">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) UnpackByte() <a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				<p>UnpackByte unpack a byte from the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.UnpackBytes">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=4014:4051#L187">UnpackBytes</a>
+					<a class="permalink" href="index.html#Packer.UnpackBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) UnpackBytes() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				<p>UnpackBytes unpack a byte slice from the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.UnpackFixedBytes">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=3619:3669#L169">UnpackFixedBytes</a>
+					<a class="permalink" href="index.html#Packer.UnpackFixedBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) UnpackFixedBytes(size <a href="http://localhost:8081/pkg/builtin/#int">int</a>) []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				<p>UnpackFixedBytes unpack a byte slice, with no length descriptor from the byte
+array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.UnpackInt">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=2306:2341#L98">UnpackInt</a>
+					<a class="permalink" href="index.html#Packer.UnpackInt">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) UnpackInt() <a href="http://localhost:8081/pkg/builtin/#uint32">uint32</a></pre>
+				<p>UnpackInt unpack an int from the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.UnpackLimitedBytes">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=4266:4322#L194">UnpackLimitedBytes</a>
+					<a class="permalink" href="index.html#Packer.UnpackLimitedBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) UnpackLimitedBytes(limit <a href="http://localhost:8081/pkg/builtin/#uint32">uint32</a>) []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				<p>UnpackLimitedBytes unpacks a byte slice. If the size of the slice is greater
+than [limit], adds [errOversized] to the packer and returns nil.
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.UnpackLimitedStr">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=5005:5059#L222">UnpackLimitedStr</a>
+					<a class="permalink" href="index.html#Packer.UnpackLimitedStr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) UnpackLimitedStr(limit <a href="http://localhost:8081/pkg/builtin/#uint16">uint16</a>) <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				<p>UnpackLimitedStr unpacks a string. If the size of the string is greater than
+[limit], adds [errOversized] to the packer and returns the empty string.
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.UnpackLong">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=2745:2781#L121">UnpackLong</a>
+					<a class="permalink" href="index.html#Packer.UnpackLong">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) UnpackLong() <a href="http://localhost:8081/pkg/builtin/#uint64">uint64</a></pre>
+				<p>UnpackLong unpack a long from the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.UnpackShort">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=1866:1903#L75">UnpackShort</a>
+					<a class="permalink" href="index.html#Packer.UnpackShort">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) UnpackShort() <a href="http://localhost:8081/pkg/builtin/#uint16">uint16</a></pre>
+				<p>UnpackShort unpack a short from the byte array
+
+				
+				
+				
+			
+				
+				<h3 id="Packer.UnpackStr">func (*Packer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/utils/wrappers/packing.go?s=4731:4766#L215">UnpackStr</a>
+					<a class="permalink" href="index.html#Packer.UnpackStr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Packer">Packer</a>) UnpackStr() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				<p>UnpackStr unpacks a string from the byte array
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8081/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

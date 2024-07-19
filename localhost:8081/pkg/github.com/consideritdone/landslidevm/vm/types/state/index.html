@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>state - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="http://localhost:8081/pkg/">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="http://localhost:8081/pkg/">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8081/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package state
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "github.com/consideritdone/landslidevm/vm/types/state"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#BuildExtendedCommitInfo">func BuildExtendedCommitInfo(ec *types.ExtendedCommit, valSet *types.ValidatorSet, initialHeight int64, ap types.ABCIParams) abci.ExtendedCommitInfo</a></dd>
+			
+				
+				<dd><a href="index.html#BuildLastCommitInfo">func BuildLastCommitInfo(block *types.Block, lastValSet *types.ValidatorSet, initialHeight int64) abci.CommitInfo</a></dd>
+			
+				
+				<dd><a href="index.html#DecodeBlock">func DecodeBlock(data []byte) (*types.Block, error)</a></dd>
+			
+				
+				<dd><a href="index.html#DecodeBlockWithStatus">func DecodeBlockWithStatus(data []byte) (*types.Block, vm.Status, error)</a></dd>
+			
+				
+				<dd><a href="index.html#EncodeBlock">func EncodeBlock(block *types.Block) ([]byte, error)</a></dd>
+			
+				
+				<dd><a href="index.html#EncodeBlockWithStatus">func EncodeBlockWithStatus(blk *types.Block, status vm.Status) ([]byte, error)</a></dd>
+			
+				
+				<dd><a href="index.html#ExecCommitBlock">func ExecCommitBlock(appConnConsensus proxy.AppConnConsensus, block *types.Block, logger log.Logger, store statetypes.Store, initialHeight int64) ([]byte, error)</a></dd>
+			
+				
+				<dd><a href="index.html#MedianTime">func MedianTime(commit *types.Commit, validators *types.ValidatorSet) time.Time</a></dd>
+			
+				
+				<dd><a href="index.html#TxPostCheck">func TxPostCheck(state state.State) mempl.PostCheckFunc</a></dd>
+			
+				
+				<dd><a href="index.html#TxPreCheck">func TxPreCheck(state state.State) mempl.PreCheckFunc</a></dd>
+			
+				
+				<dd><a href="index.html#ValidateBlock">func ValidateBlock(state state.State, block *types.Block) error</a></dd>
+			
+			
+				
+				<dd><a href="index.html#BlockExecutor">type BlockExecutor</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewBlockExecutor">func NewBlockExecutor(stateStore statetypes.Store, logger log.Logger, proxyApp proxy.AppConnConsensus, mempool mempool.Mempool, blockStore statetypes.BlockStore, blockMaxBytes int64, blockMaxGas int64, evidenceMaxBytes int64, options ...BlockExecutorOption) *BlockExecutor</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BlockExecutor.ApplyBlock">func (blockExec *BlockExecutor) ApplyBlock(state statetypes.State, blockID types.BlockID, block *types.Block) (statetypes.State, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BlockExecutor.Commit">func (blockExec *BlockExecutor) Commit(state statetypes.State, block *types.Block, abciResponse *abci.ResponseFinalizeBlock) (int64, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BlockExecutor.CreateProposalBlock">func (blockExec *BlockExecutor) CreateProposalBlock(ctx context.Context, height int64, state statetypes.State, lastExtCommit *types.ExtendedCommit, proposerAddr []byte) (*types.Block, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BlockExecutor.ExtendVote">func (blockExec *BlockExecutor) ExtendVote(ctx context.Context, vote *types.Vote, block *types.Block, state statetypes.State) ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BlockExecutor.ProcessProposal">func (blockExec *BlockExecutor) ProcessProposal(block *types.Block, state statetypes.State) (bool, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BlockExecutor.SetEventBus">func (blockExec *BlockExecutor) SetEventBus(eventBus types.BlockEventPublisher)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BlockExecutor.Store">func (blockExec *BlockExecutor) Store() statetypes.Store</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BlockExecutor.ValidateBlock">func (blockExec *BlockExecutor) ValidateBlock(state statetypes.State, block *types.Block) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BlockExecutor.VerifyVoteExtension">func (blockExec *BlockExecutor) VerifyVoteExtension(ctx context.Context, vote *types.Vote) error</a></dd>
+				
+			
+				
+				<dd><a href="index.html#BlockExecutorOption">type BlockExecutorOption</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BlockExecutorWithMetrics">func BlockExecutorWithMetrics(metrics *statetypes.Metrics) BlockExecutorOption</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ErrAppBlockHeightTooHigh">type ErrAppBlockHeightTooHigh</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ErrAppBlockHeightTooHigh.Error">func (e ErrAppBlockHeightTooHigh) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ErrAppBlockHeightTooLow">type ErrAppBlockHeightTooLow</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ErrAppBlockHeightTooLow.Error">func (e ErrAppBlockHeightTooLow) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ErrBlockHashMismatch">type ErrBlockHashMismatch</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ErrBlockHashMismatch.Error">func (e ErrBlockHashMismatch) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ErrInvalidBlock">type ErrInvalidBlock</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ErrLastStateMismatch">type ErrLastStateMismatch</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ErrLastStateMismatch.Error">func (e ErrLastStateMismatch) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ErrNoABCIResponsesForHeight">type ErrNoABCIResponsesForHeight</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ErrNoABCIResponsesForHeight.Error">func (e ErrNoABCIResponsesForHeight) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ErrNoConsensusParamsForHeight">type ErrNoConsensusParamsForHeight</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ErrNoConsensusParamsForHeight.Error">func (e ErrNoConsensusParamsForHeight) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ErrNoValSetForHeight">type ErrNoValSetForHeight</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ErrNoValSetForHeight.Error">func (e ErrNoValSetForHeight) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ErrProxyAppConn">type ErrProxyAppConn</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ErrStateMismatch">type ErrStateMismatch</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ErrStateMismatch.Error">func (e ErrStateMismatch) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ErrUnknownBlock">type ErrUnknownBlock</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ErrUnknownBlock.Error">func (e ErrUnknownBlock) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#WrappedBlock">type WrappedBlock</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#WrappedBlocksStorage">type WrappedBlocksStorage</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewWrappedBlocksStorage">func NewWrappedBlocksStorage() *WrappedBlocksStorage</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WrappedBlocksStorage.Flush">func (s *WrappedBlocksStorage) Flush()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WrappedBlocksStorage.GetCachedBlock">func (s *WrappedBlocksStorage) GetCachedBlock(blkID ids.ID) (*WrappedBlock, bool)</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go">error.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go">executor.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/tx_filter.go">tx_filter.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/utils.go">utils.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/wrapped_block.go">wrapped_block.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				
+				<pre>var <span id="ErrFinalizeBlockResponsesNotPersisted">ErrFinalizeBlockResponsesNotPersisted</span> = <a href="http://localhost:8081/pkg/errors/">errors</a>.<a href="http://localhost:8081/pkg/errors/#New">New</a>(&#34;node is not persisting finalize block responses&#34;)</pre>
+			
+		
+		
+			
+			
+			<h2 id="BuildExtendedCommitInfo">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=17327:17475#L492">BuildExtendedCommitInfo</a>
+				<a class="permalink" href="index.html#BuildExtendedCommitInfo">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func BuildExtendedCommitInfo(ec *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#ExtendedCommit">ExtendedCommit</a>, valSet *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#ValidatorSet">ValidatorSet</a>, initialHeight <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>, ap <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#ABCIParams">ABCIParams</a>) <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/abci/types/">abci</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/abci/types/#ExtendedCommitInfo">ExtendedCommitInfo</a></pre>
+			<p>BuildExtendedCommitInfo builds an ExtendedCommitInfo from the given block and validator set.
+If you want to load the validator set from the store instead of providing it,
+use buildExtendedCommitInfoFromStore.
+
+			
+			
+
+		
+			
+			
+			<h2 id="BuildLastCommitInfo">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=14982:15095#L430">BuildLastCommitInfo</a>
+				<a class="permalink" href="index.html#BuildLastCommitInfo">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func BuildLastCommitInfo(block *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>, lastValSet *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#ValidatorSet">ValidatorSet</a>, initialHeight <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>) <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/abci/types/">abci</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/abci/types/#CommitInfo">CommitInfo</a></pre>
+			<p>BuildLastCommitInfo builds a CommitInfo from the given block and validator set.
+If you want to load the validator set from the store instead of providing it,
+use buildLastCommitInfoFromStore.
+
+			
+			
+
+		
+			
+			
+			<h2 id="DecodeBlock">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/utils.go?s=1227:1278#L50">DecodeBlock</a>
+				<a class="permalink" href="index.html#DecodeBlock">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DecodeBlock(data []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>) (*<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+			
+			
+			
+
+		
+			
+			
+			<h2 id="DecodeBlockWithStatus">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/utils.go?s=710:782#L27">DecodeBlockWithStatus</a>
+				<a class="permalink" href="index.html#DecodeBlockWithStatus">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DecodeBlockWithStatus(data []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>) (*<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>, <a href="../../../proto/vm/index.html">vm</a>.<a href="../../../proto/vm/index.html#Status">Status</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+			
+			
+			
+
+		
+			
+			
+			<h2 id="EncodeBlock">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/utils.go?s=1076:1128#L42">EncodeBlock</a>
+				<a class="permalink" href="index.html#EncodeBlock">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func EncodeBlock(block *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>) ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+			
+			
+			
+
+		
+			
+			
+			<h2 id="EncodeBlockWithStatus">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/utils.go?s=385:463#L9">EncodeBlockWithStatus</a>
+				<a class="permalink" href="index.html#EncodeBlockWithStatus">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func EncodeBlockWithStatus(blk *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>, status <a href="../../../proto/vm/index.html">vm</a>.<a href="../../../proto/vm/index.html#Status">Status</a>) ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+			
+			
+			
+
+		
+			
+			
+			<h2 id="ExecCommitBlock">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=25210:25379#L711">ExecCommitBlock</a>
+				<a class="permalink" href="index.html#ExecCommitBlock">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ExecCommitBlock(
+    appConnConsensus <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/proxy/">proxy</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/proxy/#AppConnConsensus">AppConnConsensus</a>,
+    block *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>,
+    logger <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/libs/log/">log</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/libs/log/#Logger">Logger</a>,
+    store <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">statetypes</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#Store">Store</a>,
+    initialHeight <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>,
+) ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+			<p>ExecCommitBlock executes and commits a block on the proxyApp without validating or mutating the state.
+It returns the application root hash (result of abci.Commit).
+
+			
+			
+
+		
+			
+			
+			<h2 id="MedianTime">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/utils.go?s=5626:5705#L187">MedianTime</a>
+				<a class="permalink" href="index.html#MedianTime">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func MedianTime(commit *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Commit">Commit</a>, validators *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#ValidatorSet">ValidatorSet</a>) <a href="http://localhost:8081/pkg/time/">time</a>.<a href="http://localhost:8081/pkg/time/#Time">Time</a></pre>
+			<p>MedianTime computes a median time for a given Commit (based on Timestamp field of votes messages) and the
+corresponding validator set. The computed time is always between timestamps of
+the votes sent by honest processes, i.e., a faulty processes can not arbitrarily increase or decrease the
+computed value.
+
+			
+			
+
+		
+			
+			
+			<h2 id="TxPostCheck">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/tx_filter.go?s=782:837#L15">TxPostCheck</a>
+				<a class="permalink" href="index.html#TxPostCheck">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TxPostCheck(state <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">state</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#State">State</a>) <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/mempool/">mempl</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/mempool/#PostCheckFunc">PostCheckFunc</a></pre>
+			<p>TxPostCheck returns a function to filter transactions after processing.
+The function limits the gas wanted by a transaction to the block&apos;s maximum total gas.
+
+			
+			
+
+		
+			
+			
+			<h2 id="TxPreCheck">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/tx_filter.go?s=307:360#L1">TxPreCheck</a>
+				<a class="permalink" href="index.html#TxPreCheck">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TxPreCheck(state <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">state</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#State">State</a>) <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/mempool/">mempl</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/mempool/#PreCheckFunc">PreCheckFunc</a></pre>
+			<p>TxPreCheck returns a function to filter transactions before processing.
+The function limits the size of a transaction to the block&apos;s maximum data size.
+
+			
+			
+
+		
+			
+			
+			<h2 id="ValidateBlock">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/utils.go?s=1433:1496#L58">ValidateBlock</a>
+				<a class="permalink" href="index.html#ValidateBlock">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ValidateBlock(state <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">state</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#State">State</a>, block *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>) <a href="http://localhost:8081/pkg/builtin/#error">error</a></pre>
+			
+			
+			
+
+		
+		
+			
+			
+			<h2 id="BlockExecutor">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=883:1438#L16">BlockExecutor</a>
+				<a class="permalink" href="index.html#BlockExecutor">&#xb6;</a>
+				
+				
+			</h2>
+			<p>BlockExecutor provides the context and accessories for properly executing a block.
+
+			<pre>type BlockExecutor struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewBlockExecutor">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=1758:2043#L52">NewBlockExecutor</a>
+					<a class="permalink" href="index.html#NewBlockExecutor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewBlockExecutor(
+    stateStore <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">statetypes</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#Store">Store</a>,
+    logger <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/libs/log/">log</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/libs/log/#Logger">Logger</a>,
+    proxyApp <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/proxy/">proxy</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/proxy/#AppConnConsensus">AppConnConsensus</a>,
+    mempool <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/mempool/">mempool</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/mempool/#Mempool">Mempool</a>,
+    blockStore <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">statetypes</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#BlockStore">BlockStore</a>,
+    blockMaxBytes <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>,
+    blockMaxGas <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>,
+    evidenceMaxBytes <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>,
+    options ...<a href="index.html#BlockExecutorOption">BlockExecutorOption</a>,
+
+) *<a href="index.html#BlockExecutor">BlockExecutor</a></pre>
+				<p>NewBlockExecutor returns a new BlockExecutor with a NopEventBus.
+Call SetEventBus to provide one.
+
+				
+				
+			
+
+			
+				
+				<h3 id="BlockExecutor.ApplyBlock">func (*BlockExecutor) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=6918:7057#L198">ApplyBlock</a>
+					<a class="permalink" href="index.html#BlockExecutor.ApplyBlock">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (blockExec *<a href="index.html#BlockExecutor">BlockExecutor</a>) ApplyBlock(
+    state <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">statetypes</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#State">State</a>, blockID <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#BlockID">BlockID</a>, block *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>,
+) (<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">statetypes</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#State">State</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				<p>ApplyBlock validates the block against the state, executes it against the app,
+fires the relevant events, commits the app, and saves the new state and responses.
+It returns the new state.
+It&apos;s the only function that needs to be called
+from outside this package to process and commit an entire block.
+It takes a blockID to avoid recomputing the parts hash.
+
+				
+				
+				
+			
+				
+				<h3 id="BlockExecutor.Commit">func (*BlockExecutor) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=13043:13188#L367">Commit</a>
+					<a class="permalink" href="index.html#BlockExecutor.Commit">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (blockExec *<a href="index.html#BlockExecutor">BlockExecutor</a>) Commit(
+    state <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">statetypes</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#State">State</a>,
+    block *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>,
+    abciResponse *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/abci/types/">abci</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/abci/types/#ResponseFinalizeBlock">ResponseFinalizeBlock</a>,
+) (<a href="http://localhost:8081/pkg/builtin/#int64">int64</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				<p>Commit locks the mempool, runs the ABCI Commit message, and updates the
+mempool.
+It returns the result of calling abci.Commit which is the height to retain (if any)).
+The application is expected to have persisted its state (if any) before returning
+from the ABCI Commit call. This is the only place where the application should
+persist its statetypes.
+The Mempool must be locked during commit and update because state is
+typically reset on Commit and old txs must be replayed against committed
+state before new txs are run in the mempool, lest they be invalid.
+
+				
+				
+				
+			
+				
+				<h3 id="BlockExecutor.CreateProposalBlock">func (*BlockExecutor) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=3167:3365#L100">CreateProposalBlock</a>
+					<a class="permalink" href="index.html#BlockExecutor.CreateProposalBlock">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (blockExec *<a href="index.html#BlockExecutor">BlockExecutor</a>) CreateProposalBlock(
+    ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>,
+    height <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>,
+    state <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">statetypes</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#State">State</a>,
+    lastExtCommit *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#ExtendedCommit">ExtendedCommit</a>,
+    proposerAddr []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>,
+) (*<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				<p>CreateProposalBlock calls statetypes.MakeBlock with evidence from the evpool
+and txs from the mempool. The max bytes must be big enough to fit the commit.
+The block space is first allocated to outstanding evidence.
+The rest is given to txs, up to the max gas.
+<p>Contract: application will not return more bytes than are sent over the wire.
+
+				
+				
+				
+			
+				
+				<h3 id="BlockExecutor.ExtendVote">func (*BlockExecutor) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=10748:10896#L305">ExtendVote</a>
+					<a class="permalink" href="index.html#BlockExecutor.ExtendVote">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (blockExec *<a href="index.html#BlockExecutor">BlockExecutor</a>) ExtendVote(
+    ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>,
+    vote *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Vote">Vote</a>,
+    block *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>,
+    state <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">statetypes</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#State">State</a>,
+) ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="BlockExecutor.ProcessProposal">func (*BlockExecutor) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=5294:5404#L160">ProcessProposal</a>
+					<a class="permalink" href="index.html#BlockExecutor.ProcessProposal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (blockExec *<a href="index.html#BlockExecutor">BlockExecutor</a>) ProcessProposal(
+    block *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>,
+    state <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">statetypes</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#State">State</a>,
+) (<a href="http://localhost:8081/pkg/builtin/#bool">bool</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				<p>ProcessProposal is called whenever a node receives a complete proposal.
+
+				
+				
+				
+			
+				
+				<h3 id="BlockExecutor.SetEventBus">func (*BlockExecutor) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=2695:2774#L90">SetEventBus</a>
+					<a class="permalink" href="index.html#BlockExecutor.SetEventBus">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (blockExec *<a href="index.html#BlockExecutor">BlockExecutor</a>) SetEventBus(eventBus <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#BlockEventPublisher">BlockEventPublisher</a>)</pre>
+				<p>SetEventBus - sets the event bus for publishing block related events.
+If not called, it defaults to types.NopEventBus.
+
+				
+				
+				
+			
+				
+				<h3 id="BlockExecutor.Store">func (*BlockExecutor) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=2484:2540#L84">Store</a>
+					<a class="permalink" href="index.html#BlockExecutor.Store">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (blockExec *<a href="index.html#BlockExecutor">BlockExecutor</a>) Store() <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">statetypes</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#Store">Store</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="BlockExecutor.ValidateBlock">func (*BlockExecutor) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=6407:6502#L188">ValidateBlock</a>
+					<a class="permalink" href="index.html#BlockExecutor.ValidateBlock">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (blockExec *<a href="index.html#BlockExecutor">BlockExecutor</a>) ValidateBlock(state <a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">statetypes</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#State">State</a>, block *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>) <a href="http://localhost:8081/pkg/builtin/#error">error</a></pre>
+				<p>ValidateBlock validates the given block against the given state.
+If the block is invalid, it returns an error.
+Validation does not mutate state, but does require historical information from the stateDB,
+ie. to verify evidence from a validator at an old height.
+
+				
+				
+				
+			
+				
+				<h3 id="BlockExecutor.VerifyVoteExtension">func (*BlockExecutor) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=11806:11902#L336">VerifyVoteExtension</a>
+					<a class="permalink" href="index.html#BlockExecutor.VerifyVoteExtension">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (blockExec *<a href="index.html#BlockExecutor">BlockExecutor</a>) VerifyVoteExtension(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, vote *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Vote">Vote</a>) <a href="http://localhost:8081/pkg/builtin/#error">error</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="BlockExecutorOption">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=1440:1494#L42">BlockExecutorOption</a>
+				<a class="permalink" href="index.html#BlockExecutorOption">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type BlockExecutorOption func(executor *<a href="index.html#BlockExecutor">BlockExecutor</a>)</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="BlockExecutorWithMetrics">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/executor.go?s=1496:1574#L44">BlockExecutorWithMetrics</a>
+					<a class="permalink" href="index.html#BlockExecutorWithMetrics">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func BlockExecutorWithMetrics(metrics *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">statetypes</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#Metrics">Metrics</a>) <a href="index.html#BlockExecutorOption">BlockExecutorOption</a></pre>
+				
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="ErrAppBlockHeightTooHigh">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=271:345#L14">ErrAppBlockHeightTooHigh</a>
+				<a class="permalink" href="index.html#ErrAppBlockHeightTooHigh">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ErrAppBlockHeightTooHigh struct {
+<span id="ErrAppBlockHeightTooHigh.CoreHeight"></span>    CoreHeight <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>
+<span id="ErrAppBlockHeightTooHigh.AppHeight"></span>    AppHeight  <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ErrAppBlockHeightTooHigh.Error">func (ErrAppBlockHeightTooHigh) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=1041:1089#L61">Error</a>
+					<a class="permalink" href="index.html#ErrAppBlockHeightTooHigh.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#ErrAppBlockHeightTooHigh">ErrAppBlockHeightTooHigh</a>) Error() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ErrAppBlockHeightTooLow">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=348:419#L19">ErrAppBlockHeightTooLow</a>
+				<a class="permalink" href="index.html#ErrAppBlockHeightTooLow">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ErrAppBlockHeightTooLow struct {
+<span id="ErrAppBlockHeightTooLow.AppHeight"></span>    AppHeight <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>
+<span id="ErrAppBlockHeightTooLow.StoreBase"></span>    StoreBase <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ErrAppBlockHeightTooLow.Error">func (ErrAppBlockHeightTooLow) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=1192:1239#L65">Error</a>
+					<a class="permalink" href="index.html#ErrAppBlockHeightTooLow.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#ErrAppBlockHeightTooLow">ErrAppBlockHeightTooLow</a>) Error() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ErrBlockHashMismatch">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=183:268#L8">ErrBlockHashMismatch</a>
+				<a class="permalink" href="index.html#ErrBlockHashMismatch">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ErrBlockHashMismatch struct {
+<span id="ErrBlockHashMismatch.CoreHash"></span>    CoreHash []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>
+<span id="ErrBlockHashMismatch.AppHash"></span>    AppHash  []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>
+<span id="ErrBlockHashMismatch.Height"></span>    Height   <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ErrBlockHashMismatch.Error">func (ErrBlockHashMismatch) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=853:897#L52">Error</a>
+					<a class="permalink" href="index.html#ErrBlockHashMismatch.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#ErrBlockHashMismatch">ErrBlockHashMismatch</a>) Error() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ErrInvalidBlock">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=91:112#L1">ErrInvalidBlock</a>
+				<a class="permalink" href="index.html#ErrInvalidBlock">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ErrInvalidBlock <a href="http://localhost:8081/pkg/builtin/#error">error</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ErrLastStateMismatch">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=422:501#L24">ErrLastStateMismatch</a>
+				<a class="permalink" href="index.html#ErrLastStateMismatch">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ErrLastStateMismatch struct {
+<span id="ErrLastStateMismatch.Height"></span>    Height <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>
+<span id="ErrLastStateMismatch.Core"></span>    Core   []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>
+<span id="ErrLastStateMismatch.App"></span>    App    []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ErrLastStateMismatch.Error">func (ErrLastStateMismatch) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=1355:1399#L69">Error</a>
+					<a class="permalink" href="index.html#ErrLastStateMismatch.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#ErrLastStateMismatch">ErrLastStateMismatch</a>) Error() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ErrNoABCIResponsesForHeight">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=692:746#L43">ErrNoABCIResponsesForHeight</a>
+				<a class="permalink" href="index.html#ErrNoABCIResponsesForHeight">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ErrNoABCIResponsesForHeight struct {
+<span id="ErrNoABCIResponsesForHeight.Height"></span>    Height <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ErrNoABCIResponsesForHeight.Error">func (ErrNoABCIResponsesForHeight) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=1988:2039#L94">Error</a>
+					<a class="permalink" href="index.html#ErrNoABCIResponsesForHeight.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#ErrNoABCIResponsesForHeight">ErrNoABCIResponsesForHeight</a>) Error() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ErrNoConsensusParamsForHeight">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=633:689#L39">ErrNoConsensusParamsForHeight</a>
+				<a class="permalink" href="index.html#ErrNoConsensusParamsForHeight">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ErrNoConsensusParamsForHeight struct {
+<span id="ErrNoConsensusParamsForHeight.Height"></span>    Height <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ErrNoConsensusParamsForHeight.Error">func (ErrNoConsensusParamsForHeight) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=1849:1902#L90">Error</a>
+					<a class="permalink" href="index.html#ErrNoConsensusParamsForHeight.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#ErrNoConsensusParamsForHeight">ErrNoConsensusParamsForHeight</a>) Error() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ErrNoValSetForHeight">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=583:630#L35">ErrNoValSetForHeight</a>
+				<a class="permalink" href="index.html#ErrNoValSetForHeight">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ErrNoValSetForHeight struct {
+<span id="ErrNoValSetForHeight.Height"></span>    Height <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ErrNoValSetForHeight.Error">func (ErrNoValSetForHeight) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=1722:1766#L86">Error</a>
+					<a class="permalink" href="index.html#ErrNoValSetForHeight.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#ErrNoValSetForHeight">ErrNoValSetForHeight</a>) Error() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ErrProxyAppConn">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=114:135#L2">ErrProxyAppConn</a>
+				<a class="permalink" href="index.html#ErrProxyAppConn">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ErrProxyAppConn <a href="http://localhost:8081/pkg/builtin/#error">error</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ErrStateMismatch">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=504:580#L30">ErrStateMismatch</a>
+				<a class="permalink" href="index.html#ErrStateMismatch">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ErrStateMismatch struct {
+<span id="ErrStateMismatch.Got"></span>    Got      *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">state</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#State">State</a>
+<span id="ErrStateMismatch.Expected"></span>    Expected *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/">state</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/state/#State">State</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ErrStateMismatch.Error">func (ErrStateMismatch) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=1543:1583#L78">Error</a>
+					<a class="permalink" href="index.html#ErrStateMismatch.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#ErrStateMismatch">ErrStateMismatch</a>) Error() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ErrUnknownBlock">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=138:180#L4">ErrUnknownBlock</a>
+				<a class="permalink" href="index.html#ErrUnknownBlock">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ErrUnknownBlock struct {
+<span id="ErrUnknownBlock.Height"></span>    Height <a href="http://localhost:8081/pkg/builtin/#int64">int64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ErrUnknownBlock.Error">func (ErrUnknownBlock) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/error.go?s=750:789#L48">Error</a>
+					<a class="permalink" href="index.html#ErrUnknownBlock.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#ErrUnknownBlock">ErrUnknownBlock</a>) Error() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="WrappedBlock">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/wrapped_block.go?s=741:893#L18">WrappedBlock</a>
+				<a class="permalink" href="index.html#WrappedBlock">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type WrappedBlock struct {
+    <span class="comment">// block is the block this wrapper is wrapping</span>
+<span id="WrappedBlock.Block"></span>    Block *<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/">types</a>.<a href="http://localhost:8081/pkg/github.com/cometbft/cometbft/types/#Block">Block</a>
+    <span class="comment">// status is the status of the block</span>
+<span id="WrappedBlock.Status"></span>    Status <a href="../../../proto/vm/index.html">vm</a>.<a href="../../../proto/vm/index.html#Status">Status</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="WrappedBlocksStorage">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/wrapped_block.go?s=895:1609#L25">WrappedBlocksStorage</a>
+				<a class="permalink" href="index.html#WrappedBlocksStorage">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type WrappedBlocksStorage struct {
+    <span class="comment">// verifiedBlocks is a map of blocks that have been verified and are</span>
+    <span class="comment">// therefore currently in consensus.</span>
+<span id="WrappedBlocksStorage.VerifiedBlocks"></span>    VerifiedBlocks map[<a href="../../../utils/ids/index.html">ids</a>.<a href="../../../utils/ids/index.html#ID">ID</a>]*<a href="index.html#WrappedBlock">WrappedBlock</a>
+    <span class="comment">// decidedBlocks is an LRU cache of decided blocks.</span>
+    <span class="comment">// the block for which the Accept/Reject function was called</span>
+<span id="WrappedBlocksStorage.DecidedBlocks"></span>    DecidedBlocks <a href="../../../utils/cache/index.html">cache</a>.<a href="../../../utils/cache/index.html#Cacher">Cacher</a>[<a href="../../../utils/ids/index.html">ids</a>.<a href="../../../utils/ids/index.html#ID">ID</a>, *<a href="index.html#WrappedBlock">WrappedBlock</a>]
+    <span class="comment">// unverifiedBlocks is an LRU cache of blocks with status processing</span>
+    <span class="comment">// that have not yet passed verification.</span>
+<span id="WrappedBlocksStorage.UnverifiedBlocks"></span>    UnverifiedBlocks <a href="../../../utils/cache/index.html">cache</a>.<a href="../../../utils/cache/index.html#Cacher">Cacher</a>[<a href="../../../utils/ids/index.html">ids</a>.<a href="../../../utils/ids/index.html#ID">ID</a>, *<a href="index.html#WrappedBlock">WrappedBlock</a>]
+    <span class="comment">// missingBlocks is an LRU cache of missing blocks</span>
+<span id="WrappedBlocksStorage.MissingBlocks"></span>    MissingBlocks <a href="../../../utils/cache/index.html">cache</a>.<a href="../../../utils/cache/index.html#Cacher">Cacher</a>[<a href="../../../utils/ids/index.html">ids</a>.<a href="../../../utils/ids/index.html#ID">ID</a>, struct{}]
+    <span class="comment">// string([byte repr. of block]) --&gt; the block&#39;s ID</span>
+<span id="WrappedBlocksStorage.BytesToIDCache"></span>    BytesToIDCache <a href="../../../utils/cache/index.html">cache</a>.<a href="../../../utils/cache/index.html#Cacher">Cacher</a>[<a href="http://localhost:8081/pkg/builtin/#string">string</a>, <a href="../../../utils/ids/index.html">ids</a>.<a href="../../../utils/ids/index.html#ID">ID</a>]
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewWrappedBlocksStorage">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/wrapped_block.go?s=1611:1663#L41">NewWrappedBlocksStorage</a>
+					<a class="permalink" href="index.html#NewWrappedBlocksStorage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewWrappedBlocksStorage() *<a href="index.html#WrappedBlocksStorage">WrappedBlocksStorage</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="WrappedBlocksStorage.Flush">func (*WrappedBlocksStorage) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/wrapped_block.go?s=2172:2210#L61">Flush</a>
+					<a class="permalink" href="index.html#WrappedBlocksStorage.Flush">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#WrappedBlocksStorage">WrappedBlocksStorage</a>) Flush()</pre>
+				<p>Flush each block cache
+
+				
+				
+				
+			
+				
+				<h3 id="WrappedBlocksStorage.GetCachedBlock">func (*WrappedBlocksStorage) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/vm/types/state/wrapped_block.go?s=2441:2522#L70">GetCachedBlock</a>
+					<a class="permalink" href="index.html#WrappedBlocksStorage.GetCachedBlock">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#WrappedBlocksStorage">WrappedBlocksStorage</a>) GetCachedBlock(blkID <a href="../../../utils/ids/index.html">ids</a>.<a href="../../../utils/ids/index.html#ID">ID</a>) (*<a href="index.html#WrappedBlock">WrappedBlock</a>, <a href="http://localhost:8081/pkg/builtin/#bool">bool</a>)</pre>
+				<p>GetCachedBlock checks the caches for [blkID] by priority. Returning
+true if [blkID] is found in one of the caches.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8081/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

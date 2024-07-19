@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>responsewriter - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="http://localhost:8081/pkg/">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="http://localhost:8081/pkg/">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8081/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package responsewriter
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "github.com/consideritdone/landslidevm/proto/http/responsewriter"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#RegisterWriterServer">func RegisterWriterServer(s grpc.ServiceRegistrar, srv WriterServer)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Header">type Header</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Header.Descriptor">func (*Header) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Header.GetKey">func (x *Header) GetKey() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Header.GetValues">func (x *Header) GetValues() []string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Header.ProtoMessage">func (*Header) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Header.ProtoReflect">func (x *Header) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Header.Reset">func (x *Header) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Header.String">func (x *Header) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#HijackResponse">type HijackResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HijackResponse.Descriptor">func (*HijackResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HijackResponse.GetLocalNetwork">func (x *HijackResponse) GetLocalNetwork() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HijackResponse.GetLocalString">func (x *HijackResponse) GetLocalString() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HijackResponse.GetRemoteNetwork">func (x *HijackResponse) GetRemoteNetwork() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HijackResponse.GetRemoteString">func (x *HijackResponse) GetRemoteString() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HijackResponse.GetServerAddr">func (x *HijackResponse) GetServerAddr() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HijackResponse.ProtoMessage">func (*HijackResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HijackResponse.ProtoReflect">func (x *HijackResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HijackResponse.Reset">func (x *HijackResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#HijackResponse.String">func (x *HijackResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#UnimplementedWriterServer">type UnimplementedWriterServer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedWriterServer.Flush">func (UnimplementedWriterServer) Flush(context.Context, *emptypb.Empty) (*emptypb.Empty, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedWriterServer.Hijack">func (UnimplementedWriterServer) Hijack(context.Context, *emptypb.Empty) (*HijackResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedWriterServer.Write">func (UnimplementedWriterServer) Write(context.Context, *WriteRequest) (*WriteResponse, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnimplementedWriterServer.WriteHeader">func (UnimplementedWriterServer) WriteHeader(context.Context, *WriteHeaderRequest) (*emptypb.Empty, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#UnsafeWriterServer">type UnsafeWriterServer</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#WriteHeaderRequest">type WriteHeaderRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteHeaderRequest.Descriptor">func (*WriteHeaderRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteHeaderRequest.GetHeaders">func (x *WriteHeaderRequest) GetHeaders() []*Header</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteHeaderRequest.GetStatusCode">func (x *WriteHeaderRequest) GetStatusCode() int32</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteHeaderRequest.ProtoMessage">func (*WriteHeaderRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteHeaderRequest.ProtoReflect">func (x *WriteHeaderRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteHeaderRequest.Reset">func (x *WriteHeaderRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteHeaderRequest.String">func (x *WriteHeaderRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#WriteRequest">type WriteRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.Descriptor">func (*WriteRequest) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.GetHeaders">func (x *WriteRequest) GetHeaders() []*Header</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.GetPayload">func (x *WriteRequest) GetPayload() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.ProtoMessage">func (*WriteRequest) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.ProtoReflect">func (x *WriteRequest) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.Reset">func (x *WriteRequest) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteRequest.String">func (x *WriteRequest) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#WriteResponse">type WriteResponse</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.Descriptor">func (*WriteResponse) Descriptor() ([]byte, []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.GetWritten">func (x *WriteResponse) GetWritten() int32</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.ProtoMessage">func (*WriteResponse) ProtoMessage()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.ProtoReflect">func (x *WriteResponse) ProtoReflect() protoreflect.Message</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.Reset">func (x *WriteResponse) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WriteResponse.String">func (x *WriteResponse) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#WriterClient">type WriterClient</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewWriterClient">func NewWriterClient(cc grpc.ClientConnInterface) WriterClient</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#WriterServer">type WriterServer</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go">responsewriter.pb.go</a>
+			
+				<a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter_grpc.pb.go">responsewriter_grpc.pb.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				
+				<pre>const (
+    <span id="Writer_Write_FullMethodName">Writer_Write_FullMethodName</span>       = &#34;/http.responsewriter.Writer/Write&#34;
+    <span id="Writer_WriteHeader_FullMethodName">Writer_WriteHeader_FullMethodName</span> = &#34;/http.responsewriter.Writer/WriteHeader&#34;
+    <span id="Writer_Flush_FullMethodName">Writer_Flush_FullMethodName</span>       = &#34;/http.responsewriter.Writer/Flush&#34;
+    <span id="Writer_Hijack_FullMethodName">Writer_Hijack_FullMethodName</span>      = &#34;/http.responsewriter.Writer/Hijack&#34;
+)</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				
+				<pre>var <span id="File_http_responsewriter_responsewriter_proto">File_http_responsewriter_responsewriter_proto</span> <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#FileDescriptor">FileDescriptor</a></pre>
+			
+				<p>Writer_ServiceDesc is the grpc.ServiceDesc for Writer service.
+It&apos;s only intended for direct use with grpc.RegisterService,
+and not to be introspected or modified (even as a copy)
+
+				<pre>var <span id="Writer_ServiceDesc">Writer_ServiceDesc</span> = <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc">ServiceDesc</a>{
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.ServiceName">ServiceName</a>: &#34;http.responsewriter.Writer&#34;,
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.HandlerType">HandlerType</a>: (*<a href="index.html#WriterServer">WriterServer</a>)(<a href="http://localhost:8081/pkg/builtin/#nil">nil</a>),
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.Methods">Methods</a>: []<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#MethodDesc">MethodDesc</a>{
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Write&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Writer_Write_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;WriteHeader&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Writer_WriteHeader_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Flush&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Writer_Flush_Handler,
+        },
+        {
+            <a href="index.html#MethodName">MethodName</a>: &#34;Hijack&#34;,
+            <a href="index.html#Handler">Handler</a>:    _Writer_Hijack_Handler,
+        },
+    },
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.Streams">Streams</a>:  []<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#StreamDesc">StreamDesc</a>{},
+    <a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceDesc.Metadata">Metadata</a>: &#34;http/responsewriter/responsewriter.proto&#34;,
+}</pre>
+			
+		
+		
+			
+			
+			<h2 id="RegisterWriterServer">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter_grpc.pb.go?s=4909:4977#L117">RegisterWriterServer</a>
+				<a class="permalink" href="index.html#RegisterWriterServer">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RegisterWriterServer(s <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ServiceRegistrar">ServiceRegistrar</a>, srv <a href="index.html#WriterServer">WriterServer</a>)</pre>
+			
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Header">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=668:1064#L14">Header</a>
+				<a class="permalink" href="index.html#Header">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type Header struct {
+
+    <span class="comment">// key is a element key in a key value pair</span>
+<span id="Header.Key"></span>    Key <a href="http://localhost:8081/pkg/builtin/#string">string</a> `protobuf:&#34;bytes,1,opt,name=key,proto3&#34; json:&#34;key,omitempty&#34;`
+    <span class="comment">// values are a list of strings coresponding to the key</span>
+<span id="Header.Values"></span>    Values []<a href="http://localhost:8081/pkg/builtin/#string">string</a> `protobuf:&#34;bytes,2,rep,name=values,proto3&#34; json:&#34;values,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Header.Descriptor">func (*Header) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=1792:1835#L53">Descriptor</a>
+					<a class="permalink" href="index.html#Header.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#Header">Header</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use Header.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="Header.GetKey">func (*Header) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=1919:1951#L57">GetKey</a>
+					<a class="permalink" href="index.html#Header.GetKey">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#Header">Header</a>) GetKey() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Header.GetValues">func (*Header) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=2001:2038#L64">GetValues</a>
+					<a class="permalink" href="index.html#Header.GetValues">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#Header">Header</a>) GetValues() []<a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Header.ProtoMessage">func (*Header) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=1371:1400#L38">ProtoMessage</a>
+					<a class="permalink" href="index.html#Header.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#Header">Header</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Header.ProtoReflect">func (*Header) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=1405:1457#L40">ProtoReflect</a>
+					<a class="permalink" href="index.html#Header.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#Header">Header</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Header.Reset">func (*Header) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=1066:1090#L25">Reset</a>
+					<a class="permalink" href="index.html#Header.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#Header">Header</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Header.String">func (*Header) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=1294:1326#L34">String</a>
+					<a class="permalink" href="index.html#Header.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#Header">Header</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="HijackResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=6501:7601#L233">HijackResponse</a>
+				<a class="permalink" href="index.html#HijackResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type HijackResponse struct {
+
+    <span class="comment">// local_network is the name of the network (for example, &#34;tcp&#34;, &#34;udp&#34;)</span>
+<span id="HijackResponse.LocalNetwork"></span>    LocalNetwork <a href="http://localhost:8081/pkg/builtin/#string">string</a> `protobuf:&#34;bytes,1,opt,name=local_network,json=localNetwork,proto3&#34; json:&#34;local_network,omitempty&#34;`
+    <span class="comment">// local_string is string form of address</span>
+<span id="HijackResponse.LocalString"></span>    LocalString <a href="http://localhost:8081/pkg/builtin/#string">string</a> `protobuf:&#34;bytes,2,opt,name=local_string,json=localString,proto3&#34; json:&#34;local_string,omitempty&#34;`
+    <span class="comment">// remote_network is the name of the network (for example, &#34;tcp&#34;, &#34;udp&#34;)</span>
+<span id="HijackResponse.RemoteNetwork"></span>    RemoteNetwork <a href="http://localhost:8081/pkg/builtin/#string">string</a> `protobuf:&#34;bytes,3,opt,name=remote_network,json=remoteNetwork,proto3&#34; json:&#34;remote_network,omitempty&#34;`
+    <span class="comment">// remote_string is string form of address</span>
+<span id="HijackResponse.RemoteString"></span>    RemoteString <a href="http://localhost:8081/pkg/builtin/#string">string</a> `protobuf:&#34;bytes,4,opt,name=remote_string,json=remoteString,proto3&#34; json:&#34;remote_string,omitempty&#34;`
+    <span class="comment">// server_addr is the address of the gRPC server serving the Conn, Reader</span>
+    <span class="comment">// and Writer services which facilitate Hijacking</span>
+<span id="HijackResponse.ServerAddr"></span>    ServerAddr <a href="http://localhost:8081/pkg/builtin/#string">string</a> `protobuf:&#34;bytes,5,opt,name=server_addr,json=serverAddr,proto3&#34; json:&#34;server_addr,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="HijackResponse.Descriptor">func (*HijackResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=8377:8428#L279">Descriptor</a>
+					<a class="permalink" href="index.html#HijackResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#HijackResponse">HijackResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use HijackResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="HijackResponse.GetLocalNetwork">func (*HijackResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=8512:8561#L283">GetLocalNetwork</a>
+					<a class="permalink" href="index.html#HijackResponse.GetLocalNetwork">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HijackResponse">HijackResponse</a>) GetLocalNetwork() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HijackResponse.GetLocalString">func (*HijackResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=8620:8668#L290">GetLocalString</a>
+					<a class="permalink" href="index.html#HijackResponse.GetLocalString">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HijackResponse">HijackResponse</a>) GetLocalString() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HijackResponse.GetRemoteNetwork">func (*HijackResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=8726:8776#L297">GetRemoteNetwork</a>
+					<a class="permalink" href="index.html#HijackResponse.GetRemoteNetwork">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HijackResponse">HijackResponse</a>) GetRemoteNetwork() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HijackResponse.GetRemoteString">func (*HijackResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=8836:8885#L304">GetRemoteString</a>
+					<a class="permalink" href="index.html#HijackResponse.GetRemoteString">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HijackResponse">HijackResponse</a>) GetRemoteString() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HijackResponse.GetServerAddr">func (*HijackResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=8944:8991#L311">GetServerAddr</a>
+					<a class="permalink" href="index.html#HijackResponse.GetServerAddr">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HijackResponse">HijackResponse</a>) GetServerAddr() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HijackResponse.ProtoMessage">func (*HijackResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=7932:7969#L264">ProtoMessage</a>
+					<a class="permalink" href="index.html#HijackResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#HijackResponse">HijackResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HijackResponse.ProtoReflect">func (*HijackResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=7974:8034#L266">ProtoReflect</a>
+					<a class="permalink" href="index.html#HijackResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HijackResponse">HijackResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HijackResponse.Reset">func (*HijackResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=7603:7635#L251">Reset</a>
+					<a class="permalink" href="index.html#HijackResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HijackResponse">HijackResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="HijackResponse.String">func (*HijackResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=7847:7887#L260">String</a>
+					<a class="permalink" href="index.html#HijackResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#HijackResponse">HijackResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="UnimplementedWriterServer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter_grpc.pb.go?s=3841:3882#L94">UnimplementedWriterServer</a>
+				<a class="permalink" href="index.html#UnimplementedWriterServer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UnimplementedWriterServer should be embedded to have forward compatible implementations.
+
+			<pre>type UnimplementedWriterServer struct {
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="UnimplementedWriterServer.Flush">func (UnimplementedWriterServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter_grpc.pb.go?s=4260:4355#L103">Flush</a>
+					<a class="permalink" href="index.html#UnimplementedWriterServer.Flush">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedWriterServer">UnimplementedWriterServer</a>) Flush(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedWriterServer.Hijack">func (UnimplementedWriterServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter_grpc.pb.go?s=4440:4537#L106">Hijack</a>
+					<a class="permalink" href="index.html#UnimplementedWriterServer.Hijack">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedWriterServer">UnimplementedWriterServer</a>) Hijack(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>) (*<a href="index.html#HijackResponse">HijackResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedWriterServer.Write">func (UnimplementedWriterServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter_grpc.pb.go?s=3884:3978#L97">Write</a>
+					<a class="permalink" href="index.html#UnimplementedWriterServer.Write">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedWriterServer">UnimplementedWriterServer</a>) Write(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#WriteRequest">WriteRequest</a>) (*<a href="index.html#WriteResponse">WriteResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="UnimplementedWriterServer.WriteHeader">func (UnimplementedWriterServer) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter_grpc.pb.go?s=4063:4169#L100">WriteHeader</a>
+					<a class="permalink" href="index.html#UnimplementedWriterServer.WriteHeader">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (<a href="index.html#UnimplementedWriterServer">UnimplementedWriterServer</a>) WriteHeader(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#WriteHeaderRequest">WriteHeaderRequest</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="UnsafeWriterServer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter_grpc.pb.go?s=4832:4907#L113">UnsafeWriterServer</a>
+				<a class="permalink" href="index.html#UnsafeWriterServer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UnsafeWriterServer may be embedded to opt out of forward compatibility for this service.
+Use of this interface is not recommended, as added methods to WriterServer will
+result in compilation errors.
+
+			<pre>type UnsafeWriterServer interface {
+    <span class="comment">// contains filtered or unexported methods</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="WriteHeaderRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=4883:5350#L176">WriteHeaderRequest</a>
+				<a class="permalink" href="index.html#WriteHeaderRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type WriteHeaderRequest struct {
+
+    <span class="comment">// headers represents the key-value pairs in an HTTP header</span>
+<span id="WriteHeaderRequest.Headers"></span>    Headers []*<a href="index.html#Header">Header</a> `protobuf:&#34;bytes,1,rep,name=headers,proto3&#34; json:&#34;headers,omitempty&#34;`
+    <span class="comment">// status_code must be a valid HTTP 1xx-5xx status code</span>
+<span id="WriteHeaderRequest.StatusCode"></span>    StatusCode <a href="http://localhost:8081/pkg/builtin/#int32">int32</a> `protobuf:&#34;varint,2,opt,name=status_code,json=statusCode,proto3&#34; json:&#34;status_code,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="WriteHeaderRequest.Descriptor">func (*WriteHeaderRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=6150:6205#L215">Descriptor</a>
+					<a class="permalink" href="index.html#WriteHeaderRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteHeaderRequest">WriteHeaderRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use WriteHeaderRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="WriteHeaderRequest.GetHeaders">func (*WriteHeaderRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=6289:6340#L219">GetHeaders</a>
+					<a class="permalink" href="index.html#WriteHeaderRequest.GetHeaders">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteHeaderRequest">WriteHeaderRequest</a>) GetHeaders() []*<a href="index.html#Header">Header</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteHeaderRequest.GetStatusCode">func (*WriteHeaderRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=6395:6445#L226">GetStatusCode</a>
+					<a class="permalink" href="index.html#WriteHeaderRequest.GetStatusCode">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteHeaderRequest">WriteHeaderRequest</a>) GetStatusCode() <a href="http://localhost:8081/pkg/builtin/#int32">int32</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteHeaderRequest.ProtoMessage">func (*WriteHeaderRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=5693:5734#L200">ProtoMessage</a>
+					<a class="permalink" href="index.html#WriteHeaderRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteHeaderRequest">WriteHeaderRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteHeaderRequest.ProtoReflect">func (*WriteHeaderRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=5739:5803#L202">ProtoReflect</a>
+					<a class="permalink" href="index.html#WriteHeaderRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteHeaderRequest">WriteHeaderRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteHeaderRequest.Reset">func (*WriteHeaderRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=5352:5388#L187">Reset</a>
+					<a class="permalink" href="index.html#WriteHeaderRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteHeaderRequest">WriteHeaderRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteHeaderRequest.String">func (*WriteHeaderRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=5604:5648#L196">String</a>
+					<a class="permalink" href="index.html#WriteHeaderRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteHeaderRequest">WriteHeaderRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="WriteRequest">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=2092:2511#L71">WriteRequest</a>
+				<a class="permalink" href="index.html#WriteRequest">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type WriteRequest struct {
+
+    <span class="comment">// headers represents the key-value pairs in an HTTP header</span>
+<span id="WriteRequest.Headers"></span>    Headers []*<a href="index.html#Header">Header</a> `protobuf:&#34;bytes,1,rep,name=headers,proto3&#34; json:&#34;headers,omitempty&#34;`
+    <span class="comment">// payload is the write request in bytes</span>
+<span id="WriteRequest.Payload"></span>    Payload []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a> `protobuf:&#34;bytes,2,opt,name=payload,proto3&#34; json:&#34;payload,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="WriteRequest.Descriptor">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=3275:3324#L110">Descriptor</a>
+					<a class="permalink" href="index.html#WriteRequest.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteRequest">WriteRequest</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use WriteRequest.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="WriteRequest.GetHeaders">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=3408:3453#L114">GetHeaders</a>
+					<a class="permalink" href="index.html#WriteRequest.GetHeaders">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteRequest">WriteRequest</a>) GetHeaders() []*<a href="index.html#Header">Header</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteRequest.GetPayload">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=3508:3550#L121">GetPayload</a>
+					<a class="permalink" href="index.html#WriteRequest.GetPayload">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteRequest">WriteRequest</a>) GetPayload() []<a href="http://localhost:8081/pkg/builtin/#byte">byte</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteRequest.ProtoMessage">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=2836:2871#L95">ProtoMessage</a>
+					<a class="permalink" href="index.html#WriteRequest.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteRequest">WriteRequest</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteRequest.ProtoReflect">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=2876:2934#L97">ProtoReflect</a>
+					<a class="permalink" href="index.html#WriteRequest.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteRequest">WriteRequest</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteRequest.Reset">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=2513:2543#L82">Reset</a>
+					<a class="permalink" href="index.html#WriteRequest.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteRequest">WriteRequest</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteRequest.String">func (*WriteRequest) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=2753:2791#L91">String</a>
+					<a class="permalink" href="index.html#WriteRequest.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteRequest">WriteRequest</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="WriteResponse">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=3605:3884#L128">WriteResponse</a>
+				<a class="permalink" href="index.html#WriteResponse">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type WriteResponse struct {
+
+    <span class="comment">// written is the number of bytes written in body</span>
+<span id="WriteResponse.Written"></span>    Written <a href="http://localhost:8081/pkg/builtin/#int32">int32</a> `protobuf:&#34;varint,1,opt,name=written,proto3&#34; json:&#34;written,omitempty&#34;`
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="WriteResponse.Descriptor">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=4654:4704#L165">Descriptor</a>
+					<a class="permalink" href="index.html#WriteResponse.Descriptor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteResponse">WriteResponse</a>) Descriptor() ([]<a href="http://localhost:8081/pkg/builtin/#byte">byte</a>, []<a href="http://localhost:8081/pkg/builtin/#int">int</a>)</pre>
+				<p>Deprecated: Use WriteResponse.ProtoReflect.Descriptor instead.
+
+				
+				
+				
+			
+				
+				<h3 id="WriteResponse.GetWritten">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=4788:4830#L169">GetWritten</a>
+					<a class="permalink" href="index.html#WriteResponse.GetWritten">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteResponse">WriteResponse</a>) GetWritten() <a href="http://localhost:8081/pkg/builtin/#int32">int32</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteResponse.ProtoMessage">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=4212:4248#L150">ProtoMessage</a>
+					<a class="permalink" href="index.html#WriteResponse.ProtoMessage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (*<a href="index.html#WriteResponse">WriteResponse</a>) ProtoMessage()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteResponse.ProtoReflect">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=4253:4312#L152">ProtoReflect</a>
+					<a class="permalink" href="index.html#WriteResponse.ProtoReflect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteResponse">WriteResponse</a>) ProtoReflect() <a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/">protoreflect</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/reflect/protoreflect/#Message">Message</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteResponse.Reset">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=3886:3917#L137">Reset</a>
+					<a class="permalink" href="index.html#WriteResponse.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteResponse">WriteResponse</a>) Reset()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="WriteResponse.String">func (*WriteResponse) <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter.pb.go?s=4128:4167#L146">String</a>
+					<a class="permalink" href="index.html#WriteResponse.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#WriteResponse">WriteResponse</a>) String() <a href="http://localhost:8081/pkg/builtin/#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="WriterClient">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter_grpc.pb.go?s=1149:1798#L22">WriterClient</a>
+				<a class="permalink" href="index.html#WriterClient">&#xb6;</a>
+				
+				
+			</h2>
+			<p>WriterClient is the client API for Writer service.
+<p>For semantics around ctx use and closing/ending streaming RPCs, please refer to <a href="https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream">https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream</a>.
+
+			<pre>type WriterClient interface {
+    <span class="comment">// Write writes the data to the connection as part of an HTTP reply</span>
+    Write(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#WriteRequest">WriteRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#WriteResponse">WriteResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// WriteHeader sends an HTTP response header with the provided</span>
+    <span class="comment">// status code</span>
+    WriteHeader(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="index.html#WriteHeaderRequest">WriteHeaderRequest</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// Flush is a no-op</span>
+    Flush(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// Hijack lets the caller take over the connection</span>
+    Hijack(ctx <a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, in *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, opts ...<a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#CallOption">CallOption</a>) (*<a href="index.html#HijackResponse">HijackResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewWriterClient">func <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter_grpc.pb.go?s=1859:1921#L38">NewWriterClient</a>
+					<a class="permalink" href="index.html#NewWriterClient">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewWriterClient(cc <a href="http://localhost:8081/pkg/google.golang.org/grpc/">grpc</a>.<a href="http://localhost:8081/pkg/google.golang.org/grpc/#ClientConnInterface">ClientConnInterface</a>) <a href="index.html#WriterClient">WriterClient</a></pre>
+				
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="WriterServer">type <a href="http://localhost:8081/src/github.com/consideritdone/landslidevm/proto/http/responsewriter/responsewriter_grpc.pb.go?s=3226:3747#L81">WriterServer</a>
+				<a class="permalink" href="index.html#WriterServer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>WriterServer is the server API for Writer service.
+All implementations should embed UnimplementedWriterServer
+for forward compatibility
+
+			<pre>type WriterServer interface {
+    <span class="comment">// Write writes the data to the connection as part of an HTTP reply</span>
+    Write(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#WriteRequest">WriteRequest</a>) (*<a href="index.html#WriteResponse">WriteResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// WriteHeader sends an HTTP response header with the provided</span>
+    <span class="comment">// status code</span>
+    WriteHeader(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="index.html#WriteHeaderRequest">WriteHeaderRequest</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// Flush is a no-op</span>
+    Flush(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>) (*<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+    <span class="comment">// Hijack lets the caller take over the connection</span>
+    Hijack(<a href="http://localhost:8081/pkg/context/">context</a>.<a href="http://localhost:8081/pkg/context/#Context">Context</a>, *<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/">emptypb</a>.<a href="http://localhost:8081/pkg/google.golang.org/protobuf/types/known/emptypb/#Empty">Empty</a>) (*<a href="index.html#HijackResponse">HijackResponse</a>, <a href="http://localhost:8081/pkg/builtin/#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8081/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>
