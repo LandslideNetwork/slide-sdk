@@ -41,7 +41,7 @@ jobs:
       run: go install golang.org/x/lint/golint@latest
 
     - name: Run golint
-      run: golint ./... | grep -v "should have comment or be unexported"
+      run: golint ./... | grep -v "should have comment"
 
     - name: Test
       run: go test -race -vet=off -v ./...
