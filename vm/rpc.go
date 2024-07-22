@@ -363,7 +363,7 @@ func (rpc *RPC) GetConsensusState(_ *rpctypes.Context) (*ctypes.ResultConsensusS
 
 func (rpc *RPC) ConsensusParams(
 	_ *rpctypes.Context,
-	heightPtr *int64,
+	_ *int64,
 ) (*ctypes.ResultConsensusParams, error) {
 	return &ctypes.ResultConsensusParams{
 		BlockHeight:     rpc.vm.blockStore.Height(),
@@ -421,7 +421,7 @@ func (rpc *RPC) BlockByHash(_ *rpctypes.Context, hash []byte) (*ctypes.ResultBlo
 	return &ctypes.ResultBlock{BlockID: blockMeta.BlockID, Block: block}, nil
 }
 
-func (rpc *RPC) BlockResults(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBlockResults, error) {
+func (rpc *RPC) BlockResults(_ *rpctypes.Context, _ *int64) (*ctypes.ResultBlockResults, error) {
 	// height, err := getHeight(rpc.vm.blockStore, args.Height)
 	// if err != nil {
 	// 	return err

@@ -22,9 +22,9 @@ func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
 	address := "127.0.0.1:44444"
 	server := &http.Server{Addr: address, Handler: mux}
 	go func() {
-		server.ListenAndServe()
-		//panic(err)
-		//require.NoError(t, err)
+		_ = server.ListenAndServe()
+		// panic(err)
+		// require.NoError(t, err)
 	}()
 
 	// wait for servers to start

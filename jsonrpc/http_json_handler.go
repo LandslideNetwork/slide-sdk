@@ -12,7 +12,7 @@ import (
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/rpc/jsonrpc/server"
-	types "github.com/cometbft/cometbft/rpc/jsonrpc/types"
+	"github.com/cometbft/cometbft/rpc/jsonrpc/types"
 )
 
 // HTTP + JSON handler
@@ -78,14 +78,14 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, logger log.Logger) http.Han
 				)
 				continue
 			}
-			//if len(r.URL.Path) > 1 {
+			// if len(r.URL.Path) > 1 {
 			//	responses = append(
 			//		responses,
 			//		types.RPCInvalidRequestError(request.ID, fmt.Errorf("path %s is invalid", r.URL.Path)),
 			//	)
 			//	cache = false
 			//	continue
-			//}
+			// }
 			rpcFunc, ok := funcMap[request.Method]
 			if !ok || (rpcFunc.ws) {
 				responses = append(responses, types.RPCMethodNotFoundError(request.ID))
@@ -262,5 +262,5 @@ func writeListOfEndpoints(w http.ResponseWriter, r *http.Request, funcMap map[st
 	buf.WriteString("</body></html>")
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(200)
-	w.Write(buf.Bytes()) //nolint: errcheck
+	_, _ = w.Write(buf.Bytes())
 }

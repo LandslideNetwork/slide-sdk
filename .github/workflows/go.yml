@@ -37,11 +37,13 @@ jobs:
     - name: Run staticcheck
       run: staticcheck ./...
 
-    - name: Install golint
-      run: go install golang.org/x/lint/golint@latest
+    - name: Install golangci-lint
+      uses: golangci/golangci-lint-action@v2
+      with:
+        version: latest
 
-    - name: Run golint
-      run: golint ./... | grep -v "should have comment or be unexported"
+    - name: Run golangci-lint
+      run: golangci-lint run ./...
 
     - name: Test
       run: go test -race -vet=off -v ./...

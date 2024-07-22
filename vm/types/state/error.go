@@ -3,6 +3,7 @@ package state
 import (
 	"errors"
 	"fmt"
+
 	"github.com/cometbft/cometbft/state"
 )
 
