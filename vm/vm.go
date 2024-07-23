@@ -17,6 +17,7 @@ import (
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/consensus"
+	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/libs/pubsub"
@@ -92,11 +93,13 @@ type (
 		GenesisBytes []byte
 		UpgradeBytes []byte
 		ConfigBytes  []byte
+		ChainDataDir string
 	}
 
 	AppCreator func(*AppCreatorOpts) (Application, error)
 
 	LandslideVM struct {
+		networkName   string
 		allowShutdown *vmtypes.Atomic[bool]
 
 		processMetrics prometheus.Gatherer
@@ -147,7 +150,7 @@ func NewViaDB(database dbm.DB, creator AppCreator, options ...func(*LandslideVM)
 	vm := &LandslideVM{
 		appCreator:     creator,
 		database:       database,
-		allowShutdown:  vmtypes.NewAtomic(true),
+		allowShutdown:  vmtypes.NewAtomic(false),
 		vmenabled:      vmtypes.NewAtomic(false),
 		vmstate:        vmtypes.NewAtomic(vmpb.State_STATE_UNSPECIFIED),
 		vmconnected:    vmtypes.NewAtomic(false),
@@ -258,7 +261,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	vm.appOpts = &AppCreatorOpts{
 		NetworkId:    req.NetworkId,
 		SubnetId:     req.SubnetId,
-		ChainId:      req.CChainId,
+		ChainId:      req.ChainId,
 		NodeId:       req.NodeId,
 		PublicKey:    req.PublicKey,
 		XChainId:     req.XChainId,
@@ -267,11 +270,25 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		GenesisBytes: req.GenesisBytes,
 		UpgradeBytes: req.UpgradeBytes,
 		ConfigBytes:  req.ConfigBytes,
+		ChainDataDir: req.ChainDataDir,
 	}
 	app, err := vm.appCreator(vm.appOpts)
 	if err != nil {
 		return nil, err
 	}
+
+	// Set the default configuration
+	var vmCfg vmtypes.VmConfig
+	vmCfg.SetDefaults()
+	if len(vm.appOpts.ConfigBytes) > 0 {
+		if err := json.Unmarshal(vm.appOpts.ConfigBytes, &vmCfg); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal config %s: %w", string(vm.appOpts.ConfigBytes), err)
+		}
+	}
+	if err := vmCfg.Validate(); err != nil {
+		return nil, err
+	}
+	vm.networkName = vmCfg.NetworkName
 
 	cmtState, genesis, err := node.LoadStateFromDBOrGenesisDocProvider(
 		dbStateStore,
@@ -394,7 +411,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	vm.logger.Debug("initialize block", "bytes ", blockBytes)
+	//vm.logger.Debug("initialize block", "bytes ", blockBytes)
 	vm.logger.Info("vm initialization completed")
 
 	parentHash := block.BlockParentHash(blk)
@@ -446,7 +463,7 @@ func (vm *LandslideVM) CanShutdown() bool {
 
 // Shutdown is called when the node is shutting down.
 func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
-	vm.logger.Info("Shutdown")
+	fmt.Println("Shutdown")
 	vm.allowShutdown.Set(true)
 	if vm.closed != nil {
 		close(vm.closed)
@@ -538,7 +555,7 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 				BlockIDFlag:      types.BlockIDFlagNil,
 				Timestamp:        time.Now(),
 				ValidatorAddress: validators.Validators[i].Address,
-				Signature:        []byte{0x0},
+				Signature:        crypto.CRandBytes(types.MaxSignatureSize), // todo: sign the block
 			},
 		}
 	}
@@ -586,7 +603,8 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 
 // ParseBlock attempt to create a block from a stream of bytes.
 func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest) (*vmpb.ParseBlockResponse, error) {
-	vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
+	vm.logger.Info("ParseBlock")
+	//vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
 	var (
 		blk       *types.Block
 		blkStatus vmpb.Status
@@ -842,7 +860,7 @@ func (vm *LandslideVM) GetStateSummary(context.Context, *vmpb.GetStateSummaryReq
 
 func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyRequest) (*vmpb.BlockVerifyResponse, error) {
 	vm.logger.Info("BlockVerify")
-	vm.logger.Debug("block verify", "bytes", req.Bytes)
+	//vm.logger.Debug("block verify", "bytes", req.Bytes)
 
 	blk, blkStatus, err := vmstate.DecodeBlockWithStatus(req.Bytes)
 	if err != nil {

@@ -98,7 +98,7 @@ func Serve[T interface {
 	go func(ctx context.Context) {
 		defer func() {
 			server.GracefulStop()
-			fmt.Println("vm server: graceful termination success")
+			fmt.Println("landslide vm server: graceful termination success")
 		}()
 
 		for {
@@ -108,19 +108,19 @@ func Serve[T interface {
 				// that we are shutting down. Once we are in the shutdown
 				// workflow, we will gracefully exit upon receiving a SIGTERM.
 				if !lvm.CanShutdown() {
-					fmt.Printf("runtime engine: ignoring signal: %s\n", s)
+					fmt.Printf("landslide runtime engine: ignoring signal: %s\n", s)
 					continue
 				}
 
 				switch s {
 				case syscall.SIGINT:
-					fmt.Printf("runtime engine: ignoring signal: %s\n", s)
+					fmt.Printf("landslide runtime engine: ignoring signal: %s\n", s)
 				case syscall.SIGTERM:
-					fmt.Printf("runtime engine: received shutdown signal: %s\n", s)
+					fmt.Printf("landslide runtime engine: received shutdown signal: %s\n", s)
 					return
 				}
 			case <-ctx.Done():
-				fmt.Println("runtime engine: context has been cancelled")
+				fmt.Println("landslide runtime engine: context has been cancelled")
 				return
 			}
 		}
