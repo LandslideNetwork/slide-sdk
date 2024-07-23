@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"sort"
 
-	cmtjson "github.com/cometbft/cometbft/libs/json"
+	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	types "github.com/cometbft/cometbft/rpc/jsonrpc/types"
@@ -123,12 +123,11 @@ func makeJSONRPCHandler(funcMap map[string]*RPCFunc, logger log.Logger) http.Han
 				cache = false
 			}
 
-			logger.Info("calling func", "method", request.Method, "args", args)
 			returns := rpcFunc.f.Call(args)
 			result, err := unreflectResult(returns)
-			logger.Info("result of calling func for %s: err: %s", request.Method, err)
 
 			if err != nil {
+				logger.Debug("unexpected result", "method", request.Method, "err", err)
 				responses = append(responses, types.RPCInternalError(request.ID, err))
 				continue
 			}
@@ -160,7 +159,7 @@ func mapParamsToArgs(
 
 		if p, ok := params[argName]; ok && p != nil && len(p) > 0 {
 			val := reflect.New(argType)
-			err := cmtjson.Unmarshal(p, val.Interface())
+			err := tmjson.Unmarshal(p, val.Interface())
 			if err != nil {
 				return nil, err
 			}
@@ -187,7 +186,7 @@ func arrayParamsToArgs(
 	for i, p := range params {
 		argType := rpcFunc.args[i+argsOffset]
 		val := reflect.New(argType)
-		err := cmtjson.Unmarshal(p, val.Interface())
+		err := tmjson.Unmarshal(p, val.Interface())
 		if err != nil {
 			return nil, err
 		}
