@@ -772,7 +772,7 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 				version.BlockProtocol,
 				0,
 			),
-			DefaultNodeID: p2p.ID(rpc.vm.appOpts.NodeId),
+			DefaultNodeID: p2p.ID(rpc.vm.appOpts.NodeID),
 			ListenAddr:    "",
 			Network:       rpc.vm.config.NetworkName,
 			Version:       version.TMCoreSemVer,
