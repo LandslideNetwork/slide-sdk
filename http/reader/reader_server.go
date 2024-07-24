@@ -2,6 +2,7 @@ package reader
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	readerpb "github.com/consideritdone/landslidevm/proto/io/reader"
@@ -21,7 +22,11 @@ func NewServer(reader io.Reader) *Server {
 }
 
 func (s *Server) Read(_ context.Context, req *readerpb.ReadRequest) (*readerpb.ReadResponse, error) {
-	buf := make([]byte, int(req.Length))
+	if req.Length <= 0 {
+		return nil, fmt.Errorf("invalid read length: %d", req.Length)
+	}
+
+	buf := make([]byte, req.Length)
 	n, err := s.reader.Read(buf)
 	resp := &readerpb.ReadResponse{
 		Read: buf[:n],

@@ -1,14 +1,17 @@
 package state
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/libs/json"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/state"
 	"github.com/cometbft/cometbft/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 
 	"github.com/consideritdone/landslidevm/proto/vm"
 )
@@ -82,6 +85,54 @@ func ValidateBlock(state state.State, block *types.Block) error {
 			block.ChainID,
 		)
 	}
+	if state.LastBlockHeight == 0 && block.Height != state.InitialHeight {
+		return fmt.Errorf("wrong Block.Header.Height. Expected %v for initial block, got %v",
+			block.Height, state.InitialHeight)
+	}
+	if state.LastBlockHeight > 0 && block.Height != state.LastBlockHeight+1 {
+		return fmt.Errorf("wrong Block.Header.Height. Expected %v, got %v",
+			state.LastBlockHeight+1,
+			block.Height,
+		)
+	}
+	// Validate prev block info.
+	if !block.LastBlockID.Equals(state.LastBlockID) {
+		return fmt.Errorf("wrong Block.Header.LastBlockID.  Expected %v, got %v",
+			state.LastBlockID,
+			block.LastBlockID,
+		)
+	}
+	// Validate app info
+	if !bytes.Equal(block.AppHash, state.AppHash) {
+		return fmt.Errorf("wrong Block.Header.AppHash.  Expected %X, got %v",
+			state.AppHash,
+			block.AppHash,
+		)
+	}
+	if !bytes.Equal(block.ConsensusHash, state.ConsensusParams.Hash()) {
+		return fmt.Errorf("wrong Block.Header.ConsensusHash.  Expected %X, got %v",
+			state.ConsensusParams.Hash(),
+			block.ConsensusHash,
+		)
+	}
+	if !bytes.Equal(block.LastResultsHash, state.LastResultsHash) {
+		return fmt.Errorf("wrong Block.Header.LastResultsHash.  Expected %X, got %v",
+			state.LastResultsHash,
+			block.LastResultsHash,
+		)
+	}
+	if !bytes.Equal(block.ValidatorsHash, state.Validators.Hash()) {
+		return fmt.Errorf("wrong Block.Header.ValidatorsHash.  Expected %X, got %v",
+			state.Validators.Hash(),
+			block.ValidatorsHash,
+		)
+	}
+	if !bytes.Equal(block.NextValidatorsHash, state.NextValidators.Hash()) {
+		return fmt.Errorf("wrong Block.Header.NextValidatorsHash.  Expected %X, got %v",
+			state.NextValidators.Hash(),
+			block.NextValidatorsHash,
+		)
+	}
 
 	// Validate block LastCommit.
 	if block.Height == state.InitialHeight {
@@ -109,6 +160,13 @@ func ValidateBlock(state state.State, block *types.Block) error {
 				state.LastBlockTime,
 			)
 		}
+		medianTime := MedianTime(block.LastCommit, state.LastValidators)
+		if !block.Time.Equal(medianTime) {
+			return fmt.Errorf("invalid block time. Expected %v, got %v",
+				medianTime,
+				block.Time,
+			)
+		}
 
 	case block.Height == state.InitialHeight:
 		genesisTime := state.LastBlockTime
@@ -124,5 +182,33 @@ func ValidateBlock(state state.State, block *types.Block) error {
 			block.Height, state.InitialHeight)
 	}
 
+	// Check evidence doesn't exceed the limit amount of bytes.
+	if max, got := state.ConsensusParams.Evidence.MaxBytes, block.Evidence.ByteSize(); got > max {
+		return types.NewErrEvidenceOverflow(max, got)
+	}
+
 	return nil
+}
+
+// MedianTime computes a median time for a given Commit (based on Timestamp field of votes messages) and the
+// corresponding validator set. The computed time is always between timestamps of
+// the votes sent by honest processes, i.e., a faulty processes can not arbitrarily increase or decrease the
+// computed value.
+func MedianTime(commit *types.Commit, validators *types.ValidatorSet) time.Time {
+	weightedTimes := make([]*cmttime.WeightedTime, len(commit.Signatures))
+	totalVotingPower := int64(0)
+
+	for i, commitSig := range commit.Signatures {
+		if commitSig.BlockIDFlag == types.BlockIDFlagAbsent {
+			continue
+		}
+		_, validator := validators.GetByAddress(commitSig.ValidatorAddress)
+		// If there's no condition, TestValidateBlockCommit panics; not needed normally.
+		if validator != nil {
+			totalVotingPower += validator.VotingPower
+			weightedTimes[i] = cmttime.NewWeightedTime(commitSig.Timestamp, validator.VotingPower)
+		}
+	}
+
+	return cmttime.WeightedMedian(weightedTimes, totalVotingPower)
 }

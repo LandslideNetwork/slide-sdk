@@ -110,6 +110,7 @@ func (rpc *RPC) CheckTx(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultCheckTx
 	return &ctypes.ResultCheckTx{ResponseCheckTx: *res}, nil
 }
 
+// ABCIInfo returns the latest information about the application.
 func (rpc *RPC) ABCIInfo(_ *rpctypes.Context) (*ctypes.ResultABCIInfo, error) {
 	resInfo, err := rpc.vm.app.Query().Info(context.TODO(), proxy.RequestInfo)
 	if err != nil {
@@ -118,6 +119,7 @@ func (rpc *RPC) ABCIInfo(_ *rpctypes.Context) (*ctypes.ResultABCIInfo, error) {
 	return &ctypes.ResultABCIInfo{Response: *resInfo}, nil
 }
 
+// ABCIQuery queries the application for some information.
 func (rpc *RPC) ABCIQuery(
 	_ *rpctypes.Context,
 	path string,
@@ -141,6 +143,12 @@ func (rpc *RPC) ABCIQuery(
 func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
 	rpc.vm.logger.Info("BroadcastTxCommit called")
 	subscriber := ctx.RemoteAddr()
+
+	if rpc.vm.eventBus.NumClients() >= rpc.vm.config.MaxSubscriptionClients {
+		return nil, fmt.Errorf("max_subscription_clients %d reached", rpc.vm.config.MaxSubscriptionClients)
+	} else if rpc.vm.eventBus.NumClientSubscriptions(subscriber) >= rpc.vm.config.MaxSubscriptionsPerClient {
+		return nil, fmt.Errorf("max_subscriptions_per_client %d reached", rpc.vm.config.MaxSubscriptionsPerClient)
+	}
 
 	// Subscribe to tx being committed in block.
 	subCtx, cancel := context.WithTimeout(context.Background(), core.SubscribeTimeout)
@@ -187,7 +195,12 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 		// Wait for the tx to be included in a block or timeout.
 		select {
 		case msg := <-deliverTxSub.Out(): // The tx was included in a block.
-			eventDataTx := msg.Data().(types.EventDataTx)
+			eventDataTx, ok := msg.Data().(types.EventDataTx)
+			if !ok {
+				err = fmt.Errorf("expected types.EventDataTx, got %T", msg.Data())
+				rpc.vm.logger.Error("Error on broadcastTxCommit", "err", err)
+				return nil, err
+			}
 			return &ctypes.ResultBroadcastTxCommit{
 				CheckTx:  *checkTxRes,
 				TxResult: eventDataTx.Result,
@@ -208,8 +221,7 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 				TxResult: abci.ExecTxResult{},
 				Hash:     tx.Hash(),
 			}, err
-		// TODO: use rpc.config.TimeoutBroadcastTxCommit for timeout
-		case <-time.After(30 * time.Second):
+		case <-time.After(time.Duration(rpc.vm.config.TimeoutBroadcastTxCommit) * time.Second):
 			err = errors.New("timed out waiting for tx to be included in a block")
 			rpc.vm.logger.Error("Error on broadcastTxCommit", "err", err)
 			return &ctypes.ResultBroadcastTxCommit{
@@ -231,26 +243,34 @@ func (rpc *RPC) BroadcastTxAsync(_ *rpctypes.Context, tx types.Tx) (*ctypes.Resu
 	return &ctypes.ResultBroadcastTx{Hash: tx.Hash()}, nil
 }
 
-func (rpc *RPC) BroadcastTxSync(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
+// BroadcastTxSync returns with the response from CheckTx. Does not wait for
+// the transaction result.
+// More: https://docs.cometbft.com/v0.38.x/rpc/#/Tx/broadcast_tx_sync
+func (rpc *RPC) BroadcastTxSync(ctx *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
 	rpc.vm.logger.Info("BroadcastTxSync called")
 	resCh := make(chan *abci.ResponseCheckTx, 1)
 	err := rpc.vm.mempool.CheckTx(tx, func(res *abci.ResponseCheckTx) {
-		resCh <- res
+		select {
+		case <-ctx.Context().Done():
+		case resCh <- res:
+		}
 	}, mempl.TxInfo{})
 	if err != nil {
 		rpc.vm.logger.Error("Error on BroadcastTxSync", "err", err)
 		return nil, err
 	}
-	res := <-resCh
-
-	rpc.vm.logger.Info("BroadcastTxSync response", "Code", res.Code, "Log", res.Log, "Codespace", res.Codespace, "Hash", tx.Hash())
-	return &ctypes.ResultBroadcastTx{
-		Code:      res.GetCode(),
-		Data:      res.GetData(),
-		Log:       res.GetLog(),
-		Codespace: res.GetCodespace(),
-		Hash:      tx.Hash(),
-	}, nil
+	select {
+	case <-ctx.Context().Done():
+		return nil, fmt.Errorf("broadcast confirmation not received: %w", ctx.Context().Err())
+	case res := <-resCh:
+		return &ctypes.ResultBroadcastTx{
+			Code:      res.Code,
+			Data:      res.Data,
+			Log:       res.Log,
+			Codespace: res.Codespace,
+			Hash:      tx.Hash(),
+		}, nil
+	}
 }
 
 // filterMinMax returns error if either min or max are negative or min > max
@@ -307,7 +327,9 @@ func (rpc *RPC) BlockchainInfo(
 	var blockMetas []*types.BlockMeta
 	for height := maxHeight; height >= minHeight; height-- {
 		blockMeta := rpc.vm.blockStore.LoadBlockMeta(height)
-		blockMetas = append(blockMetas, blockMeta)
+		if blockMeta != nil {
+			blockMetas = append(blockMetas, blockMeta)
+		}
 	}
 
 	return &ctypes.ResultBlockchainInfo{
@@ -335,7 +357,7 @@ func (rpc *RPC) GenesisChunked(_ *rpctypes.Context, chunk uint) (*ctypes.ResultG
 
 	id := int(chunk)
 
-	if id > len(rpc.vm.genChunks)-1 {
+	if id < 0 || id > len(rpc.vm.genChunks)-1 {
 		return nil, fmt.Errorf("there are %d chunks, %d is invalid", len(rpc.vm.genChunks)-1, id)
 	}
 
@@ -346,17 +368,17 @@ func (rpc *RPC) GenesisChunked(_ *rpctypes.Context, chunk uint) (*ctypes.ResultG
 	}, nil
 }
 
-// ToDo: no peers, because it's vm
+// NetInfo - no peers, because it's vm
 func (rpc *RPC) NetInfo(_ *rpctypes.Context) (*ctypes.ResultNetInfo, error) {
 	return nil, nil
 }
 
-// ToDo: we doesn't have consensusState
+// DumpConsensusState - we doesn't have consensusState
 func (rpc *RPC) DumpConsensusState(_ *rpctypes.Context) (*ctypes.ResultDumpConsensusState, error) {
 	return nil, nil
 }
 
-// ToDo: we doesn't have consensusState
+// GetConsensusState - we doesn't have consensusState
 func (rpc *RPC) GetConsensusState(_ *rpctypes.Context) (*ctypes.ResultConsensusState, error) {
 	return nil, nil
 }
@@ -487,7 +509,7 @@ func validatePerPage(perPagePtr *int) int {
 
 func validatePage(pagePtr *int, perPage, totalCount int) (int, error) {
 	if perPage < 1 {
-		panic(fmt.Sprintf("zero or negative perPage: %d", perPage))
+		return 1, fmt.Errorf("zero or negative perPage: %d", perPage)
 	}
 
 	if pagePtr == nil { // no page parameter
@@ -514,6 +536,7 @@ func validateSkipCount(page, perPage int) int {
 	return skipCount
 }
 
+// Validators fetches and verifies validators.
 func (rpc *RPC) Validators(
 	_ *rpctypes.Context,
 	heightPtr *int64,
@@ -580,6 +603,8 @@ func (rpc *RPC) Tx(_ *rpctypes.Context, hash []byte, prove bool) (*ctypes.Result
 	}, nil
 }
 
+// TxSearch defines a method to search for a paginated set of transactions by
+// transaction event search criteria.
 func (rpc *RPC) TxSearch(
 	ctx *rpctypes.Context,
 	query string,
@@ -749,7 +774,7 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 			),
 			DefaultNodeID: p2p.ID(rpc.vm.appOpts.NodeId),
 			ListenAddr:    "",
-			Network:       rpc.vm.networkName,
+			Network:       rpc.vm.config.NetworkName,
 			Version:       version.TMCoreSemVer,
 			Channels:      nil,
 			Moniker:       "",

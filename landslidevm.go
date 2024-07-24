@@ -45,14 +45,16 @@ const (
 	// rpcChainVMProtocol should be bumped anytime changes are made which
 	// require the plugin vm to upgrade to latest avalanchego release to be
 	// compatible.
-	rpcChainVMProtocol uint = 35
+	rpcChainVMProtocol          uint = 35
+	defaultMaxRecvMsgSize            = 50 * 1024 * 1024 // 50 MB
+	defaultMaxConcurrentStreams      = 1000
 )
 
 var (
 	DefaultServerOptions = []grpc.ServerOption{
-		grpc.MaxRecvMsgSize(math.MaxInt),
+		grpc.MaxRecvMsgSize(defaultMaxRecvMsgSize),
 		grpc.MaxSendMsgSize(math.MaxInt),
-		grpc.MaxConcurrentStreams(math.MaxUint32),
+		grpc.MaxConcurrentStreams(defaultMaxConcurrentStreams),
 		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
 			MinTime:             defaultServerKeepAliveMinTime,
 			PermitWithoutStream: defaultPermitWithoutStream,
@@ -137,6 +139,8 @@ func Serve[T interface {
 	}
 
 	client := runtimepb.NewRuntimeClient(clientConn)
+
+	// the gRPC server should be exposed only to the local IP address 127.0.0.1
 	listener, err := net.Listen("tcp", "127.0.0.1:")
 	if err != nil {
 		return fmt.Errorf("failed to create new listener: %w", err)

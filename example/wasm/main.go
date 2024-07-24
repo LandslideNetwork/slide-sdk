@@ -34,6 +34,12 @@ import (
 	vmtypes "github.com/consideritdone/landslidevm/vm/types"
 )
 
+// AppConfig is a Wasm App Config
+type AppConfig struct {
+	RPCPort  uint16 `json:"rpc_port"`
+	GRPCPort uint16 `json:"grpc_port"`
+}
+
 func main() {
 	appCreator := WasmCreator()
 	if err := landslidevm.Serve(context.Background(), appCreator); err != nil {
@@ -58,25 +64,33 @@ func WasmCreator() vm.AppCreator {
 
 		srvCfg := *srvconfig.DefaultConfig()
 		grpcCfg := srvCfg.GRPC
-		var vmCfg vmtypes.VmConfig
-		vmCfg.SetDefaults()
+		var (
+			vmCfg  vmtypes.Config
+			appCfg AppConfig
+		)
+		vmCfg.VMConfig.SetDefaults()
+
 		if len(config.ConfigBytes) > 0 {
 			if err := json.Unmarshal(config.ConfigBytes, &vmCfg); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal config %s: %w", string(config.ConfigBytes), err)
 			}
-			// set the grpc port, if it is set to 0, disable gRPC
-			if vmCfg.GRPCPort > 0 {
-				grpcCfg.Address = fmt.Sprintf("127.0.0.1:%d", vmCfg.GRPCPort)
-			} else {
-				grpcCfg.Enable = false
+
+			if err := vmCfg.VMConfig.Validate(); err != nil {
+				return nil, err
+			}
+
+			// Unmarshal wasm app config
+			if err := json.Unmarshal(vmCfg.AppConfig, &appCfg); err != nil {
+				// set the grpc port, if it is set to 0, disable gRPC
+				if appCfg.GRPCPort > 0 {
+					grpcCfg.Address = fmt.Sprintf("127.0.0.1:%d", appCfg.GRPCPort)
+				} else {
+					grpcCfg.Enable = false
+				}
 			}
 		}
 
-		if err := vmCfg.Validate(); err != nil {
-			return nil, err
-		}
-		chainID := vmCfg.NetworkName
-
+		chainID := vmCfg.VMConfig.NetworkName
 		var wasmApp = app.NewWasmApp(
 			logger,
 			db,
@@ -108,7 +122,7 @@ func WasmCreator() vm.AppCreator {
 
 		rpcURI := fmt.Sprintf(
 			"http://127.0.0.1:%d/ext/bc/%s/rpc",
-			vmCfg.RPCPort,
+			appCfg.RPCPort,
 			avaChainID,
 		)
 

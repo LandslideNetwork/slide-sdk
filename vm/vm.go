@@ -90,13 +90,13 @@ type (
 		GenesisBytes []byte
 		UpgradeBytes []byte
 		ConfigBytes  []byte
+		Config       *vmtypes.Config
 		ChainDataDir string
 	}
 
 	AppCreator func(*AppCreatorOpts) (Application, error)
 
 	LandslideVM struct {
-		networkName   string
 		allowShutdown *vmtypes.Atomic[bool]
 
 		processMetrics prometheus.Gatherer
@@ -135,7 +135,9 @@ type (
 		preferred      [32]byte
 		wrappedBlocks  *vmstate.WrappedBlocksStorage
 
-		clientConn grpc.ClientConnInterface
+		clientConn    grpc.ClientConnInterface
+		optClientConn *grpc.ClientConn
+		config        vmtypes.VMConfig
 	}
 )
 
@@ -163,13 +165,23 @@ func NewViaDB(database dbm.DB, creator AppCreator, options ...func(*LandslideVM)
 	return vm
 }
 
+// WithClientConn sets the client connection for the VM.
 func WithClientConn(clientConn grpc.ClientConnInterface) func(vm *LandslideVM) {
 	return func(vm *LandslideVM) {
 		vm.clientConn = clientConn
 	}
 }
 
-// Initialize this VM.
+// WithOptClientConn sets the optional client connection for the VM.
+// it overrides the client connection set by WithClientConn.
+func WithOptClientConn(clientConn *grpc.ClientConn) func(vm *LandslideVM) {
+	return func(vm *LandslideVM) {
+		vm.optClientConn = clientConn
+	}
+}
+
+// Initialize initializes the VM.
+// This method should only be accessible by the AvalancheGo node and not exposed publicly.
 func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest) (*vmpb.InitializeResponse, error) {
 	registerer := prometheus.NewRegistry()
 
@@ -194,7 +206,11 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	// Register metrics for each Go plugin processes
 	vm.processMetrics = registerer
 
-	if vm.clientConn == nil {
+	// add to connCloser even we have defined vm.clientConn via Option
+	if vm.optClientConn != nil {
+		vm.connCloser.Add(vm.optClientConn)
+		vm.clientConn = vm.optClientConn
+	} else {
 		clientConn, err := grpc.Dial(
 			"passthrough:///"+req.ServerAddr,
 			grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
@@ -207,10 +223,11 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			return nil, err
 		}
 
-		// TODO: add to connCloser even we have defined vm.clientConn via Option
 		vm.connCloser.Add(clientConn)
 		vm.clientConn = clientConn
 	}
+
+	vm.logger = log.NewTMLogger(os.Stdout)
 
 	msgClient := messengerpb.NewMessengerClient(vm.clientConn)
 
@@ -221,12 +238,17 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			select {
 			case msg, ok := <-vm.toEngine:
 				if !ok {
+					vm.logger.Error("channel closed")
 					return
 				}
 				// Nothing to do with the error within the goroutine
-				_, _ = msgClient.Notify(context.Background(), &messengerpb.NotifyRequest{
+				_, err := msgClient.Notify(context.Background(), &messengerpb.NotifyRequest{
 					Message: msg,
 				})
+				if err != nil {
+					vm.logger.Error("failed to notify", "err", err)
+				}
+
 			case <-vm.closed:
 				return
 			}
@@ -242,13 +264,13 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
+			vm.logger.Error("failed to dial database", "err", err)
 			return nil, err
 		}
 		vm.connCloser.Add(dbClientConn)
 		vm.databaseClient = rpcdb.NewDatabaseClient(dbClientConn)
 		vm.database = database.New(vm.databaseClient)
 	}
-	vm.logger = log.NewTMLogger(os.Stdout)
 
 	dbBlockStore := dbm.NewPrefixDB(vm.database, dbPrefixBlockStore)
 	vm.blockStore = store.NewBlockStore(dbBlockStore)
@@ -271,21 +293,22 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}
 	app, err := vm.appCreator(vm.appOpts)
 	if err != nil {
+		vm.logger.Error("failed to create app", "err", err)
 		return nil, err
 	}
 
 	// Set the default configuration
-	var vmCfg vmtypes.VmConfig
-	vmCfg.SetDefaults()
+	var cfg vmtypes.Config
+	cfg.VMConfig.SetDefaults()
 	if len(vm.appOpts.ConfigBytes) > 0 {
-		if err := json.Unmarshal(vm.appOpts.ConfigBytes, &vmCfg); err != nil {
+		if err := json.Unmarshal(vm.appOpts.ConfigBytes, &cfg); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal config %s: %w", string(vm.appOpts.ConfigBytes), err)
 		}
 	}
-	if err := vmCfg.Validate(); err != nil {
+	if err := cfg.VMConfig.Validate(); err != nil {
 		return nil, err
 	}
-	vm.networkName = vmCfg.NetworkName
+	vm.config = cfg.VMConfig
 
 	vm.state, vm.genesis, err = node.LoadStateFromDBOrGenesisDocProvider(
 		dbStateStore,
@@ -369,7 +392,16 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		blk = vm.blockStore.LoadBlock(vm.state.LastBlockHeight)
 	} else {
 		vm.logger.Debug("creating genesis block")
-		executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
+		executor := vmstate.NewBlockExecutor(
+			vm.stateStore,
+			vm.logger,
+			vm.app.Consensus(),
+			vm.mempool,
+			vm.blockStore,
+			vm.config.ConsensusParams.Block.MaxBytes,
+			vm.config.ConsensusParams.Block.MaxGas,
+			vm.config.ConsensusParams.Evidence.MaxBytes,
+		)
 		executor.SetEventBus(vm.eventBus)
 
 		blk, err = executor.CreateProposalBlock(context.Background(), vm.state.LastBlockHeight+1, vm.state, &types.ExtendedCommit{}, proposerAddress)
@@ -405,7 +437,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	//vm.logger.Debug("initialize block", "bytes ", blockBytes)
+	// vm.logger.Debug("initialize block", "bytes ", blockBytes)
 	vm.logger.Info("vm initialization completed")
 
 	parentHash := block.BlockParentHash(blk)
@@ -521,10 +553,20 @@ func (vm *LandslideVM) Disconnected(context.Context, *vmpb.DisconnectedRequest) 
 	return &emptypb.Empty{}, nil
 }
 
-// BuildBlock attempt to create a new block from data contained in the VM.
+// BuildBlock attempts to create a new block from data contained in the VM.
+// This method should be restricted to the AvalancheGo node.
 func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vmpb.BuildBlockResponse, error) {
 	vm.logger.Info("BuildBlock")
-	executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
+	executor := vmstate.NewBlockExecutor(
+		vm.stateStore,
+		vm.logger,
+		vm.app.Consensus(),
+		vm.mempool,
+		vm.blockStore,
+		vm.config.ConsensusParams.Block.MaxBytes,
+		vm.config.ConsensusParams.Block.MaxGas,
+		vm.config.ConsensusParams.Evidence.MaxBytes,
+	)
 	executor.SetEventBus(vm.eventBus)
 
 	signatures := make([]types.ExtendedCommitSig, len(vm.state.Validators.Validators))
@@ -583,7 +625,7 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 // ParseBlock attempt to create a block from a stream of bytes.
 func (vm *LandslideVM) ParseBlock(_ context.Context, req *vmpb.ParseBlockRequest) (*vmpb.ParseBlockResponse, error) {
 	vm.logger.Info("ParseBlock")
-	//vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
+	// vm.logger.Debug("ParseBlock", "bytes", req.Bytes)
 	var (
 		blk       *types.Block
 		blkStatus vmpb.Status
@@ -839,7 +881,7 @@ func (vm *LandslideVM) GetStateSummary(context.Context, *vmpb.GetStateSummaryReq
 
 func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyRequest) (*vmpb.BlockVerifyResponse, error) {
 	vm.logger.Info("BlockVerify")
-	//vm.logger.Debug("block verify", "bytes", req.Bytes)
+	// vm.logger.Debug("block verify", "bytes", req.Bytes)
 
 	blk, blkStatus, err := vmstate.DecodeBlockWithStatus(req.Bytes)
 	if err != nil {
@@ -869,6 +911,8 @@ func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyReque
 	return &vmpb.BlockVerifyResponse{Timestamp: timestamppb.New(blk.Time)}, nil
 }
 
+// BlockAccept notifies the VM that a block has been accepted.
+// This is a critical method and should not be exposed publicly.
 func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptRequest) (*emptypb.Empty, error) {
 	vm.logger.Info("BlockAccept")
 
@@ -883,7 +927,16 @@ func (vm *LandslideVM) BlockAccept(_ context.Context, req *vmpb.BlockAcceptReque
 		return nil, ErrNotFound
 	}
 
-	executor := vmstate.NewBlockExecutor(vm.stateStore, vm.logger, vm.app.Consensus(), vm.mempool, vm.blockStore)
+	executor := vmstate.NewBlockExecutor(
+		vm.stateStore,
+		vm.logger,
+		vm.app.Consensus(),
+		vm.mempool,
+		vm.blockStore,
+		vm.config.ConsensusParams.Block.MaxBytes,
+		vm.config.ConsensusParams.Block.MaxGas,
+		vm.config.ConsensusParams.Evidence.MaxBytes,
+	)
 	executor.SetEventBus(vm.eventBus)
 
 	blk := wblk.Block

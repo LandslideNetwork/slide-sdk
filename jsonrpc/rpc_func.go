@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"runtime/debug"
 	"strings"
 
 	"github.com/cometbft/cometbft/libs/log"
@@ -66,6 +67,23 @@ func NewWSRPCFunc(f interface{}, args string, options ...Option) *RPCFunc {
 	return newRPCFunc(f, args, options...)
 }
 
+// panicRecoveryMiddleware wraps RPCFunc to handle panics.
+func panicRecoveryMiddleware(rpcFunc *RPCFunc) *RPCFunc {
+	originalFunc := rpcFunc.f
+	rpcFunc.f = reflect.MakeFunc(rpcFunc.f.Type(), func(args []reflect.Value) (results []reflect.Value) {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recovered in RPC call: %v\n", r)
+				debug.PrintStack()
+				err := fmt.Errorf("internal server error")
+				results = []reflect.Value{reflect.Zero(rpcFunc.returns[0]), reflect.ValueOf(&err).Elem()}
+			}
+		}()
+		return originalFunc.Call(args)
+	})
+	return rpcFunc
+}
+
 // cacheableWithArgs returns whether or not a call to this function is cacheable,
 // given the specified arguments.
 func (f *RPCFunc) cacheableWithArgs(args []reflect.Value) bool {
@@ -107,7 +125,8 @@ func newRPCFunc(f interface{}, args string, options ...Option) *RPCFunc {
 		opt(r)
 	}
 
-	return r
+	// using middleware to handle panics
+	return panicRecoveryMiddleware(r)
 }
 
 // return a function's argument types
@@ -132,7 +151,7 @@ func funcReturnTypes(f interface{}) []reflect.Type {
 	return typez
 }
 
-//-------------------------------------------------------------
+// -------------------------------------------------------------
 
 // NOTE: assume returns is result struct and error. If error is not nil, return it
 func unreflectResult(returns []reflect.Value) (interface{}, error) {
