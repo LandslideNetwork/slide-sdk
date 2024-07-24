@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cometbft/cometbft/libs/log"
-	types "github.com/cometbft/cometbft/rpc/jsonrpc/types"
+	"github.com/cometbft/cometbft/rpc/jsonrpc/types"
 )
 
 func testMux() *http.ServeMux {
@@ -218,7 +218,7 @@ func TestRPCNotificationInBatch(t *testing.T) {
 	}
 }
 
-//func TestUnknownRPCPath(t *testing.T) {
+// func TestUnknownRPCPath(t *testing.T) {
 //	mux := testMux()
 //	req, err := http.NewRequest("GET", "http://localhost/unknownrpcpath", nil)
 //	require.NoError(t, err)
@@ -229,7 +229,7 @@ func TestRPCNotificationInBatch(t *testing.T) {
 //	// Always expecting back a 404 error
 //	require.Equal(t, http.StatusNotFound, res.StatusCode, "should always return 404")
 //	res.Body.Close()
-//}
+// }
 
 func TestRPCResponseCache(t *testing.T) {
 	mux := testMux()
@@ -241,7 +241,7 @@ func TestRPCResponseCache(t *testing.T) {
 
 	// Always expecting back a JSONRPCResponse
 	require.True(t, statusOK(res.StatusCode), "should always return 2XX")
-	require.Equal(t, "public, max-age=86400", res.Header.Get("Cache-control"))
+	require.Equal(t, "public, max-age=86400", res.Header.Get("Cache-Control"))
 
 	_, err := io.ReadAll(res.Body)
 	res.Body.Close()
@@ -256,7 +256,7 @@ func TestRPCResponseCache(t *testing.T) {
 
 	// Always expecting back a JSONRPCResponse
 	require.True(t, statusOK(res.StatusCode), "should always return 2XX")
-	require.Equal(t, "", res.Header.Get("Cache-control"))
+	require.Equal(t, "", res.Header.Get("Cache-Control"))
 
 	_, err = io.ReadAll(res.Body)
 
@@ -272,7 +272,7 @@ func TestRPCResponseCache(t *testing.T) {
 
 	// Always expecting back a JSONRPCResponse
 	require.True(t, statusOK(res.StatusCode), "should always return 2XX")
-	require.Equal(t, "", res.Header.Get("Cache-control"))
+	require.Equal(t, "", res.Header.Get("Cache-Control"))
 
 	_, err = io.ReadAll(res.Body)
 

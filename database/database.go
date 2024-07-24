@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 
 	dbm "github.com/cometbft/cometbft-db"
+
 	"github.com/consideritdone/landslidevm/proto/rpcdb"
 )
 
@@ -115,11 +116,11 @@ func (db *Database) NewBatch() dbm.Batch {
 }
 
 func (db *Database) Print() error {
-	//TODO implement me
+	// TODO implement me
 	return nil
 }
 
 func (db *Database) Stats() map[string]string {
-	//TODO implement me
+	// TODO implement me
 	return nil
 }

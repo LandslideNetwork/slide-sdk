@@ -115,7 +115,7 @@ func WasmCreator() vm.AppCreator {
 			WithInterfaceRegistry(interfaceRegistry).
 			WithChainID(chainID)
 
-		avaChainID, err := ids.ToID(config.ChainId)
+		avaChainID, err := ids.ToID(config.ChainID)
 		if err != nil {
 			return nil, err
 		}
