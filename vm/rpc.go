@@ -4,15 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cometbft/cometbft/config"
-	"github.com/cometbft/cometbft/libs/pubsub"
-	"github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	"sort"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/config"
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	tmmath "github.com/cometbft/cometbft/libs/math"
+	"github.com/cometbft/cometbft/libs/pubsub"
 	tmquery "github.com/cometbft/cometbft/libs/pubsub/query"
 	mempl "github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/p2p"
@@ -43,6 +42,11 @@ func NewRPC(vm *LandslideVM) *RPC {
 
 func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 	return map[string]*jsonrpc.RPCFunc{
+		// subscribe/unsubscribe are reserved for websocket events.
+		"subscribe":       jsonrpc.NewWSRPCFunc(rpc.Subscribe, "query"),
+		"unsubscribe":     jsonrpc.NewWSRPCFunc(rpc.Unsubscribe, "query"),
+		"unsubscribe_all": jsonrpc.NewWSRPCFunc(rpc.UnsubscribeAll, ""),
+
 		// info AP
 		"health":          jsonrpc.NewRPCFunc(rpc.Health, ""),
 		"status":          jsonrpc.NewRPCFunc(rpc.Status, ""),
@@ -78,51 +82,6 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 
 		// evidence API
 		// "broadcast_evidence": jsonrpc.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
-	}
-}
-
-func (rpc *RPC) TMRoutes() map[string]*server.RPCFunc {
-	return map[string]*server.RPCFunc{
-		//subscribe/unsubscribe are reserved for websocket events.
-		"subscribe":       server.NewWSRPCFunc(rpc.Subscribe, "query"),
-		"unsubscribe":     server.NewWSRPCFunc(rpc.Unsubscribe, "query"),
-		"unsubscribe_all": server.NewWSRPCFunc(rpc.UnsubscribeAll, ""),
-
-		// info AP
-		"health":          server.NewRPCFunc(rpc.Health, ""),
-		"status":          server.NewRPCFunc(rpc.Status, ""),
-		"net_info":        server.NewRPCFunc(rpc.NetInfo, ""),
-		"blockchain":      server.NewRPCFunc(rpc.BlockchainInfo, "minHeight,maxHeight", server.Cacheable()),
-		"genesis":         server.NewRPCFunc(rpc.Genesis, "", server.Cacheable()),
-		"genesis_chunked": server.NewRPCFunc(rpc.GenesisChunked, "chunk", server.Cacheable()),
-		"block":           server.NewRPCFunc(rpc.Block, "height", server.Cacheable("height")),
-		"block_by_hash":   server.NewRPCFunc(rpc.BlockByHash, "hash", server.Cacheable()),
-		"block_results":   server.NewRPCFunc(rpc.BlockResults, "height", server.Cacheable("height")),
-		"commit":          server.NewRPCFunc(rpc.Commit, "height", server.Cacheable("height")),
-		// "header":              server.NewRPCFunc(rpc.Header, "height", server.Cacheable("height")),
-		// "header_by_hash":      server.NewRPCFunc(rpc.HeaderByHash, "hash", server.Cacheable()),
-		"check_tx": server.NewRPCFunc(rpc.CheckTx, "tx"),
-		"tx":       server.NewRPCFunc(rpc.Tx, "hash,prove", server.Cacheable()),
-		// "consensus_state":     server.NewRPCFunc(rpc.GetConsensusState, ""),
-		"unconfirmed_txs":      server.NewRPCFunc(rpc.UnconfirmedTxs, "limit"),
-		"num_unconfirmed_txs":  server.NewRPCFunc(rpc.NumUnconfirmedTxs, ""),
-		"tx_search":            server.NewRPCFunc(rpc.TxSearch, "query,prove,page,per_page,order_by"),
-		"block_search":         server.NewRPCFunc(rpc.BlockSearch, "query,page,per_page,order_by"),
-		"validators":           server.NewRPCFunc(rpc.Validators, "height,page,per_page", server.Cacheable("height")),
-		"dump_consensus_state": server.NewRPCFunc(rpc.DumpConsensusState, ""),
-		"consensus_params":     server.NewRPCFunc(rpc.ConsensusParams, "height", server.Cacheable("height")),
-
-		// tx broadcast API
-		"broadcast_tx_commit": server.NewRPCFunc(rpc.BroadcastTxCommit, "tx"),
-		"broadcast_tx_sync":   server.NewRPCFunc(rpc.BroadcastTxSync, "tx"),
-		"broadcast_tx_async":  server.NewRPCFunc(rpc.BroadcastTxAsync, "tx"),
-
-		// abci API
-		"abci_query": server.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
-		"abci_info":  server.NewRPCFunc(rpc.ABCIInfo, "", server.Cacheable()),
-
-		// evidence API
-		// "broadcast_evidence": server.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
 	}
 }
 
