@@ -561,7 +561,7 @@ func (vm *LandslideVM) createWsHandler(routes map[string]*jsonrpc.RPCFunc, logge
 	mux := http2.NewServeMux()
 	logger = logger.With("protocol", "websocket")
 
-	jsonrpc.NewWebsocketManager(routes,
+	wm := jsonrpc.NewWebsocketManager(routes,
 		jsonrpc.OnDisconnect(func(remoteAddr string) {
 			err := vm.eventBus.UnsubscribeAll(context.Background(), remoteAddr)
 			if err != nil && !errors.Is(err, pubsub.ErrSubscriptionNotFound) {
@@ -569,7 +569,10 @@ func (vm *LandslideVM) createWsHandler(routes map[string]*jsonrpc.RPCFunc, logge
 			}
 		}),
 		jsonrpc.ReadLimit(vm.config.MaxBodyBytes),
-		jsonrpc.WriteChanCapacity(vm.config.WebSocketWriteBufferSize))
+		jsonrpc.WriteChanCapacity(vm.config.WebSocketWriteBufferSize),
+	)
+
+	mux.HandleFunc("/", wm.WebsocketHandler)
 
 	return mux
 }
