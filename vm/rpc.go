@@ -816,11 +816,12 @@ func (rpc *RPC) Subscribe(ctx *rpctypes.Context, query string) (*ctypes.ResultSu
 	addr := ctx.RemoteAddr()
 	cfg := config.DefaultRPCConfig()
 
-	if rpc.vm.eventBus.NumClients() >= cfg.MaxSubscriptionClients {
-		return nil, fmt.Errorf("max_subscription_clients %d reached", cfg.MaxSubscriptionClients)
-	} else if rpc.vm.eventBus.NumClientSubscriptions(addr) >= cfg.MaxSubscriptionsPerClient {
-		return nil, fmt.Errorf("max_subscriptions_per_client %d reached", cfg.MaxSubscriptionsPerClient)
-	} else if len(query) > maxQueryLength {
+	switch {
+	case rpc.vm.eventBus.NumClients() >= rpc.vm.config.MaxSubscriptionClients:
+		return nil, fmt.Errorf("max_subscription_clients %d reached", rpc.vm.config.MaxSubscriptionClients)
+	case rpc.vm.eventBus.NumClientSubscriptions(addr) >= rpc.vm.config.MaxSubscriptionsPerClient:
+		return nil, fmt.Errorf("max_subscriptions_per_client %d reached", rpc.vm.config.MaxSubscriptionsPerClient)
+	case len(query) > maxQueryLength:
 		return nil, errors.New("maximum query length exceeded")
 	}
 
