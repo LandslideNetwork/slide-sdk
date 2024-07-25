@@ -407,7 +407,7 @@ func testBlockProduction(t *testing.T, serverBuilder setupServerAndTransport) {
 
 	initialHeight := vm.state.LastBlockHeight()
 
-	for i := 1; i < 10; i++ {
+	for i := 1; i < 30; i++ {
 		testStatus(t, client, &coretypes.ResultStatus{
 			NodeInfo: p2p.DefaultNodeInfo{},
 			SyncInfo: coretypes.SyncInfo{
@@ -421,7 +421,7 @@ func testBlockProduction(t *testing.T, serverBuilder setupServerAndTransport) {
 		previousAppHash := vm.state.AppHash()
 		bres := testBroadcastTxCommit(t, client, vm, tx)
 
-		testBlock(t, client, &bres.Height, &coretypes.ResultBlock{
+		blk := testBlock(t, client, &bres.Height, &coretypes.ResultBlock{
 			Block: &types.Block{
 				Header: types.Header{
 					ChainID: vm.state.ChainID(),
@@ -430,6 +430,7 @@ func testBlockProduction(t *testing.T, serverBuilder setupServerAndTransport) {
 				},
 			},
 		})
+		t.Logf("Height: %d, Txs: %v", blk.Block.Height, blk.Block.Txs)
 	}
 }
 
