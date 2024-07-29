@@ -142,6 +142,7 @@ func (rpc *RPC) ABCIQuery(
 	return &ctypes.ResultABCIQuery{Response: *resQuery}, nil
 }
 
+// BroadcastTxCommit returns with the responses from CheckTx and ExecTxResult.
 func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadcastTxCommit, error) {
 	rpc.vm.logger.Info("BroadcastTxCommit called")
 	subscriber := ctx.RemoteAddr()
@@ -235,6 +236,8 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 	}
 }
 
+// BroadcastTxAsync returns right away, with no response. Does not wait for
+// CheckTx nor transaction results.
 func (rpc *RPC) BroadcastTxAsync(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultBroadcastTx, error) {
 	rpc.vm.logger.Info("BroadcastTxAsync called")
 	err := rpc.vm.mempool.CheckTx(tx, nil, mempl.TxInfo{})
@@ -308,6 +311,14 @@ func filterMinMax(base, height, min, max, limit int64) (int64, int64, error) {
 	return min, max, nil
 }
 
+// BlockchainInfo gets block headers for minHeight <= height <= maxHeight.
+//
+// If maxHeight does not yet exist, blocks up to the current height will be
+// returned. If minHeight does not exist (due to pruning), earliest existing
+// height will be used.
+//
+// At most 20 items will be returned. Block headers are returned in descending
+// order (highest first).
 func (rpc *RPC) BlockchainInfo(
 	_ *rpctypes.Context,
 	minHeight, maxHeight int64,
@@ -340,6 +351,7 @@ func (rpc *RPC) BlockchainInfo(
 	}, nil
 }
 
+// Genesis returns genesis file.
 func (rpc *RPC) Genesis(_ *rpctypes.Context) (*ctypes.ResultGenesis, error) {
 	if len(rpc.vm.genChunks) > 1 {
 		return nil, errors.New("genesis response is large, please use the genesis_chunked API instead")
@@ -348,6 +360,7 @@ func (rpc *RPC) Genesis(_ *rpctypes.Context) (*ctypes.ResultGenesis, error) {
 	return &ctypes.ResultGenesis{Genesis: rpc.vm.genesis}, nil
 }
 
+// GenesisChunked returns requested chunk of genesis file
 func (rpc *RPC) GenesisChunked(_ *rpctypes.Context, chunk uint) (*ctypes.ResultGenesisChunk, error) {
 	if rpc.vm.genChunks == nil {
 		return nil, fmt.Errorf("service configuration error, genesis chunks are not initialized")
@@ -385,6 +398,7 @@ func (rpc *RPC) GetConsensusState(_ *rpctypes.Context) (*ctypes.ResultConsensusS
 	return nil, nil
 }
 
+// ConsensusParams returns requested chunk of genesis file
 func (rpc *RPC) ConsensusParams(
 	_ *rpctypes.Context,
 	_ *int64,
@@ -395,6 +409,8 @@ func (rpc *RPC) ConsensusParams(
 	}, nil
 }
 
+// Health gets node health. Returns empty result (200 OK) on success, no
+// response - in case of an error.
 func (rpc *RPC) Health(*rpctypes.Context) (*ctypes.ResultHealth, error) {
 	return &ctypes.ResultHealth{}, nil
 }
@@ -424,6 +440,8 @@ func getHeight(bs *store.BlockStore, heightPtr *int64) (int64, error) {
 	return height, nil
 }
 
+// Block gets block at a given height.
+// If no height is provided, it will fetch the latest block.
 func (rpc *RPC) Block(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBlock, error) {
 	height, err := getHeight(rpc.vm.blockStore, heightPtr)
 	if err != nil {
@@ -441,6 +459,7 @@ func (rpc *RPC) Block(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBloc
 	return &ctypes.ResultBlock{BlockID: blockMeta.BlockID, Block: block}, nil
 }
 
+// BlockByHash gets block by hash.
 func (rpc *RPC) BlockByHash(_ *rpctypes.Context, hash []byte) (*ctypes.ResultBlock, error) {
 	block := rpc.vm.blockStore.LoadBlockByHash(hash)
 	if block == nil {
@@ -450,6 +469,12 @@ func (rpc *RPC) BlockByHash(_ *rpctypes.Context, hash []byte) (*ctypes.ResultBlo
 	return &ctypes.ResultBlock{BlockID: blockMeta.BlockID, Block: block}, nil
 }
 
+// BlockResults gets ABCIResults at a given height.
+// If no height is provided, it will fetch results for the latest block.
+//
+// Results are for the height of the block containing the txs.
+// Thus response.results.deliver_tx[5] is the results of executing
+// getBlock(h).Txs[5]
 func (rpc *RPC) BlockResults(_ *rpctypes.Context, _ *int64) (*ctypes.ResultBlockResults, error) {
 	// height, err := getHeight(rpc.vm.blockStore, args.Height)
 	// if err != nil {
@@ -471,6 +496,8 @@ func (rpc *RPC) BlockResults(_ *rpctypes.Context, _ *int64) (*ctypes.ResultBlock
 	return nil, nil
 }
 
+// Commit gets block commit at a given height.
+// If no height is provided, it will fetch the commit for the latest block.
 func (rpc *RPC) Commit(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultCommit, error) {
 	height, err := getHeight(rpc.vm.blockStore, heightPtr)
 	if err != nil {
@@ -543,7 +570,11 @@ func validateSkipCount(page, perPage int) int {
 	return skipCount
 }
 
-// Validators fetches and verifies validators.
+// Validators gets the validator set at the given block height.
+//
+// If no height is provided, it will fetch the latest validator set. Note the
+// validators are sorted by their voting power - this is the canonical order
+// for the validators in the set as used in computing their Merkle root.
 func (rpc *RPC) Validators(
 	_ *rpctypes.Context,
 	heightPtr *int64,
@@ -578,6 +609,9 @@ func (rpc *RPC) Validators(
 	}, nil
 }
 
+// Tx allows you to query the transaction results. `nil` could mean the
+// transaction is in the mempool, invalidated, or was not sent in the first
+// place.
 func (rpc *RPC) Tx(_ *rpctypes.Context, hash []byte, prove bool) (*ctypes.ResultTx, error) {
 	rpc.vm.logger.Info("Tx called", "hash", hash)
 	r, err := rpc.vm.txIndexer.Get(hash)
@@ -614,8 +648,8 @@ func (rpc *RPC) Tx(_ *rpctypes.Context, hash []byte, prove bool) (*ctypes.Result
 	}, nil
 }
 
-// TxSearch defines a method to search for a paginated set of transactions by
-// transaction event search criteria.
+// TxSearch allows you to query for multiple transactions results. It returns a
+// list of transactions (maximum ?per_page entries) and the total count.
 func (rpc *RPC) TxSearch(
 	ctx *rpctypes.Context,
 	query string,
@@ -692,6 +726,8 @@ func (rpc *RPC) TxSearch(
 	return &ctypes.ResultTxSearch{Txs: apiResults, TotalCount: totalCount}, nil
 }
 
+// BlockSearch searches for a paginated set of blocks matching
+// FinalizeBlock event search criteria.
 func (rpc *RPC) BlockSearch(
 	ctx *rpctypes.Context,
 	query string,
@@ -749,6 +785,8 @@ func (rpc *RPC) BlockSearch(
 	return &ctypes.ResultBlockSearch{Blocks: apiResults, TotalCount: totalCount}, nil
 }
 
+// Status returns CometBFT status including node info, pubkey, latest block
+// hash, app hash, block height and time.
 func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 	var (
 		earliestBlockHeight   int64
