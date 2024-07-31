@@ -22,6 +22,14 @@ type WSClient struct {
 	subscriptions map[string]chan ctypes.ResultEvent // query -> chan
 }
 
+func NewWSClient(wsClient *client.WSClient) *WSClient {
+	return &WSClient{
+		WSClient:      wsClient,
+		mtx:           tmsync.RWMutex{},
+		subscriptions: make(map[string]chan ctypes.ResultEvent),
+	}
+}
+
 func (ws *WSClient) Status(ctx context.Context) (*ctypes.ResultStatus, error) {
 	params := make(map[string]interface{})
 	err := ws.Call(context.Background(), "status", params)
