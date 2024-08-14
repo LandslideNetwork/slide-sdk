@@ -42,7 +42,7 @@ source "$SUBNET_EVM_PATH"/scripts/constants.sh
 if [[ $# -eq 1 ]]; then
     BINARY_PATH=$1
 elif [[ $# -eq 0 ]]; then
-    BINARY_PATH="$GOPATH/src/github.com/ava-labs/avalanchego/build/plugins/pjSL9ksard4YE96omaiTkGL5H6XX2W5VEo3ZgWC9S2P6gzs9A"
+    BINARY_PATH="$GOPATH/src/github.com/consideritdone/landslidevm/build/plugins/pjSL9ksard4YE96omaiTkGL5H6XX2W5VEo3ZgWC9S2P6gzs9A"
 else
     echo "Invalid arguments to build subnet-evm. Requires zero (default location) or one argument to specify binary location."
     exit 1

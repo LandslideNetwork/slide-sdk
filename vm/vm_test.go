@@ -144,7 +144,7 @@ func TestAcceptBlock(t *testing.T) {
 }
 
 // TestShutdownWithoutInit tests VM Shutdown function. This function called without Initialize in Avalanchego Factory
-// https://github.com/ava-labs/avalanchego/blob/0c4efd743e1d737f4e8970d0e0ebf229ea44406c/vms/manager.go#L129
+// https://github.com/consideritdone/landslidevm/blob/0c4efd743e1d737f4e8970d0e0ebf229ea44406c/vms/manager.go#L129
 func TestShutdownWithoutInit(t *testing.T) {
 	vmdb := dbm.NewMemDB()
 	appdb := dbm.NewMemDB()
@@ -168,7 +168,7 @@ func TestShutdownWithoutInit(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// allowShutdown should be false by default https://github.com/ava-labs/avalanchego/blob/c8a5d0b11bcfe8b8a74983a9b0ef04fc68e78cf3/vms/rpcchainvm/vm.go#L40
+// allowShutdown should be false by default https://github.com/consideritdone/landslidevm/blob/c8a5d0b11bcfe8b8a74983a9b0ef04fc68e78cf3/vms/rpcchainvm/vm.go#L40
 func TestAllowShutdown(t *testing.T) {
 	vm := newFreshKvApp(t)
 	vmLnd := vm.(*LandslideVM)

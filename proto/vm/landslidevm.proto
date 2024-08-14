@@ -8,8 +8,8 @@ import "io/prometheus/client/metrics.proto";
 
 option go_package = "github.com/consideritdone/landslidevm/proto/vm";
 
-// ref. https://pkg.go.dev/github.com/ava-labs/avalanchego/snow/engine/snowman/block
-// ref. https://pkg.go.dev/github.com/ava-labs/avalanchego/snow/consensus/snowman#Block
+// ref. https://pkg.go.dev/github.com/consideritdone/landslidevm/snow/engine/snowman/block
+// ref. https://pkg.go.dev/github.com/consideritdone/landslidevm/snow/consensus/snowman#Block
 service VM {
   // ChainVM
   //

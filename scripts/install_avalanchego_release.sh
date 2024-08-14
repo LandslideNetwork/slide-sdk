@@ -13,7 +13,7 @@ source "$SUBNET_EVM_PATH"/scripts/versions.sh
 
 ############################
 # download avalanchego
-# https://github.com/ava-labs/avalanchego/releases
+# https://github.com/consideritdone/landslidevm/releases
 GOARCH=$(go env GOARCH)
 GOOS=$(go env GOOS)
 BASEDIR=${BASEDIR:-"/tmp/avalanchego-release"}
@@ -21,11 +21,11 @@ AVALANCHEGO_BUILD_PATH=${AVALANCHEGO_BUILD_PATH:-${BASEDIR}/avalanchego}
 
 mkdir -p ${BASEDIR}
 
-AVAGO_DOWNLOAD_URL=https://github.com/ava-labs/avalanchego/releases/download/${AVALANCHE_VERSION}/avalanchego-linux-${GOARCH}-${AVALANCHE_VERSION}.tar.gz
+AVAGO_DOWNLOAD_URL=https://github.com/consideritdone/landslidevm/releases/download/${AVALANCHE_VERSION}/avalanchego-linux-${GOARCH}-${AVALANCHE_VERSION}.tar.gz
 AVAGO_DOWNLOAD_PATH=${BASEDIR}/avalanchego-linux-${GOARCH}-${AVALANCHE_VERSION}.tar.gz
 
 if [[ ${GOOS} == "darwin" ]]; then
-  AVAGO_DOWNLOAD_URL=https://github.com/ava-labs/avalanchego/releases/download/${AVALANCHE_VERSION}/avalanchego-macos-${AVALANCHE_VERSION}.zip
+  AVAGO_DOWNLOAD_URL=https://github.com/consideritdone/landslidevm/releases/download/${AVALANCHE_VERSION}/avalanchego-macos-${AVALANCHE_VERSION}.zip
   AVAGO_DOWNLOAD_PATH=${BASEDIR}/avalanchego-macos-${AVALANCHE_VERSION}.zip
 fi
 
@@ -59,7 +59,7 @@ else
     extract_archive
   else
     # else the version is a git commitish (or it's invalid)
-    GIT_CLONE_URL=https://github.com/ava-labs/avalanchego.git
+    GIT_CLONE_URL=https://github.com/consideritdone/landslidevm.git
     GIT_CLONE_PATH=${BASEDIR}/avalanchego-repo/
 
     # check to see if the repo already exists, if not clone it
