@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/consideritdone/landslidevm/warp"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -134,6 +135,10 @@ type (
 		verifiedBlocks sync.Map
 		preferred      [32]byte
 		wrappedBlocks  *vmstate.WrappedBlocksStorage
+
+		// Avalanche Warp Messaging server
+		// Used to serve BLS signatures of warp messages over RPC
+		warpServer warp.Server
 
 		clientConn    grpc.ClientConnInterface
 		optClientConn *grpc.ClientConn
@@ -441,6 +446,8 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	vm.logger.Info("vm initialization completed")
 
 	parentHash := block.ParentHash(blk)
+
+	vm.warpServer = warp.NewServer(vm.ctx.NetworkID, vm.ctx.ChainID, vm.ctx.WarpSigner, vm, vm.warpDB, warpSignatureCacheSize)
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
