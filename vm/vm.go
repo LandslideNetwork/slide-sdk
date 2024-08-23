@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/consideritdone/landslidevm/warp"
+	warpConnection "github.com/consideritdone/landslidevm/warp/connection"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -55,7 +55,8 @@ import (
 )
 
 const (
-	genesisChunkSize = 16 * 1024 * 1024 // 16
+	genesisChunkSize       = 16 * 1024 * 1024 // 16
+	warpSignatureCacheSize = 500
 )
 
 var (
@@ -65,6 +66,7 @@ var (
 	dbPrefixStateStore   = []byte("state-store")
 	dbPrefixTxIndexer    = []byte("tx-indexer")
 	dbPrefixBlockIndexer = []byte("block-indexer")
+	dbPrefixWarp         = []byte("warp")
 
 	// TODO: use internal app validators instead
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -136,9 +138,13 @@ type (
 		preferred      [32]byte
 		wrappedBlocks  *vmstate.WrappedBlocksStorage
 
-		// Avalanche Warp Messaging server
+		// [warpDB] is used to store warp message signatures
+		// set to a prefixDB with the prefix [warpPrefix]
+		warpDB dbm.DB
+
+		// Avalanche Warp Messaging backend
 		// Used to serve BLS signatures of warp messages over RPC
-		warpServer warp.Server
+		warpBackend warpConnection.Backend
 
 		clientConn    grpc.ClientConnInterface
 		optClientConn *grpc.ClientConn
@@ -447,7 +453,14 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 	parentHash := block.ParentHash(blk)
 
-	vm.warpServer = warp.NewServer(vm.ctx.NetworkID, vm.ctx.ChainID, vm.ctx.WarpSigner, vm, vm.warpDB, warpSignatureCacheSize)
+	// Note warpDB is not part of versiondb because it is not necessary
+	// that warp signatures are committed to the database atomically with
+	// the last accepted block.
+	vm.warpDB = dbm.NewPrefixDB(vm.database, dbPrefixWarp)
+
+	//secretKey := bls.SecretKey{}
+	//warpSinger := warp.NewSigner(&secretKey, req.NetworkId, req.ChainId)
+	vm.warpBackend = warpConnection.NewBackend(req.NetworkId, req.ChainId, vm.warpDB)
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
@@ -528,6 +541,14 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 
 	mux := http2.NewServeMux()
 	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vm).Routes(), vm.logger)
+	//
+	//if vm.config.WarpAPIEnabled {
+	//	validatorsState := warpValidators.NewState(vm.ctx)
+	//	if err := handler.RegisterName("warp", warp.NewAPI(vm.ctx.NetworkID, vm.ctx.SubnetID, vm.ctx.ChainID, validatorsState, vm.warpBackend, vm.client)); err != nil {
+	//		return nil, err
+	//	}
+	//	enabledAPIs = append(enabledAPIs, "warp")
+	//}
 
 	httppb.RegisterHTTPServer(server, http.NewServer(mux))
 
