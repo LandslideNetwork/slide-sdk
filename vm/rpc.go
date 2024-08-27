@@ -751,6 +751,7 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 	}
 
 	var (
+		err                 error
 		latestBlockHash     tmbytes.HexBytes
 		latestAppHash       tmbytes.HexBytes
 		latestBlockTimeNano int64
@@ -766,9 +767,12 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 		}
 	}
 
-	chainID, err := ids.ToID(rpc.vm.appOpts.ChainID)
-	if err != nil {
-		return nil, err
+	chainID := ids.Empty
+	if rpc.vm.appOpts.ChainID != nil {
+		chainID, err = ids.ToID(rpc.vm.appOpts.ChainID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	result := &ctypes.ResultStatus{
