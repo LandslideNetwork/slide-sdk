@@ -22,6 +22,7 @@ import (
 	"github.com/cometbft/cometbft/version"
 
 	"github.com/consideritdone/landslidevm/jsonrpc"
+	"github.com/consideritdone/landslidevm/utils/ids"
 )
 
 type RPC struct {
@@ -750,6 +751,7 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 	}
 
 	var (
+		err                 error
 		latestBlockHash     tmbytes.HexBytes
 		latestAppHash       tmbytes.HexBytes
 		latestBlockTimeNano int64
@@ -765,6 +767,14 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 		}
 	}
 
+	chainID := ids.Empty
+	if rpc.vm.appOpts.ChainID != nil {
+		chainID, err = ids.ToID(rpc.vm.appOpts.ChainID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	result := &ctypes.ResultStatus{
 		NodeInfo: p2p.DefaultNodeInfo{
 			ProtocolVersion: p2p.NewProtocolVersion(
@@ -772,12 +782,12 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 				version.BlockProtocol,
 				0,
 			),
-			DefaultNodeID: p2p.ID(rpc.vm.appOpts.NodeID),
-			ListenAddr:    "",
+			DefaultNodeID: p2p.ID(fmt.Sprintf("%x", rpc.vm.appOpts.NodeID)),
+			ListenAddr:    fmt.Sprintf("/ext/bc/%s/rpc", chainID),
 			Network:       rpc.vm.config.NetworkName,
 			Version:       version.TMCoreSemVer,
 			Channels:      nil,
-			Moniker:       "",
+			Moniker:       fmt.Sprintf("%x", rpc.vm.appOpts.NodeID),
 			Other:         p2p.DefaultNodeInfoOther{},
 		},
 		SyncInfo: ctypes.SyncInfo{

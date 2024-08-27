@@ -16,6 +16,9 @@ run:
 # This file contains only configs which differ from defaults.
 # All possible options can be found here https://github.com/golangci/golangci-lint/blob/master/.golangci.reference.yml
 linters-settings:
+  gosec:
+    excludes:
+      - G115 # integer overflow conversion int -> uint8 (gosec)
   revive:
     ignore-generated-header: true
     severity: warning
@@ -247,7 +250,7 @@ linters:
 #    - errname # checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error
 #    - errorlint # finds code that will cause problems with the error wrapping scheme introduced in Go 1.13
 #    - exhaustive # checks exhaustiveness of enum switch statements
-    - exportloopref # checks for pointers to enclosing loop variables
+#    - exportloopref # checks for pointers to enclosing loop variables
     - fatcontext # detects nested contexts in loops
 #    - forbidigo # forbids identifiers
 #    - funlen # tool for detection of long functions

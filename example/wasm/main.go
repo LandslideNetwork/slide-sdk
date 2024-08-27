@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -176,6 +177,19 @@ func WasmCreator() vm.AppCreator {
 		// that the server is gracefully shut down.
 		g.Go(func() error {
 			return servergrpc.StartGRPCServer(ctx, logger.With("module", "grpc-server"), grpcCfg, grpcSrv)
+		})
+
+		apiAddr := "tcp://localhost:1317"
+		srvCfg.API = srvconfig.APIConfig{
+			Enable:           true,
+			Swagger:          true,
+			EnableUnsafeCORS: true,
+			Address:          apiAddr,
+		}
+		apiSrv := api.New(clientCtx, logger.With(log.ModuleKey, "api-server"), grpcSrv)
+		wasmApp.RegisterAPIRoutes(apiSrv, srvCfg.API)
+		g.Go(func() error {
+			return apiSrv.Start(ctx, srvCfg)
 		})
 
 		return server.NewCometABCIWrapper(wasmApp), nil
