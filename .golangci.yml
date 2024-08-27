@@ -250,7 +250,7 @@ linters:
 #    - errname # checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error
 #    - errorlint # finds code that will cause problems with the error wrapping scheme introduced in Go 1.13
 #    - exhaustive # checks exhaustiveness of enum switch statements
-    - exportloopref # checks for pointers to enclosing loop variables
+#    - exportloopref # checks for pointers to enclosing loop variables
     - fatcontext # detects nested contexts in loops
 #    - forbidigo # forbids identifiers
 #    - funlen # tool for detection of long functions
