@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"cosmossdk.io/log"
@@ -39,6 +41,8 @@ import (
 type AppConfig struct {
 	RPCPort  uint16 `json:"rpc_port"`
 	GRPCPort uint16 `json:"grpc_port"`
+	APIPort  uint16 `json:"api_port"`
+	APIHost  string `json:"api_host"`
 }
 
 func main() {
@@ -179,12 +183,18 @@ func WasmCreator() vm.AppCreator {
 			return servergrpc.StartGRPCServer(ctx, logger.With("module", "grpc-server"), grpcCfg, grpcSrv)
 		})
 
-		apiAddr := "tcp://localhost:1317"
+		if appCfg.APIPort == 0 {
+			appCfg.APIPort = 1317
+		}
+		if appCfg.APIHost == "" {
+			appCfg.APIHost = "localhost"
+		}
+		apiURI := fmt.Sprintf("tcp://%s", net.JoinHostPort(appCfg.APIHost, strconv.Itoa(int(appCfg.APIPort))))
 		srvCfg.API = srvconfig.APIConfig{
 			Enable:           true,
 			Swagger:          true,
 			EnableUnsafeCORS: true,
-			Address:          apiAddr,
+			Address:          apiURI,
 		}
 		apiSrv := api.New(clientCtx, logger.With(log.ModuleKey, "api-server"), grpcSrv)
 		wasmApp.RegisterAPIRoutes(apiSrv, srvCfg.API)
