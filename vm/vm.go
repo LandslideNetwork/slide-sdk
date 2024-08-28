@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/consideritdone/landslidevm/utils/crypto/bls"
+	"github.com/consideritdone/landslidevm/warp"
 	warpConnection "github.com/consideritdone/landslidevm/warp/connection"
 	http2 "net/http"
 	"os"
@@ -458,9 +460,12 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	// the last accepted block.
 	vm.warpDB = dbm.NewPrefixDB(vm.database, dbPrefixWarp)
 
-	//secretKey := bls.SecretKey{}
-	//warpSinger := warp.NewSigner(&secretKey, req.NetworkId, req.ChainId)
-	vm.warpBackend = warpConnection.NewBackend(req.NetworkId, req.ChainId, vm.warpDB)
+	blsSecretKey, err := bls.NewSecretKey()
+	if err != nil {
+		panic(err)
+	}
+	warpSigner := warp.NewSigner(blsSecretKey, vm.appOpts.NetworkID, ids.ID(vm.appOpts.ChainID))
+	vm.warpBackend = warpConnection.NewBackend(vm.appOpts.NetworkID, ids.ID(vm.appOpts.ChainID), warpSigner, vm.blockStore, vm.wrappedBlocks, vm.warpDB)
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
@@ -541,14 +546,8 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 
 	mux := http2.NewServeMux()
 	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vm).Routes(), vm.logger)
-	//
-	//if vm.config.WarpAPIEnabled {
-	//	validatorsState := warpValidators.NewState(vm.ctx)
-	//	if err := handler.RegisterName("warp", warp.NewAPI(vm.ctx.NetworkID, vm.ctx.SubnetID, vm.ctx.ChainID, validatorsState, vm.warpBackend, vm.client)); err != nil {
-	//		return nil, err
-	//	}
-	//	enabledAPIs = append(enabledAPIs, "warp")
-	//}
+	jsonrpc.RegisterRPCFuncs(mux, warpConnection.NewAPI(vm.appOpts.NetworkID, ids.ID(vm.appOpts.SubnetID),
+		ids.ID(vm.appOpts.ChainID), vm.warpBackend).Routes(), vm.logger)
 
 	httppb.RegisterHTTPServer(server, http.NewServer(mux))
 
