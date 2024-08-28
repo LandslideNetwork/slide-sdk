@@ -1,6 +1,3 @@
-// Copyright (C) 2019-2024, Ava Labs, Inc. All rights reserved.
-// See the file LICENSE for licensing terms.
-
 package grpcutils
 
 import (
@@ -12,9 +9,10 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	httppb "github.com/consideritdone/landslidevm/proto/http"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
+
+	httppb "github.com/consideritdone/landslidevm/proto/http"
 )
 
 func Errorf(code int, tmpl string, args ...interface{}) error {
