@@ -190,12 +190,12 @@ func WasmCreator() vm.AppCreator {
 			appCfg.APIHost = "localhost"
 		}
 		apiURI := fmt.Sprintf("tcp://%s", net.JoinHostPort(appCfg.APIHost, strconv.Itoa(int(appCfg.APIPort))))
-		srvCfg.API = srvconfig.APIConfig{
-			Enable:           true,
-			Swagger:          true,
-			EnableUnsafeCORS: true,
-			Address:          apiURI,
-		}
+
+		srvCfg.API.Enable = true
+		srvCfg.API.Swagger = false
+		srvCfg.API.EnableUnsafeCORS = true
+		srvCfg.API.Address = apiURI
+
 		apiSrv := api.New(clientCtx, logger.With(log.ModuleKey, "api-server"), grpcSrv)
 		wasmApp.RegisterAPIRoutes(apiSrv, srvCfg.API)
 		g.Go(func() error {
