@@ -72,11 +72,11 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 		"abci_query": jsonrpc.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
 		"abci_info":  jsonrpc.NewRPCFunc(rpc.ABCIInfo, "", jsonrpc.Cacheable()),
 
-		// warp API
-		"warp_1": jsonrpc.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
-		"warp_2": jsonrpc.NewRPCFunc(rpc.ABCIInfo, "path,data,height,prove"),
-		"warp_3": jsonrpc.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
-		"warp_4": jsonrpc.NewRPCFunc(rpc.ABCIInfo, "path,data,height,prove"),
+		//// warp API
+		//"warp_1": jsonrpc.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
+		//"warp_2": jsonrpc.NewRPCFunc(rpc.ABCIInfo, "path,data,height,prove"),
+		//"warp_3": jsonrpc.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
+		//"warp_4": jsonrpc.NewRPCFunc(rpc.ABCIInfo, "path,data,height,prove"),
 
 		// evidence API
 		// "broadcast_evidence": jsonrpc.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),

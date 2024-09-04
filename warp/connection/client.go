@@ -6,10 +6,10 @@ package connection
 import (
 	"context"
 	"fmt"
+	"github.com/cometbft/cometbft/libs/bytes"
 
-	"github.com/ava-labs/subnet-evm/rpc"
+	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	"github.com/consideritdone/landslidevm/utils/ids"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 var _ Client = (*client)(nil)
@@ -23,12 +23,12 @@ type Client interface {
 
 // client implementation for interacting with EVM [chain]
 type client struct {
-	client *rpc.Client
+	client *rpcclient.Client
 }
 
 // NewClient returns a Client for interacting with EVM [chain]
 func NewClient(uri, chain string) (Client, error) {
-	innerClient, err := rpc.Dial(fmt.Sprintf("%s/ext/bc/%s/rpc", uri, chain))
+	innerClient, err := rpcclient.New(fmt.Sprintf("%s/ext/bc/%s/rpc", uri, chain))
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial client. err: %w", err)
 	}
@@ -55,9 +55,11 @@ func NewClient(uri, chain string) (Client, error) {
 //}
 
 func (c *client) GetBlockSignature(ctx context.Context, blockID ids.ID) ([]byte, error) {
-	var res hexutil.Bytes
-	if err := c.client.CallContext(ctx, &res, "warp_getBlockSignature", blockID); err != nil {
-		return nil, fmt.Errorf("call to warp_getBlockSignature failed. err: %w", err)
+	var err error
+	var res bytes.HexBytes
+	_, err = c.client.Call(ctx, "get_block_signature", map[string]interface{}{"blockID": blockID}, &res)
+	if err != nil {
+		return nil, fmt.Errorf("call to get_block_signature failed. err: %w", err)
 	}
 	return res, nil
 }

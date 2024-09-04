@@ -9,6 +9,7 @@ import (
 	"github.com/consideritdone/landslidevm/utils/crypto/bls"
 	"github.com/consideritdone/landslidevm/warp"
 	warpConnection "github.com/consideritdone/landslidevm/warp/connection"
+	"golang.org/x/exp/maps"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -465,7 +466,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		panic(err)
 	}
 	warpSigner := warp.NewSigner(blsSecretKey, vm.appOpts.NetworkID, ids.ID(vm.appOpts.ChainID))
-	vm.warpBackend = warpConnection.NewBackend(vm.appOpts.NetworkID, ids.ID(vm.appOpts.ChainID), warpSigner, vm.blockStore, vm.wrappedBlocks, vm.warpDB)
+	vm.warpBackend = warpConnection.NewBackend(vm.appOpts.NetworkID, ids.ID(vm.appOpts.ChainID), warpSigner, vm.blockStore, vm.wrappedBlocks, vm.logger, vm.warpDB)
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
@@ -545,9 +546,11 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 	vm.serverCloser.Add(server)
 
 	mux := http2.NewServeMux()
-	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vm).Routes(), vm.logger)
-	jsonrpc.RegisterRPCFuncs(mux, warpConnection.NewAPI(vm.appOpts.NetworkID, ids.ID(vm.appOpts.SubnetID),
-		ids.ID(vm.appOpts.ChainID), vm.warpBackend).Routes(), vm.logger)
+	rpcRoutes := NewRPC(vm).Routes()
+	warpRoutes := warpConnection.NewAPI(vm.appOpts.NetworkID, ids.ID(vm.appOpts.SubnetID),
+		ids.ID(vm.appOpts.ChainID), vm.warpBackend).Routes()
+	maps.Copy(rpcRoutes, warpRoutes)
+	jsonrpc.RegisterRPCFuncs(mux, rpcRoutes, vm.logger)
 
 	httppb.RegisterHTTPServer(server, http.NewServer(mux))
 

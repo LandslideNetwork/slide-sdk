@@ -7,10 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ava-labs/avalanchego/vms/platformvm/warp"
+	"github.com/cometbft/cometbft/libs/bytes"
+	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/consideritdone/landslidevm/jsonrpc"
 	"github.com/consideritdone/landslidevm/utils/ids"
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/consideritdone/landslidevm/warp"
 )
 
 var errNoValidators = errors.New("cannot aggregate signatures from subnet with no validators")
@@ -46,7 +47,7 @@ func (api *API) Routes() map[string]*jsonrpc.RPCFunc {
 }
 
 // GetMessageSignature returns the BLS signature associated with a messageID.
-func (api *API) GetMessageSignature(ctx context.Context, messageID ids.ID) (hexutil.Bytes, error) {
+func (api *API) GetMessageSignature(ctx context.Context, messageID ids.ID) (bytes.HexBytes, error) {
 	//signature, err := a.backend.GetMessageSignature(messageID)
 	//if err != nil {
 	//	return nil, fmt.Errorf("failed to get signature for message %s with error %w", messageID, err)
@@ -56,7 +57,7 @@ func (api *API) GetMessageSignature(ctx context.Context, messageID ids.ID) (hexu
 }
 
 // GetBlockSignature returns the BLS signature associated with a blockID.
-func (api *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (hexutil.Bytes, error) {
+func (api *API) GetBlockSignature(_ *rpctypes.Context, blockID ids.ID) (bytes.HexBytes, error) {
 	signature, err := api.backend.GetBlockSignature(blockID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get signature for block %s with error %w", blockID, err)
@@ -65,7 +66,7 @@ func (api *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (hexutil.
 }
 
 // GetMessageAggregateSignature fetches the aggregate signature for the requested [messageID]
-func (api *API) GetMessageAggregateSignature(ctx context.Context, messageID ids.ID, quorumNum uint64) (signedMessageBytes hexutil.Bytes, err error) {
+func (api *API) GetMessageAggregateSignature(ctx context.Context, messageID ids.ID, quorumNum uint64) (signedMessageBytes bytes.HexBytes, err error) {
 	//unsignedMessage, err := a.backend.GetMessage(messageID)
 	//if err != nil {
 	//	return nil, err
@@ -75,7 +76,7 @@ func (api *API) GetMessageAggregateSignature(ctx context.Context, messageID ids.
 }
 
 // GetBlockAggregateSignature fetches the aggregate signature for the requested [blockID]
-func (api *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, quorumNum uint64) (signedMessageBytes hexutil.Bytes, err error) {
+func (api *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, quorumNum uint64) (signedMessageBytes bytes.HexBytes, err error) {
 	//blockHashPayload, err := payload.NewHash(blockID)
 	//if err != nil {
 	//	return nil, err
@@ -89,7 +90,7 @@ func (api *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, 
 	return nil, nil
 }
 
-func (api *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.UnsignedMessage, quorumNum uint64) (hexutil.Bytes, error) {
+func (api *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp.UnsignedMessage, quorumNum uint64) (bytes.HexBytes, error) {
 	//pChainHeight, err := a.state.GetCurrentHeight(ctx)
 	//if err != nil {
 	//	return nil, err

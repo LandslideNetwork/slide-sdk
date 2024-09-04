@@ -3,6 +3,7 @@ package vm
 import (
 	"context"
 	_ "embed"
+	"github.com/consideritdone/landslidevm/utils/ids"
 	"net"
 	"testing"
 
@@ -57,9 +58,16 @@ func newKvApp(t *testing.T, vmdb, appdb dbm.DB) vmpb.VMServer {
 		return kvstore.NewApplication(appdb), nil
 	}, WithOptClientConn(mockConn))
 	require.NotNil(t, vm)
+	chainID, err := ids.ToID([]byte("chainID1234567890123456789012345"))
+	require.NoError(t, err)
+	subnetID, err := ids.ToID([]byte("subnetID123456789012345678901234"))
+	require.NoError(t, err)
 	initRes, err := vm.Initialize(context.TODO(), &vmpb.InitializeRequest{
 		DbServerAddr: "inmemory",
 		GenesisBytes: kvstorevmGenesis,
+		NetworkId:    70707,
+		ChainId:      []byte(chainID.String()),
+		SubnetId:     []byte(subnetID.String()),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, initRes)

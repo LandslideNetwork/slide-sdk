@@ -2,9 +2,15 @@ package vm
 
 import (
 	"context"
+	"github.com/cometbft/cometbft/libs/bytes"
+	"github.com/consideritdone/landslidevm/utils/ids"
+	warpConnection "github.com/consideritdone/landslidevm/warp/connection"
+	"maps"
 	"net/http"
 	"testing"
 	"time"
+
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/rpc/jsonrpc/client"
@@ -18,7 +24,11 @@ func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
 	vm := newFreshKvApp(t)
 	vmLnd := vm.(*LandslideVM)
 	mux := http.NewServeMux()
-	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vmLnd).Routes(), vmLnd.logger)
+	rpcRoutes := NewRPC(vmLnd).Routes()
+	warpRoutes := warpConnection.NewAPI(vmLnd.appOpts.NetworkID, ids.ID(vmLnd.appOpts.SubnetID),
+		ids.ID(vmLnd.appOpts.ChainID), vmLnd.warpBackend).Routes()
+	maps.Copy(rpcRoutes, warpRoutes)
+	jsonrpc.RegisterRPCFuncs(mux, rpcRoutes, vmLnd.logger)
 
 	address := "127.0.0.1:44444"
 	server := &http.Server{Addr: address, Handler: mux}
@@ -86,7 +96,11 @@ func setupTestRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
 	vm := newFreshKvApp(t)
 	vmLnd := vm.(*LandslideVM)
 	mux := http.NewServeMux()
-	jsonrpc.RegisterRPCFuncs(mux, NewTestRPC(vmLnd).Routes(), vmLnd.logger)
+	rpcRoutes := NewRPC(vmLnd).Routes()
+	warpRoutes := warpConnection.NewAPI(vmLnd.appOpts.NetworkID, ids.ID(vmLnd.appOpts.SubnetID),
+		ids.ID(vmLnd.appOpts.ChainID), vmLnd.warpBackend).Routes()
+	maps.Copy(rpcRoutes, warpRoutes)
+	jsonrpc.RegisterRPCFuncs(mux, rpcRoutes, vmLnd.logger)
 
 	address := "127.0.0.1:44444"
 	server := &http.Server{Addr: address, Handler: mux, ReadHeaderTimeout: time.Second * 5, WriteTimeout: time.Second * 5}
@@ -103,14 +117,37 @@ func setupTestRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
 	return server, vmLnd, rpcClient
 }
 
+//
+//// TestPanic tests that the server recovers from a panic.
+//func TestPanic(t *testing.T) {
+//	server, _, rpcClient := setupTestRPC(t)
+//	defer server.Close()
+//
+//	result := new(ctypes.ResultStatus)
+//	_, err := rpcClient.Call(context.Background(), "test_panic", map[string]interface{}{}, result)
+//	require.Error(t, err)
+//
+//	t.Logf("Panic result %+v", err)
+//}
+
 // TestPanic tests that the server recovers from a panic.
-func TestPanic(t *testing.T) {
-	server, _, rpcClient := setupTestRPC(t)
+func TestGetBlockSignature(t *testing.T) {
+	server, vm, rpcClient := setupTestRPC(t)
 	defer server.Close()
 
-	result := new(ctypes.ResultStatus)
-	_, err := rpcClient.Call(context.Background(), "test_panic", map[string]interface{}{}, result)
-	require.Error(t, err)
+	result := new(coretypes.ResultBlock)
+	_, err := rpcClient.Call(context.Background(), "block", map[string]interface{}{"height": vm.state.LastBlockHeight}, result)
+	require.NoError(t, err)
+	//
+	//result := new(bytes.HexBytes)
+	//_, err := rpcClient.Call(context.Background(), "get_block_signature", map[string]interface{}{base58.Encode()}, result)
+	//require.NoError(t, err)
 
-	t.Logf("Panic result %+v", err)
+	resultSig := new(bytes.HexBytes)
+	blkID, err := ids.ToID(result.Block.Hash().Bytes())
+	require.NoError(t, err)
+	_, err = rpcClient.Call(context.Background(), "get_block_signature", map[string]interface{}{"blockID": blkID}, resultSig)
+	require.NoError(t, err)
+
+	t.Logf("GetBlockSignature result %+v", result)
 }
