@@ -401,22 +401,27 @@ func (rpc *RPC) Health(*rpctypes.Context) (*ctypes.ResultHealth, error) {
 
 // bsHeight can be either latest committed or uncommitted (+1) height.
 func getHeight(bs *store.BlockStore, heightPtr *int64) (int64, error) {
-	bsHeight := bs.Height()
-	if heightPtr != nil {
-		height := *heightPtr
-		if height <= 0 {
-			return 0, fmt.Errorf("height must be greater than 0, but got %d", height)
-		}
-		if height > bsHeight {
-			return 0, fmt.Errorf("height %d must be less than or equal to the current blockchain height %d", height, bsHeight)
-		}
-		bsBase := bs.Base()
-		if height < bsBase {
-			return 0, fmt.Errorf("height %d is not available, lowest height is %d", height, bsBase)
-		}
-		return height, nil
+	if heightPtr == nil {
+		return bs.Height(), nil
 	}
-	return bsHeight, nil
+
+	height := *heightPtr
+	if height <= 0 {
+		return 0, fmt.Errorf("height must be greater than 0, but got %d", height)
+	}
+	if height > bs.Height() {
+		return 0, fmt.Errorf(
+			"height %d must be less than or equal to the current blockchain height %d",
+			height,
+			bs.Height(),
+		)
+	}
+	bsBase := bs.Base()
+	if height < bsBase {
+		return 0, fmt.Errorf("height %d is not available, lowest height is %d", height, bsBase)
+	}
+
+	return height, nil
 }
 
 func (rpc *RPC) Block(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBlock, error) {
