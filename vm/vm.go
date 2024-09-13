@@ -577,7 +577,7 @@ func (vm *LandslideVM) BuildBlock(context.Context, *vmpb.BuildBlockRequest) (*vm
 				BlockIDFlag:      types.BlockIDFlagNil,
 				Timestamp:        time.Now(),
 				ValidatorAddress: vm.state.Validators.Validators[i].Address,
-				Signature:        crypto.CRandBytes(types.MaxSignatureSize), // todo: sign the block
+				Signature:        crypto.CRandBytes(types.MaxSignatureSize),
 			},
 		}
 	}
