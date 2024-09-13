@@ -213,7 +213,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		vm.connCloser.Add(vm.optClientConn)
 		vm.clientConn = vm.optClientConn
 	} else {
-		clientConn, err := grpc.Dial(
+		clientConn, err := grpc.NewClient(
 			"passthrough:///"+req.ServerAddr,
 			grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
 			grpc.WithChainStreamInterceptor(grpcClientMetrics.StreamClientInterceptor()),
@@ -258,7 +258,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 	// Dial the database
 	if vm.database == nil {
-		dbClientConn, err := grpc.Dial(
+		dbClientConn, err := grpc.NewClient(
 			"passthrough:///"+req.DbServerAddr,
 			grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
 			grpc.WithChainStreamInterceptor(grpcClientMetrics.StreamClientInterceptor()),
