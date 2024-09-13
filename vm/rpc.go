@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"time"
 
@@ -591,7 +592,11 @@ func (rpc *RPC) Tx(_ *rpctypes.Context, hash []byte, prove bool) (*ctypes.Result
 	var proof types.TxProof
 	if prove {
 		block := rpc.vm.blockStore.LoadBlock(height)
-		proof = block.Data.Txs.Proof(int(index)) // XXX: overflow on 32-bit machines
+
+		if r.Index > math.MaxInt32 {
+			return nil, errors.New("index value overflows int on 32-bit systems")
+		}
+		proof = block.Data.Txs.Proof(int(index))
 	}
 
 	return &ctypes.ResultTx{
@@ -662,7 +667,11 @@ func (rpc *RPC) TxSearch(
 		var proof types.TxProof
 		if prove {
 			block := rpc.vm.blockStore.LoadBlock(r.Height)
-			proof = block.Data.Txs.Proof(int(r.Index)) // XXX: overflow on 32-bit machines
+
+			if r.Index > math.MaxInt32 {
+				return nil, errors.New("index value overflows int on 32-bit systems")
+			}
+			proof = block.Data.Txs.Proof(int(r.Index))
 		}
 
 		apiResults = append(apiResults, &ctypes.ResultTx{
