@@ -206,6 +206,8 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	// Register metrics for each Go plugin processes
 	vm.processMetrics = registerer
 
+	vm.logger = log.NewTMLogger(os.Stdout)
+
 	// add to connCloser even we have defined vm.clientConn via Option
 	if vm.optClientConn != nil {
 		vm.connCloser.Add(vm.optClientConn)
@@ -218,16 +220,15 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err != nil {
-			// Ignore closing errors to return the original error
-			_ = vm.connCloser.Close()
+			if closerErr := vm.connCloser.Close(); closerErr != nil {
+				vm.logger.Error("failed to close connCloser", "err", err)
+			}
 			return nil, err
 		}
 
 		vm.connCloser.Add(clientConn)
 		vm.clientConn = clientConn
 	}
-
-	vm.logger = log.NewTMLogger(os.Stdout)
 
 	msgClient := messengerpb.NewMessengerClient(vm.clientConn)
 
