@@ -42,9 +42,7 @@ func bufDialer(context.Context, string) (net.Conn, error) {
 }
 
 func newKvApp(t *testing.T, vmdb, appdb dbm.DB) vmpb.VMServer {
-	ctx := context.Background()
-	mockConn, err := grpc.DialContext(
-		ctx,
+	mockConn, err := grpc.NewClient(
 		"bufnet",
 		grpc.WithContextDialer(bufDialer),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -148,10 +146,8 @@ func TestAcceptBlock(t *testing.T) {
 func TestShutdownWithoutInit(t *testing.T) {
 	vmdb := dbm.NewMemDB()
 	appdb := dbm.NewMemDB()
-	ctx := context.Background()
 
-	mockConn, err := grpc.DialContext(
-		ctx,
+	mockConn, err := grpc.NewClient(
 		"bufnet",
 		grpc.WithContextDialer(bufDialer),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),

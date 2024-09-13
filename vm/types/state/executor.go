@@ -171,7 +171,7 @@ func (blockExec *BlockExecutor) ProcessProposal(
 	block *types.Block,
 	state statetypes.State,
 ) (bool, error) {
-	resp, err := blockExec.proxyApp.ProcessProposal(context.TODO(), &abci.RequestProcessProposal{
+	resp, err := blockExec.proxyApp.ProcessProposal(context.Background(), &abci.RequestProcessProposal{
 		Hash:               block.Header.Hash(),
 		Height:             block.Header.Height,
 		Time:               block.Header.Time,
@@ -214,7 +214,7 @@ func (blockExec *BlockExecutor) ApplyBlock(
 	}
 
 	startTime := time.Now().UnixNano()
-	abciResponse, err := blockExec.proxyApp.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	abciResponse, err := blockExec.proxyApp.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{
 		Hash:               block.Hash(),
 		NextValidatorsHash: block.NextValidatorsHash,
 		ProposerAddress:    block.ProposerAddress,
@@ -391,7 +391,7 @@ func (blockExec *BlockExecutor) Commit(
 	}
 
 	// Commit block, get hash back
-	res, err := blockExec.proxyApp.Commit(context.TODO())
+	res, err := blockExec.proxyApp.Commit(context.Background())
 	if err != nil {
 		blockExec.logger.Error("client error during proxyAppConn.CommitSync", "err", err)
 		return 0, err
@@ -727,7 +727,7 @@ func ExecCommitBlock(
 ) ([]byte, error) {
 	commitInfo := buildLastCommitInfoFromStore(block, store, initialHeight)
 
-	resp, err := appConnConsensus.FinalizeBlock(context.TODO(), &abci.RequestFinalizeBlock{
+	resp, err := appConnConsensus.FinalizeBlock(context.Background(), &abci.RequestFinalizeBlock{
 		Hash:               block.Hash(),
 		NextValidatorsHash: block.NextValidatorsHash,
 		ProposerAddress:    block.ProposerAddress,
@@ -750,7 +750,7 @@ func ExecCommitBlock(
 	logger.Info("executed block", "height", block.Height, "app_hash", fmt.Sprintf("%X", resp.AppHash))
 
 	// Commit block
-	_, err = appConnConsensus.Commit(context.TODO())
+	_, err = appConnConsensus.Commit(context.Background())
 	if err != nil {
 		logger.Error("client error during proxyAppConn.Commit", "err", err)
 		return nil, err

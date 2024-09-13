@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"time"
 
@@ -104,7 +105,7 @@ func (rpc *RPC) NumUnconfirmedTxs(*rpctypes.Context) (*ctypes.ResultUnconfirmedT
 // CheckTx checks the transaction without executing it. The transaction won't
 // be added to the mempool either.
 func (rpc *RPC) CheckTx(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultCheckTx, error) {
-	res, err := rpc.vm.app.Mempool().CheckTx(context.TODO(), &abci.RequestCheckTx{Tx: tx})
+	res, err := rpc.vm.app.Mempool().CheckTx(context.Background(), &abci.RequestCheckTx{Tx: tx})
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +114,7 @@ func (rpc *RPC) CheckTx(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultCheckTx
 
 // ABCIInfo returns the latest information about the application.
 func (rpc *RPC) ABCIInfo(_ *rpctypes.Context) (*ctypes.ResultABCIInfo, error) {
-	resInfo, err := rpc.vm.app.Query().Info(context.TODO(), proxy.RequestInfo)
+	resInfo, err := rpc.vm.app.Query().Info(context.Background(), proxy.RequestInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +129,7 @@ func (rpc *RPC) ABCIQuery(
 	height int64,
 	prove bool,
 ) (*ctypes.ResultABCIQuery, error) {
-	resQuery, err := rpc.vm.app.Query().Query(context.TODO(), &abci.RequestQuery{
+	resQuery, err := rpc.vm.app.Query().Query(context.Background(), &abci.RequestQuery{
 		Path:   path,
 		Data:   data,
 		Height: height,
@@ -400,22 +401,27 @@ func (rpc *RPC) Health(*rpctypes.Context) (*ctypes.ResultHealth, error) {
 
 // bsHeight can be either latest committed or uncommitted (+1) height.
 func getHeight(bs *store.BlockStore, heightPtr *int64) (int64, error) {
-	bsHeight := bs.Height()
-	if heightPtr != nil {
-		height := *heightPtr
-		if height <= 0 {
-			return 0, fmt.Errorf("height must be greater than 0, but got %d", height)
-		}
-		if height > bsHeight {
-			return 0, fmt.Errorf("height %d must be less than or equal to the current blockchain height %d", height, bsHeight)
-		}
-		bsBase := bs.Base()
-		if height < bsBase {
-			return 0, fmt.Errorf("height %d is not available, lowest height is %d", height, bsBase)
-		}
-		return height, nil
+	if heightPtr == nil {
+		return bs.Height(), nil
 	}
-	return bsHeight, nil
+
+	height := *heightPtr
+	if height <= 0 {
+		return 0, fmt.Errorf("height must be greater than 0, but got %d", height)
+	}
+	if height > bs.Height() {
+		return 0, fmt.Errorf(
+			"height %d must be less than or equal to the current blockchain height %d",
+			height,
+			bs.Height(),
+		)
+	}
+	bsBase := bs.Base()
+	if height < bsBase {
+		return 0, fmt.Errorf("height %d is not available, lowest height is %d", height, bsBase)
+	}
+
+	return height, nil
 }
 
 func (rpc *RPC) Block(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBlock, error) {
@@ -591,7 +597,11 @@ func (rpc *RPC) Tx(_ *rpctypes.Context, hash []byte, prove bool) (*ctypes.Result
 	var proof types.TxProof
 	if prove {
 		block := rpc.vm.blockStore.LoadBlock(height)
-		proof = block.Data.Txs.Proof(int(index)) // XXX: overflow on 32-bit machines
+
+		if r.Index > math.MaxInt32 {
+			return nil, errors.New("index value overflows int on 32-bit systems")
+		}
+		proof = block.Data.Txs.Proof(int(index))
 	}
 
 	return &ctypes.ResultTx{
@@ -662,7 +672,11 @@ func (rpc *RPC) TxSearch(
 		var proof types.TxProof
 		if prove {
 			block := rpc.vm.blockStore.LoadBlock(r.Height)
-			proof = block.Data.Txs.Proof(int(r.Index)) // XXX: overflow on 32-bit machines
+
+			if r.Index > math.MaxInt32 {
+				return nil, errors.New("index value overflows int on 32-bit systems")
+			}
+			proof = block.Data.Txs.Proof(int(r.Index))
 		}
 
 		apiResults = append(apiResults, &ctypes.ResultTx{

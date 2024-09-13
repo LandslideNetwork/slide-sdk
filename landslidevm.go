@@ -133,7 +133,7 @@ func Serve[T interface {
 		return fmt.Errorf("required env var missing: %q", EngineAddressKey)
 	}
 
-	clientConn, err := grpc.Dial("passthrough:///"+runtimeAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	clientConn, err := grpc.NewClient("passthrough:///"+runtimeAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("failed to create client conn: %w", err)
 	}
