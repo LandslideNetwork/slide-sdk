@@ -1,6 +1,6 @@
 module github.com/consideritdone/landslidevm
 
-go 1.22.5
+go 1.22.7
 
 require (
 	cosmossdk.io/log v1.3.1
