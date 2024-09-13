@@ -138,10 +138,6 @@ func TestGetBlockSignature(t *testing.T) {
 	result := new(coretypes.ResultBlock)
 	_, err := rpcClient.Call(context.Background(), "block", map[string]interface{}{"height": vm.state.LastBlockHeight}, result)
 	require.NoError(t, err)
-	//
-	//result := new(bytes.HexBytes)
-	//_, err := rpcClient.Call(context.Background(), "get_block_signature", map[string]interface{}{base58.Encode()}, result)
-	//require.NoError(t, err)
 
 	resultSig := new(bytes.HexBytes)
 	blkID, err := ids.ToID(result.Block.Hash().Bytes())
