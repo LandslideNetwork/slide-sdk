@@ -6,6 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/consideritdone/landslidevm/utils/crypto/bls"
+	"github.com/consideritdone/landslidevm/warp"
+	warpConnection "github.com/consideritdone/landslidevm/warp/connection"
+	"golang.org/x/exp/maps"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -54,7 +58,8 @@ import (
 )
 
 const (
-	genesisChunkSize = 16 * 1024 * 1024 // 16
+	genesisChunkSize       = 16 * 1024 * 1024 // 16
+	warpSignatureCacheSize = 500
 )
 
 var (
@@ -64,6 +69,7 @@ var (
 	dbPrefixStateStore   = []byte("state-store")
 	dbPrefixTxIndexer    = []byte("tx-indexer")
 	dbPrefixBlockIndexer = []byte("block-indexer")
+	dbPrefixWarp         = []byte("warp")
 
 	// TODO: use internal app validators instead
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -134,6 +140,14 @@ type (
 		verifiedBlocks sync.Map
 		preferred      [32]byte
 		wrappedBlocks  *vmstate.WrappedBlocksStorage
+
+		// [warpDB] is used to store warp message signatures
+		// set to a prefixDB with the prefix [warpPrefix]
+		warpDB dbm.DB
+
+		// Avalanche Warp Messaging backend
+		// Used to serve BLS signatures of warp messages over RPC
+		warpBackend warpConnection.Backend
 
 		clientConn    grpc.ClientConnInterface
 		optClientConn *grpc.ClientConn
@@ -442,6 +456,18 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 	parentHash := block.ParentHash(blk)
 
+	// Note warpDB is not part of versiondb because it is not necessary
+	// that warp signatures are committed to the database atomically with
+	// the last accepted block.
+	vm.warpDB = dbm.NewPrefixDB(vm.database, dbPrefixWarp)
+
+	blsSecretKey, err := bls.NewSecretKey()
+	if err != nil {
+		panic(err)
+	}
+	warpSigner := warp.NewSigner(blsSecretKey, vm.appOpts.NetworkID, ids.ID(vm.appOpts.ChainID))
+	vm.warpBackend = warpConnection.NewBackend(vm.appOpts.NetworkID, ids.ID(vm.appOpts.ChainID), warpSigner, vm.blockStore, vm.wrappedBlocks, vm.logger, vm.warpDB)
+
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
 		LastAcceptedParentId: parentHash[:],
@@ -520,7 +546,11 @@ func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.Cr
 	vm.serverCloser.Add(server)
 
 	mux := http2.NewServeMux()
-	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vm).Routes(), vm.logger)
+	rpcRoutes := NewRPC(vm).Routes()
+	warpRoutes := warpConnection.NewAPI(vm.appOpts.NetworkID, ids.ID(vm.appOpts.SubnetID),
+		ids.ID(vm.appOpts.ChainID), vm.warpBackend).Routes()
+	maps.Copy(rpcRoutes, warpRoutes)
+	jsonrpc.RegisterRPCFuncs(mux, rpcRoutes, vm.logger)
 
 	httppb.RegisterHTTPServer(server, http.NewServer(mux))
 

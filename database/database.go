@@ -124,3 +124,37 @@ func (db *Database) Stats() map[string]string {
 	// TODO implement me
 	return nil
 }
+
+func Clear(db dbm.DB) error {
+	b := db.NewBatch()
+	it, err := db.Iterator(nil, nil)
+	if err != nil {
+		return err
+	}
+	// Defer the release of the iterator inside a closure to guarantee that the
+	// latest, not the first, iterator is released on return.
+	defer func() {
+		it.Close()
+	}()
+
+	for i := 0; it.Valid(); i++ {
+		key := it.Key()
+		if err := b.Delete(key); err != nil {
+			return err
+		}
+
+		if err := b.Write(); err != nil {
+			return err
+		}
+		// Reset the iterator to release references to now deleted keys.
+		if err := it.Error(); err != nil {
+			return err
+		}
+		it.Next()
+	}
+
+	if err := b.Write(); err != nil {
+		return err
+	}
+	return it.Error()
+}
