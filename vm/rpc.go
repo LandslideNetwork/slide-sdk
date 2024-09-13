@@ -104,7 +104,7 @@ func (rpc *RPC) NumUnconfirmedTxs(*rpctypes.Context) (*ctypes.ResultUnconfirmedT
 // CheckTx checks the transaction without executing it. The transaction won't
 // be added to the mempool either.
 func (rpc *RPC) CheckTx(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultCheckTx, error) {
-	res, err := rpc.vm.app.Mempool().CheckTx(context.TODO(), &abci.RequestCheckTx{Tx: tx})
+	res, err := rpc.vm.app.Mempool().CheckTx(context.Background(), &abci.RequestCheckTx{Tx: tx})
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (rpc *RPC) CheckTx(_ *rpctypes.Context, tx types.Tx) (*ctypes.ResultCheckTx
 
 // ABCIInfo returns the latest information about the application.
 func (rpc *RPC) ABCIInfo(_ *rpctypes.Context) (*ctypes.ResultABCIInfo, error) {
-	resInfo, err := rpc.vm.app.Query().Info(context.TODO(), proxy.RequestInfo)
+	resInfo, err := rpc.vm.app.Query().Info(context.Background(), proxy.RequestInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (rpc *RPC) ABCIQuery(
 	height int64,
 	prove bool,
 ) (*ctypes.ResultABCIQuery, error) {
-	resQuery, err := rpc.vm.app.Query().Query(context.TODO(), &abci.RequestQuery{
+	resQuery, err := rpc.vm.app.Query().Query(context.Background(), &abci.RequestQuery{
 		Path:   path,
 		Data:   data,
 		Height: height,
