@@ -18,9 +18,9 @@ LandslideVM is a custom virtual machine designed for AvalancheGo. It enables the
 
 LandslideVM relies on the following major dependencies:
 
-- Go (latest version recommended)
-- Cosmos SDK
-- AvalancheGo
+- Go v 1.22.7
+- Cosmos SDK 0.50.9 (https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.9)
+- AvalancheGo v1.11.11 (https://github.com/ava-labs/avalanchego/releases/tag/v1.11.11)
 
 Please ensure you have the latest versions of these dependencies installed to avoid any known vulnerabilities.
 
