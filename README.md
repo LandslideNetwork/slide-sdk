@@ -1,5 +1,6 @@
 # Slide SDK
 ![Slide SDK](https://media.publit.io/file/Landslide/Github/Slide-SDK.png)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
 
 LandslideVM is a custom virtual machine designed for AvalancheGo. It enables the execution of Cosmos SDK chains on the Avalanche network by emulating the CometBFT consensus mechanism. This innovative VM allows for the execution of Cosmos SDK chains and interaction with Cosmos modules while being secured by the Avalanche consensus protocol.
 
