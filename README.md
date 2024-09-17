@@ -48,7 +48,7 @@ For a full understanding of the security considerations, please refer to the com
 
 ## License
 
-[Add license information here]
+Slide SDK v0.1 is licensed under the [Business Source License 1.1](./LICENSE). Please see the [LICENSE](./LICENSE) file for details.
 
 ## Disclaimer
 
