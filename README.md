@@ -36,11 +36,7 @@ Please ensure you have the latest versions of these dependencies installed to av
 
 ## Installation
 
-[Add installation instructions here]
-
-## Usage
-
-[Add usage instructions here]
+Please follow our docs for installation: (https://docs.landslide.network/)
 
 ## Security
 
