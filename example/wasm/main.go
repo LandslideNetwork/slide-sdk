@@ -31,10 +31,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/consideritdone/landslidevm"
-	"github.com/consideritdone/landslidevm/utils/ids"
-	"github.com/consideritdone/landslidevm/vm"
-	vmtypes "github.com/consideritdone/landslidevm/vm/types"
+	"github.com/landslidenetwork/slide-sdk"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/vm"
+	vmtypes "github.com/landslidenetwork/slide-sdk/vm/types"
 )
 
 // AppConfig is a Wasm App Config

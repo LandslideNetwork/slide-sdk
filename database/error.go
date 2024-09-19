@@ -3,7 +3,7 @@ package database
 import (
 	"errors"
 
-	"github.com/consideritdone/landslidevm/proto/rpcdb"
+	"github.com/landslidenetwork/slide-sdk/proto/rpcdb"
 )
 
 var (

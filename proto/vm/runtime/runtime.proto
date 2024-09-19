@@ -4,7 +4,7 @@ package vm.runtime;
 
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/consideritdone/landslidevm/proto/vm/runtime";
+option go_package = "github.com/landslidenetwork/slide-sdk/proto/vm/runtime";
 
 // Manages the lifecycle of a subnet VM process.
 service Runtime {

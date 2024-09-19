@@ -3,7 +3,7 @@ package linkedhashmap
 import (
 	"container/list"
 
-	"github.com/consideritdone/landslidevm/utils"
+	"github.com/landslidenetwork/slide-sdk/utils"
 )
 
 var _ Iter[int, struct{}] = (*iterator[int, struct{}])(nil)

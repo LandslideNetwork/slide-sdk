@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/consideritdone/landslidevm/proto/vm"
+	"github.com/landslidenetwork/slide-sdk/proto/vm"
 )
 
 func TestEncodeDecodeBlockWithStatus(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"cmp"
 	"slices"
 
-	"github.com/consideritdone/landslidevm/utils/hashing"
+	"github.com/landslidenetwork/slide-sdk/utils/hashing"
 )
 
 // TODO can we handle sorting where the Compare function relies on a codec?

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package messenger;
 
-option go_package = "github.com/consideritdone/landslidevm/proto/messenger";
+option go_package = "github.com/landslidenetwork/slide-sdk/proto/messenger";
 
 service Messenger {
   rpc Notify(NotifyRequest) returns (NotifyResponse);

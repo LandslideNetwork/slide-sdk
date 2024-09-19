@@ -22,8 +22,8 @@ import (
 	"github.com/cometbft/cometbft/types"
 	"github.com/cometbft/cometbft/version"
 
-	"github.com/consideritdone/landslidevm/jsonrpc"
-	"github.com/consideritdone/landslidevm/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/jsonrpc"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
 type RPC struct {

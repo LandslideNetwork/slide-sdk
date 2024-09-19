@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/consideritdone/landslidevm/proto/vm"
-	"github.com/consideritdone/landslidevm/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/proto/vm"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
 func TestGetCachedBlock(t *testing.T) {

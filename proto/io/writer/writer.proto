@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package io.writer;
 
-option go_package = "github.com/consideritdone/landslidevm/proto/io/writer";
+option go_package = "github.com/landslidenetwork/slide-sdk/proto/io/writer";
 
 // Writer see: io.Writer https://pkg.go.dev/io#Writer
 service Writer {

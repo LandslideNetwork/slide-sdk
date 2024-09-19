@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"sync"
 
-	"github.com/consideritdone/landslidevm/utils"
+	"github.com/landslidenetwork/slide-sdk/utils"
 )
 
 var _ LinkedHashmap[int, struct{}] = (*linkedHashmap[int, struct{}])(nil)

@@ -1,4 +1,4 @@
-module github.com/consideritdone/landslidevm
+module github.com/landslidenetwork/slide-sdk
 
 go 1.22.7
 

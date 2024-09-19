@@ -7,15 +7,15 @@ import (
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/consideritdone/landslidevm/grpcutils"
-	"github.com/consideritdone/landslidevm/http/conn"
-	"github.com/consideritdone/landslidevm/http/reader"
-	"github.com/consideritdone/landslidevm/http/writer"
+	"github.com/landslidenetwork/slide-sdk/grpcutils"
+	"github.com/landslidenetwork/slide-sdk/http/conn"
+	"github.com/landslidenetwork/slide-sdk/http/reader"
+	"github.com/landslidenetwork/slide-sdk/http/writer"
 
-	responsewriterpb "github.com/consideritdone/landslidevm/proto/http/responsewriter"
-	readerpb "github.com/consideritdone/landslidevm/proto/io/reader"
-	writerpb "github.com/consideritdone/landslidevm/proto/io/writer"
-	connpb "github.com/consideritdone/landslidevm/proto/net/conn"
+	responsewriterpb "github.com/landslidenetwork/slide-sdk/proto/http/responsewriter"
+	readerpb "github.com/landslidenetwork/slide-sdk/proto/io/reader"
+	writerpb "github.com/landslidenetwork/slide-sdk/proto/io/writer"
+	connpb "github.com/landslidenetwork/slide-sdk/proto/net/conn"
 )
 
 var (

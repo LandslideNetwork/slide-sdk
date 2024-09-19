@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/consideritdone/landslidevm/utils"
-	"github.com/consideritdone/landslidevm/utils/cb58"
-	"github.com/consideritdone/landslidevm/utils/hashing"
-	"github.com/consideritdone/landslidevm/utils/wrappers"
+	"github.com/landslidenetwork/slide-sdk/utils"
+	"github.com/landslidenetwork/slide-sdk/utils/cb58"
+	"github.com/landslidenetwork/slide-sdk/utils/hashing"
+	"github.com/landslidenetwork/slide-sdk/utils/wrappers"
 )
 
 const (

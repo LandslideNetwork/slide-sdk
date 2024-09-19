@@ -5,9 +5,9 @@ import (
 
 	"github.com/cometbft/cometbft/types"
 
-	"github.com/consideritdone/landslidevm/proto/vm"
-	"github.com/consideritdone/landslidevm/utils/cache"
-	"github.com/consideritdone/landslidevm/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/proto/vm"
+	"github.com/landslidenetwork/slide-sdk/utils/cache"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
 // TODO: make these configurable

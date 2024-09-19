@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package io.reader;
 
-option go_package = "github.com/consideritdone/landslidevm/proto/io/reader";
+option go_package = "github.com/landslidenetwork/slide-sdk/proto/io/reader";
 
 // Reader is an io.Reader see: https://pkg.go.dev/io#Reader
 service Reader {

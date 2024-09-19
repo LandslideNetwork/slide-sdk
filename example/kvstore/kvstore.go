@@ -6,8 +6,8 @@ import (
 
 	"github.com/cometbft/cometbft/abci/example/kvstore"
 
-	"github.com/consideritdone/landslidevm"
-	"github.com/consideritdone/landslidevm/vm"
+	"github.com/landslidenetwork/slide-sdk"
+	"github.com/landslidenetwork/slide-sdk/vm"
 )
 
 func main() {

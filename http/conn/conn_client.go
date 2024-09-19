@@ -9,7 +9,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	connpb "github.com/consideritdone/landslidevm/proto/net/conn"
+	connpb "github.com/landslidenetwork/slide-sdk/proto/net/conn"
 )
 
 var _ net.Conn = (*Client)(nil)
