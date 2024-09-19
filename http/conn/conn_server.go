@@ -7,9 +7,9 @@ import (
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/consideritdone/landslidevm/grpcutils"
+	"github.com/landslidenetwork/slide-sdk/grpcutils"
 
-	connpb "github.com/consideritdone/landslidevm/proto/net/conn"
+	connpb "github.com/landslidenetwork/slide-sdk/proto/net/conn"
 )
 
 var _ connpb.ConnServer = (*Server)(nil)

@@ -8,7 +8,7 @@ import (
 
 	"github.com/mr-tron/base58/base58"
 
-	"github.com/consideritdone/landslidevm/utils/hashing"
+	"github.com/landslidenetwork/slide-sdk/utils/hashing"
 )
 
 const checksumLen = 4

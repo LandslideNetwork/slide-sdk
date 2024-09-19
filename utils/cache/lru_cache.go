@@ -3,8 +3,8 @@ package cache
 import (
 	"sync"
 
-	"github.com/consideritdone/landslidevm/utils"
-	"github.com/consideritdone/landslidevm/utils/linkedhashmap"
+	"github.com/landslidenetwork/slide-sdk/utils"
+	"github.com/landslidenetwork/slide-sdk/utils/linkedhashmap"
 )
 
 var _ Cacher[struct{}, struct{}] = (*LRU[struct{}, struct{}])(nil)

@@ -6,7 +6,7 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 
-	"github.com/consideritdone/landslidevm/proto/rpcdb"
+	"github.com/landslidenetwork/slide-sdk/proto/rpcdb"
 )
 
 var (

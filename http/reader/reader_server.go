@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	readerpb "github.com/consideritdone/landslidevm/proto/io/reader"
+	readerpb "github.com/landslidenetwork/slide-sdk/proto/io/reader"
 )
 
 var _ readerpb.ReaderServer = (*Server)(nil)

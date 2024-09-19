@@ -13,7 +13,7 @@ import (
 	"github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 
-	"github.com/consideritdone/landslidevm/proto/vm"
+	"github.com/landslidenetwork/slide-sdk/proto/vm"
 )
 
 func EncodeBlockWithStatus(blk *types.Block, status vm.Status) ([]byte, error) {

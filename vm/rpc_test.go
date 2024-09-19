@@ -11,7 +11,7 @@ import (
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/consideritdone/landslidevm/jsonrpc"
+	"github.com/landslidenetwork/slide-sdk/jsonrpc"
 )
 
 func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {

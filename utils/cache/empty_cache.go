@@ -1,6 +1,6 @@
 package cache
 
-import "github.com/consideritdone/landslidevm/utils"
+import "github.com/landslidenetwork/slide-sdk/utils"
 
 var _ Cacher[struct{}, struct{}] = (*Empty[struct{}, struct{}])(nil)
 

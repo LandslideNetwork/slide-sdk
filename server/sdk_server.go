@@ -1,4 +1,4 @@
-package landslidevm
+package server
 
 import (
 	"context"
@@ -16,9 +16,9 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/keepalive"
 
-	vmpb "github.com/consideritdone/landslidevm/proto/vm"
-	runtimepb "github.com/consideritdone/landslidevm/proto/vm/runtime"
-	"github.com/consideritdone/landslidevm/vm"
+	vmpb "github.com/landslidenetwork/slide-sdk/proto/vm"
+	runtimepb "github.com/landslidenetwork/slide-sdk/proto/vm/runtime"
+	"github.com/landslidenetwork/slide-sdk/vm"
 )
 
 const (

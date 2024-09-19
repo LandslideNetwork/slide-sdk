@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/consideritdone/landslidevm/utils"
-	"github.com/consideritdone/landslidevm/utils/cb58"
+	"github.com/landslidenetwork/slide-sdk/utils"
+	"github.com/landslidenetwork/slide-sdk/utils/cb58"
 )
 
 func TestID(t *testing.T) {

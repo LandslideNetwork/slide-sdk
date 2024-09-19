@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/consideritdone/landslidevm/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
 const TestIntSize = ids.IDLen + 8

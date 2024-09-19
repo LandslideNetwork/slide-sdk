@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	writerpb "github.com/consideritdone/landslidevm/proto/io/writer"
+	writerpb "github.com/landslidenetwork/slide-sdk/proto/io/writer"
 )
 
 var _ writerpb.WriterServer = (*Server)(nil)

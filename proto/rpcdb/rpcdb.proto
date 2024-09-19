@@ -4,7 +4,7 @@ package rpcdb;
 
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/consideritdone/landslidevm/proto/rpcdb";
+option go_package = "github.com/landslidenetwork/slide-sdk/proto/rpcdb";
 
 service Database {
   rpc Has(HasRequest) returns (HasResponse);

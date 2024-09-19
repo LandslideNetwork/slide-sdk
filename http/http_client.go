@@ -4,11 +4,11 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/consideritdone/landslidevm/grpcutils"
-	"github.com/consideritdone/landslidevm/http/responsewriter"
+	"github.com/landslidenetwork/slide-sdk/grpcutils"
+	"github.com/landslidenetwork/slide-sdk/http/responsewriter"
 
-	httppb "github.com/consideritdone/landslidevm/proto/http"
-	responsewriterpb "github.com/consideritdone/landslidevm/proto/http/responsewriter"
+	httppb "github.com/landslidenetwork/slide-sdk/proto/http"
+	responsewriterpb "github.com/landslidenetwork/slide-sdk/proto/http/responsewriter"
 )
 
 var _ http.Handler = (*Client)(nil)
