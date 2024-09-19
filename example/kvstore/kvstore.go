@@ -6,13 +6,13 @@ import (
 
 	"github.com/cometbft/cometbft/abci/example/kvstore"
 
-	"github.com/landslidenetwork/slide-sdk"
+	"github.com/landslidenetwork/slide-sdk/server"
 	"github.com/landslidenetwork/slide-sdk/vm"
 )
 
 func main() {
 	appCreator := KvStoreCreator()
-	if err := landslidevm.Serve(context.Background(), appCreator); err != nil {
+	if err := server.Serve(context.Background(), appCreator); err != nil {
 		panic(fmt.Sprintf("can't serve application: %s", err))
 	}
 }

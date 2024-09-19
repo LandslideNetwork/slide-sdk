@@ -31,7 +31,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/landslidenetwork/slide-sdk"
+	sdkserver "github.com/landslidenetwork/slide-sdk/server"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/vm"
 	vmtypes "github.com/landslidenetwork/slide-sdk/vm/types"
@@ -47,7 +47,7 @@ type AppConfig struct {
 
 func main() {
 	appCreator := WasmCreator()
-	if err := landslidevm.Serve(context.Background(), appCreator); err != nil {
+	if err := sdkserver.Serve(context.Background(), appCreator); err != nil {
 		panic(fmt.Sprintf("can't serve application: %s", err))
 	}
 }

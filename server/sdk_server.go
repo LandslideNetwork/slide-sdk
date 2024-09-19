@@ -1,4 +1,4 @@
-package landslidevm
+package server
 
 import (
 	"context"
