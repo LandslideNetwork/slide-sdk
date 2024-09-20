@@ -4,12 +4,15 @@
 
 Welcome to the Slide SDK security policy, where we turn haters into heroes! We're all about catching those gnarly bugs before they wipe us out. Remember, we're still shredding on the testnet, so your help in spotting issues is totally tubular!
 
+## Security Audit
+The SLIDE SDK has been audited by Oak Security. You can view the full audit report [here](https://github.com/oak-security/audit-reports/blob/main/Slide%20SDK/2024-09-20%20Audit%20Report%20-%20Slide%20SDK%20v1.1.pdf).
+
 ## 🎯 Scope
 
 | Version | Supported          |
 |---------|---------------------|
-| Latest Release | 🛝  |
-| Main Branch    | 🏄‍♀️    |
+| Latest Release | 🛝 v1.0.0  |
+| Main Branch    | 🏄‍♀️ 🛝 v1.0.0   |
 
 Security vulnerabilities should be reported if they can be reproduced on either the latest release or the main branch.
 
