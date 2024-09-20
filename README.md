@@ -8,6 +8,9 @@ LandslideVM is a custom virtual machine designed for AvalancheGo. It enables the
 
 **Landslide is currently in testnet with the release of SlideSDK. Please expect bumps in the road as we continue to develop and refine the system. Use at your own risk and do not use for production environments at this stage.**
 
+## Security Audit
+The SLIDE SDK has been audited by Oak Security. You can view the full audit report [here](https://github.com/oak-security/audit-reports/blob/main/Slide%20SDK/2024-09-20%20Audit%20Report%20-%20Slide%20SDK%20v1.1.pdf).
+
 ## Features
 
 - Execute Cosmos SDK chains on Avalanche
