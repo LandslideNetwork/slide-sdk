@@ -1,6 +1,4 @@
-# 🏄‍♂️ Slide SDK Security Policy 🛹
-
-## 🌊 Riding the Wave of Security
+# 🌊 Riding the Wave of Security
 
 Welcome to the Slide SDK security policy, where we turn haters into heroes! We're all about catching those gnarly bugs before they wipe us out. Remember, we're still shredding on the testnet, so your help in spotting issues is totally tubular!
 
@@ -22,7 +20,7 @@ Found a bug? Don't just hate, participate! Here's how you can help us hang ten a
 
 1. **Public Reporting**: Since we're riding the testnet waves, we're open to public vulnerability reports. Feel free to open an issue on our GitHub repo with the tag [SECURITY]. This helps us build a transparent and collaborative security culture.
 
-2. **Sensitive Issues**: For vulnerabilities that might have severe implications even on testnet (like potential economic exploits or privacy breaches), please email us at security@slidesdk.com with the subject "Confidential Hater's Bug Report: [Brief Description]".
+2. **Sensitive Issues**: For vulnerabilities that might have severe implications even on testnet (like potential economic exploits or privacy breaches), please email us at security@landslidelabs.org with the subject "Confidential Hater's Bug Report: [Brief Description]".
 
 3. **Details, dude**: Whether public or private, give us the 411 on the bug. Include reproduction steps and all the juicy details.
 
@@ -71,4 +69,4 @@ While we love our Haters (with Benefits), we keep it cool here. Hate speech or a
 
 Heads up, beach bums! This open policy is specific to our testnet phase. As we paddle towards mainnet, we'll be updating our security policy to ensure we're ready for the big leagues. Stay tuned for updates!
 
-Stay groovy, stay secure! Cowabunga, dudes and dudettes! 🏄‍♂️🌊🛹
+Stay groovy, stay secure! Slide on board, dudes! 🏄‍♂️🌊🛹
