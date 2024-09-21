@@ -9,8 +9,8 @@ The SLIDE SDK has been audited by Oak Security. You can view the full audit repo
 
 | Version | Supported          |
 |---------|---------------------|
-| Latest Release | 🛝 v1.0.0 (https://github.com/LandslideNetwork/slide-sdk/releases/tag/v1.0.0)  |
-| Main Branch    | 🏄‍♀️ 🛝 v1.0.0 (https://github.com/LandslideNetwork/slide-sdk/releases/tag/v1.0.0)   |
+| Latest Release | 🛝 [v1.0.0](https://github.com/LandslideNetwork/slide-sdk/releases/tag/v1.0.0)  |
+| Main Branch    | 🏄‍♀️ 🛝 [v1.0.0](https://github.com/LandslideNetwork/slide-sdk/releases/tag/v1.0.0)   |
 
 Security vulnerabilities should be reported if they can be reproduced on either the latest release or the main branch.
 
