@@ -51,7 +51,7 @@ var DefaultDialOptions = []grpc.DialOption{
 	grpc.WithTransportCredentials(insecure.NewCredentials()),
 }
 
-// gRPC clients created from this ClientConn will wait forever for the Server to
+// Dial gRPC clients created from this ClientConn will wait forever for the Server to
 // become Ready. If you desire a dial timeout ensure context is properly plumbed
 // to the client and use context.WithTimeout.
 //
@@ -67,7 +67,7 @@ type DialOptions struct {
 	opts []grpc.DialOption
 }
 
-// append(DefaultDialOptions, ...) will always allocate a new slice and will
+// newDialOpts append(DefaultDialOptions, ...) will always allocate a new slice and will
 // not overwrite any potential data that may have previously been appended to
 // DefaultServerOptions https://go.dev/ref/spec#Composite_literals
 func newDialOpts(opts ...DialOption) []grpc.DialOption {

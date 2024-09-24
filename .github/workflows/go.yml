@@ -41,5 +41,8 @@ jobs:
       with:
         version: v1.60
 
+    - name: Run golangci-lint
+      run: golangci-lint run ./...
+
     - name: Test
       run: go test -race -vet=off -v ./...
