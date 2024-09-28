@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	defaultTimeoutBroadcastTxCommit uint16 = 10 // seconds
+	defaultTimeoutBroadcastTxCommit uint16 = 180 // seconds
 	defaultNetworkName                     = "landslide-test"
 
 	defaultMaxBytes int64 = 100 * 1024 * 1024 // 10MB

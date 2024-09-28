@@ -15,7 +15,6 @@ import (
 	mempl "github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/proxy"
-	"github.com/cometbft/cometbft/rpc/core"
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/cometbft/cometbft/store"
@@ -153,7 +152,7 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 	}
 
 	// Subscribe to tx being committed in block.
-	subCtx, cancel := context.WithTimeout(context.Background(), core.SubscribeTimeout)
+	subCtx, cancel := context.WithTimeout(context.Background(), time.Duration(rpc.vm.config.TimeoutBroadcastTxCommit)*time.Second)
 	defer cancel()
 
 	q := types.EventQueryTxFor(tx)
@@ -424,6 +423,7 @@ func getHeight(bs *store.BlockStore, heightPtr *int64) (int64, error) {
 	return height, nil
 }
 
+// Block returns a block at a given height.
 func (rpc *RPC) Block(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBlock, error) {
 	height, err := getHeight(rpc.vm.blockStore, heightPtr)
 	if err != nil {
@@ -441,6 +441,7 @@ func (rpc *RPC) Block(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBloc
 	return &ctypes.ResultBlock{BlockID: blockMeta.BlockID, Block: block}, nil
 }
 
+// BlockByHash retrieves a block by its hash.
 func (rpc *RPC) BlockByHash(_ *rpctypes.Context, hash []byte) (*ctypes.ResultBlock, error) {
 	block := rpc.vm.blockStore.LoadBlockByHash(hash)
 	if block == nil {
@@ -450,25 +451,26 @@ func (rpc *RPC) BlockByHash(_ *rpctypes.Context, hash []byte) (*ctypes.ResultBlo
 	return &ctypes.ResultBlock{BlockID: blockMeta.BlockID, Block: block}, nil
 }
 
+// BlockResults retrieves the results of a block at a given height.
 func (rpc *RPC) BlockResults(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBlockResults, error) {
-	// height, err := getHeight(rpc.vm.blockStore, args.Height)
-	// if err != nil {
-	// 	return err
-	// }
+	height, err := getHeight(rpc.vm.blockStore, heightPtr)
+	if err != nil {
+		return nil, err
+	}
 
-	// TODO make IBC reply it realised in landslidevm, but not realised in comet bft
-	// results, err := rpc.vm.stateStore.
-	// if err != nil {
-	// 	return err
-	// }
+	results, err := rpc.vm.stateStore.LoadFinalizeBlockResponse(height)
+	if err != nil {
+		return nil, err
+	}
 
-	// reply.Height = height
-	// reply.TxsResults = results.DeliverTxs
-	// reply.BeginBlockEvents = results.BeginBlock.Events
-	// reply.EndBlockEvents = results.EndBlock.Events
-	// reply.ValidatorUpdates = results.EndBlock.ValidatorUpdates
-	// reply.ConsensusParamUpdates = results.EndBlock.ConsensusParamUpdates
-	return nil, nil
+	return &ctypes.ResultBlockResults{
+		Height:                height,
+		TxsResults:            results.TxResults,
+		FinalizeBlockEvents:   results.Events,
+		ValidatorUpdates:      results.ValidatorUpdates,
+		ConsensusParamUpdates: results.ConsensusParamUpdates,
+		AppHash:               results.AppHash,
+	}, nil
 }
 
 func (rpc *RPC) Commit(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultCommit, error) {
