@@ -19,6 +19,7 @@ import (
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cometbft/cometbft/libs/pubsub"
 	"github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/proxy"
@@ -517,29 +518,64 @@ func (vm *LandslideVM) Shutdown(context.Context, *emptypb.Empty) (*emptypb.Empty
 
 // CreateHandlers creates the HTTP handlers for custom chain network calls.
 func (vm *LandslideVM) CreateHandlers(context.Context, *emptypb.Empty) (*vmpb.CreateHandlersResponse, error) {
-	server := grpcutils.NewServer()
-	vm.serverCloser.Add(server)
+	routes := NewRPC(vm).Routes()
+	rpcLogger := vm.logger.With("module", "rpc-server")
 
-	mux := http2.NewServeMux()
-	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vm).Routes(), vm.logger)
+	httpHandler := vm.createHttpHandler(routes, rpcLogger)
+	wsHandler := vm.createWsHandler(routes, rpcLogger)
 
-	httppb.RegisterHTTPServer(server, http.NewServer(mux))
-
-	listener, err := grpcutils.NewListener()
-	if err != nil {
-		return nil, err
+	handlers := map[string]http2.Handler{
+		"/rpc": httpHandler,
+		"/ws":  wsHandler,
 	}
 
-	go grpcutils.Serve(listener, server)
+	resp := &vmpb.CreateHandlersResponse{}
+	for prefix, handler := range handlers {
+		listener, err := grpcutils.NewListener()
+		if err != nil {
+			return nil, err
+		}
+		server := grpcutils.NewServer()
+		vm.serverCloser.Add(server)
+		httppb.RegisterHTTPServer(server, http.NewServer(handler))
 
-	return &vmpb.CreateHandlersResponse{
-		Handlers: []*vmpb.Handler{
-			{
-				Prefix:     "/rpc",
-				ServerAddr: listener.Addr().String(),
-			},
-		},
-	}, nil
+		// Start HTTP service
+		go grpcutils.Serve(listener, server)
+
+		resp.Handlers = append(resp.Handlers, &vmpb.Handler{
+			Prefix:     prefix,
+			ServerAddr: listener.Addr().String(),
+		})
+	}
+
+	return resp, nil
+}
+
+func (vm *LandslideVM) createHttpHandler(routes map[string]*jsonrpc.RPCFunc, logger log.Logger) http2.Handler {
+	mux := http2.NewServeMux()
+	jsonrpc.RegisterRPCFuncs(mux, routes, logger)
+
+	return mux
+}
+
+func (vm *LandslideVM) createWsHandler(routes map[string]*jsonrpc.RPCFunc, logger log.Logger) http2.Handler {
+	mux := http2.NewServeMux()
+	logger = logger.With("protocol", "websocket")
+
+	wm := jsonrpc.NewWebsocketManager(routes,
+		jsonrpc.OnDisconnect(func(remoteAddr string) {
+			err := vm.eventBus.UnsubscribeAll(context.Background(), remoteAddr)
+			if err != nil && !errors.Is(err, pubsub.ErrSubscriptionNotFound) {
+				logger.Error("Failed to unsubscribe addr from events", "addr", remoteAddr, "err", err)
+			}
+		}),
+		jsonrpc.ReadLimit(vm.config.MaxBodyBytes),
+		jsonrpc.WriteChanCapacity(vm.config.WebSocketWriteBufferSize),
+	)
+
+	mux.HandleFunc("/", wm.WebsocketHandler)
+
+	return mux
 }
 
 func (vm *LandslideVM) Connected(context.Context, *vmpb.ConnectedRequest) (*emptypb.Empty, error) {

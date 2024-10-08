@@ -11,11 +11,14 @@ const (
 	defaultTimeoutBroadcastTxCommit uint16 = 10 // seconds
 	defaultNetworkName                     = "landslide-test"
 
-	defaultMaxBytes int64 = 100 * 1024 * 1024 // 10MB
-	defaultMaxGas   int64 = 10000000
+	defaultMaxBytes     int64 = 100 * 1024 * 1024 // 10MB
+	defaultMaxGas       int64 = 10000000
+	defaultMaxBodyBytes int64 = 1000000 // 1MB
 
 	defaultMaxSubscriptionClients    = 100
 	defaultMaxSubscriptionsPerClient = 5
+
+	defaultSubscriptionBufferSize = 200
 )
 
 type (
@@ -31,6 +34,20 @@ type (
 		ConsensusParams           ConsensusParams `json:"consensus_params"`
 		MaxSubscriptionClients    int             `json:"max_subscription_clients"`
 		MaxSubscriptionsPerClient int             `json:"max_subscriptions_per_client"`
+
+		// MaxBodyBytes controls the maximum number of bytes the
+		// server will read parsing the request body.
+		MaxBodyBytes int64 `json:"max_body_bytes"`
+
+		// The maximum number of responses that can be buffered per WebSocket
+		// client. If clients cannot read from the WebSocket endpoint fast enough,
+		// they will be disconnected, so increasing this parameter may reduce the
+		// chances of them being disconnected (but will cause the node to use more
+		// memory).
+		//
+		// Must be at least the same as `SubscriptionBufferSize`, otherwise
+		// connections may be dropped unnecessarily.
+		WebSocketWriteBufferSize int `json:"websocket_write_buffer_size"`
 	}
 
 	// ConsensusParams contains consensus critical parameters that determine the
@@ -61,6 +78,10 @@ func (c *VMConfig) SetDefaults() {
 
 	c.MaxSubscriptionsPerClient = defaultMaxSubscriptionsPerClient
 	c.MaxSubscriptionClients = defaultMaxSubscriptionClients
+
+	c.WebSocketWriteBufferSize = defaultSubscriptionBufferSize
+
+	c.MaxBodyBytes = defaultMaxBodyBytes
 }
 
 // Validate returns an error if this is an invalid config.
@@ -79,6 +100,14 @@ func (c *VMConfig) Validate() error {
 
 	if c.MaxSubscriptionClients < 0 {
 		return fmt.Errorf("max_subscription_clients must be positive. Got %d", c.MaxSubscriptionClients)
+	}
+
+	if c.WebSocketWriteBufferSize <= 0 {
+		return fmt.Errorf("negative or zero capacity. websocket_write_buffer_size must be positive. Got %d", c.WebSocketWriteBufferSize)
+	}
+
+	if c.MaxBodyBytes < 0 {
+		return fmt.Errorf("max_body_bytes must be positive. Got %d", c.MaxBodyBytes)
 	}
 
 	return nil

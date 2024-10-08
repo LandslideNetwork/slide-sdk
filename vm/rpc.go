@@ -9,8 +9,10 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/config"
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	tmmath "github.com/cometbft/cometbft/libs/math"
+	"github.com/cometbft/cometbft/libs/pubsub"
 	tmquery "github.com/cometbft/cometbft/libs/pubsub/query"
 	mempl "github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/p2p"
@@ -26,6 +28,12 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
+const (
+	// maxQueryLength is the maximum length of a query string that will be
+	// accepted. This is just a safety check to avoid outlandish queries.
+	maxQueryLength = 512
+)
+
 type RPC struct {
 	vm *LandslideVM
 }
@@ -37,9 +45,9 @@ func NewRPC(vm *LandslideVM) *RPC {
 func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 	return map[string]*jsonrpc.RPCFunc{
 		// subscribe/unsubscribe are reserved for websocket events.
-		// "subscribe":       jsonrpc.NewWSRPCFunc(rpc.Subscribe, "query"),
-		// "unsubscribe":     jsonrpc.NewWSRPCFunc(rpc.Unsubscribe, "query"),
-		// "unsubscribe_all": jsonrpc.NewWSRPCFunc(rpc.UnsubscribeAll, ""),
+		"subscribe":       jsonrpc.NewWSRPCFunc(rpc.Subscribe, "query"),
+		"unsubscribe":     jsonrpc.NewWSRPCFunc(rpc.Unsubscribe, "query"),
+		"unsubscribe_all": jsonrpc.NewWSRPCFunc(rpc.UnsubscribeAll, ""),
 
 		// info AP
 		"health":          jsonrpc.NewRPCFunc(rpc.Health, ""),
@@ -824,4 +832,117 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 	}
 
 	return result, nil
+}
+
+// Subscribe for events via WebSocket.
+// More: https://docs.cometbft.com/v0.38.x/rpc/#/Websocket/subscribe
+func (rpc *RPC) Subscribe(ctx *rpctypes.Context, query string) (*ctypes.ResultSubscribe, error) {
+	addr := ctx.RemoteAddr()
+	cfg := config.DefaultRPCConfig()
+
+	switch {
+	case rpc.vm.eventBus.NumClients() >= rpc.vm.config.MaxSubscriptionClients:
+		return nil, fmt.Errorf("max_subscription_clients %d reached", rpc.vm.config.MaxSubscriptionClients)
+	case rpc.vm.eventBus.NumClientSubscriptions(addr) >= rpc.vm.config.MaxSubscriptionsPerClient:
+		return nil, fmt.Errorf("max_subscriptions_per_client %d reached", rpc.vm.config.MaxSubscriptionsPerClient)
+	case len(query) > maxQueryLength:
+		return nil, errors.New("maximum query length exceeded")
+	}
+
+	rpc.vm.logger.Info("Subscribe to query", "remote", addr, "query", query)
+
+	q, err := tmquery.New(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse query: %w", err)
+	}
+
+	subCtx, cancel := context.WithTimeout(ctx.Context(), core.SubscribeTimeout)
+	defer cancel()
+
+	sub, err := rpc.vm.eventBus.Subscribe(subCtx, addr, q, cfg.SubscriptionBufferSize)
+	if err != nil {
+		return nil, err
+	}
+
+	closeIfSlow := cfg.CloseOnSlowClient
+
+	// Capture the current ID, since it can change in the future.
+	subscriptionID := ctx.JSONReq.ID
+	go func() {
+		writeCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		for {
+			select {
+			case msg := <-sub.Out():
+				var (
+					resultEvent = &ctypes.ResultEvent{Query: query, Data: msg.Data(), Events: msg.Events()}
+					resp        = rpctypes.NewRPCSuccessResponse(subscriptionID, resultEvent)
+				)
+				if err := ctx.WSConn.WriteRPCResponse(writeCtx, resp); err != nil {
+					rpc.vm.logger.Info("Can't write response (slow client)",
+						"to", addr, "subscriptionID", subscriptionID, "err", err)
+
+					if closeIfSlow {
+						var (
+							err  = errors.New("subscription was canceled (reason: slow client)")
+							resp = rpctypes.RPCServerError(subscriptionID, err)
+						)
+						if !ctx.WSConn.TryWriteRPCResponse(resp) {
+							rpc.vm.logger.Info("Can't write response (slow client)",
+								"to", addr, "subscriptionID", subscriptionID, "err", err)
+						}
+						return
+					}
+				}
+			case <-sub.Canceled():
+				if sub.Err() != pubsub.ErrUnsubscribed {
+					var reason string
+					if sub.Err() == nil {
+						reason = "CometBFT exited"
+					} else {
+						reason = sub.Err().Error()
+					}
+					var (
+						err  = fmt.Errorf("subscription was canceled (reason: %s)", reason)
+						resp = rpctypes.RPCServerError(subscriptionID, err)
+					)
+					if !ctx.WSConn.TryWriteRPCResponse(resp) {
+						rpc.vm.logger.Info("Can't write response (slow client)",
+							"to", addr, "subscriptionID", subscriptionID, "err", err)
+					}
+				}
+				return
+			}
+		}
+	}()
+
+	return &ctypes.ResultSubscribe{}, nil
+}
+
+// Unsubscribe from events via WebSocket.
+// More: https://docs.cometbft.com/v0.38.x/rpc/#/Websocket/unsubscribe
+func (rpc *RPC) Unsubscribe(ctx *rpctypes.Context, query string) (*ctypes.ResultUnsubscribe, error) {
+	addr := ctx.RemoteAddr()
+	rpc.vm.logger.Info("Unsubscribe from query", "remote", addr, "query", query)
+	q, err := tmquery.New(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse query: %w", err)
+	}
+	err = rpc.vm.eventBus.Unsubscribe(context.Background(), addr, q)
+	if err != nil {
+		return nil, err
+	}
+	return &ctypes.ResultUnsubscribe{}, nil
+}
+
+// UnsubscribeAll from all events via WebSocket.
+// More: https://docs.cometbft.com/v0.38.x/rpc/#/Websocket/unsubscribe_all
+func (rpc *RPC) UnsubscribeAll(ctx *rpctypes.Context) (*ctypes.ResultUnsubscribe, error) {
+	addr := ctx.RemoteAddr()
+	rpc.vm.logger.Info("Unsubscribe from all", "remote", addr)
+	err := rpc.vm.eventBus.UnsubscribeAll(context.Background(), addr)
+	if err != nil {
+		return nil, err
+	}
+	return &ctypes.ResultUnsubscribe{}, nil
 }
