@@ -36,34 +36,24 @@ func NewRPC(vm *LandslideVM) *RPC {
 
 func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 	return map[string]*jsonrpc.RPCFunc{
-		// subscribe/unsubscribe are reserved for websocket events.
-		// "subscribe":       jsonrpc.NewWSRPCFunc(rpc.Subscribe, "query"),
-		// "unsubscribe":     jsonrpc.NewWSRPCFunc(rpc.Unsubscribe, "query"),
-		// "unsubscribe_all": jsonrpc.NewWSRPCFunc(rpc.UnsubscribeAll, ""),
 
 		// info AP
-		"health":          jsonrpc.NewRPCFunc(rpc.Health, ""),
-		"status":          jsonrpc.NewRPCFunc(rpc.Status, ""),
-		"net_info":        jsonrpc.NewRPCFunc(rpc.NetInfo, ""),
-		"blockchain":      jsonrpc.NewRPCFunc(rpc.BlockchainInfo, "minHeight,maxHeight", jsonrpc.Cacheable()),
-		"genesis":         jsonrpc.NewRPCFunc(rpc.Genesis, "", jsonrpc.Cacheable()),
-		"genesis_chunked": jsonrpc.NewRPCFunc(rpc.GenesisChunked, "chunk", jsonrpc.Cacheable()),
-		"block":           jsonrpc.NewRPCFunc(rpc.Block, "height", jsonrpc.Cacheable("height")),
-		"block_by_hash":   jsonrpc.NewRPCFunc(rpc.BlockByHash, "hash", jsonrpc.Cacheable()),
-		"block_results":   jsonrpc.NewRPCFunc(rpc.BlockResults, "height", jsonrpc.Cacheable("height")),
-		"commit":          jsonrpc.NewRPCFunc(rpc.Commit, "height", jsonrpc.Cacheable("height")),
-		// "header":              jsonrpc.NewRPCFunc(rpc.Header, "height", jsonrpc.Cacheable("height")),
-		// "header_by_hash":      jsonrpc.NewRPCFunc(rpc.HeaderByHash, "hash", jsonrpc.Cacheable()),
-		"check_tx": jsonrpc.NewRPCFunc(rpc.CheckTx, "tx"),
-		"tx":       jsonrpc.NewRPCFunc(rpc.Tx, "hash,prove", jsonrpc.Cacheable()),
-		// "consensus_state":     jsonrpc.NewRPCFunc(rpc.GetConsensusState, ""),
-		"unconfirmed_txs":      jsonrpc.NewRPCFunc(rpc.UnconfirmedTxs, "limit"),
-		"num_unconfirmed_txs":  jsonrpc.NewRPCFunc(rpc.NumUnconfirmedTxs, ""),
-		"tx_search":            jsonrpc.NewRPCFunc(rpc.TxSearch, "query,prove,page,per_page,order_by"),
-		"block_search":         jsonrpc.NewRPCFunc(rpc.BlockSearch, "query,page,per_page,order_by"),
-		"validators":           jsonrpc.NewRPCFunc(rpc.Validators, "height,page,per_page", jsonrpc.Cacheable("height")),
-		"dump_consensus_state": jsonrpc.NewRPCFunc(rpc.DumpConsensusState, ""),
-		"consensus_params":     jsonrpc.NewRPCFunc(rpc.ConsensusParams, "height", jsonrpc.Cacheable("height")),
+		"health":              jsonrpc.NewRPCFunc(rpc.Health, ""),
+		"status":              jsonrpc.NewRPCFunc(rpc.Status, ""),
+		"blockchain":          jsonrpc.NewRPCFunc(rpc.BlockchainInfo, "minHeight,maxHeight", jsonrpc.Cacheable()),
+		"genesis":             jsonrpc.NewRPCFunc(rpc.Genesis, "", jsonrpc.Cacheable()),
+		"genesis_chunked":     jsonrpc.NewRPCFunc(rpc.GenesisChunked, "chunk", jsonrpc.Cacheable()),
+		"block":               jsonrpc.NewRPCFunc(rpc.Block, "height", jsonrpc.Cacheable("height")),
+		"block_by_hash":       jsonrpc.NewRPCFunc(rpc.BlockByHash, "hash", jsonrpc.Cacheable()),
+		"commit":              jsonrpc.NewRPCFunc(rpc.Commit, "height", jsonrpc.Cacheable("height")),
+		"check_tx":            jsonrpc.NewRPCFunc(rpc.CheckTx, "tx"),
+		"tx":                  jsonrpc.NewRPCFunc(rpc.Tx, "hash,prove", jsonrpc.Cacheable()),
+		"unconfirmed_txs":     jsonrpc.NewRPCFunc(rpc.UnconfirmedTxs, "limit"),
+		"num_unconfirmed_txs": jsonrpc.NewRPCFunc(rpc.NumUnconfirmedTxs, ""),
+		"tx_search":           jsonrpc.NewRPCFunc(rpc.TxSearch, "query,prove,page,per_page,order_by"),
+		"block_search":        jsonrpc.NewRPCFunc(rpc.BlockSearch, "query,page,per_page,order_by"),
+		"validators":          jsonrpc.NewRPCFunc(rpc.Validators, "height,page,per_page", jsonrpc.Cacheable("height")),
+		"consensus_params":    jsonrpc.NewRPCFunc(rpc.ConsensusParams, "height", jsonrpc.Cacheable("height")),
 
 		// tx broadcast API
 		"broadcast_tx_commit": jsonrpc.NewRPCFunc(rpc.BroadcastTxCommit, "tx"),
@@ -73,9 +63,6 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 		// abci API
 		"abci_query": jsonrpc.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
 		"abci_info":  jsonrpc.NewRPCFunc(rpc.ABCIInfo, "", jsonrpc.Cacheable()),
-
-		// evidence API
-		// "broadcast_evidence": jsonrpc.NewRPCFunc(rpc.BroadcastEvidence, "evidence"),
 	}
 }
 
@@ -370,21 +357,6 @@ func (rpc *RPC) GenesisChunked(_ *rpctypes.Context, chunk uint) (*ctypes.ResultG
 	}, nil
 }
 
-// NetInfo - no peers, because it's vm
-func (rpc *RPC) NetInfo(_ *rpctypes.Context) (*ctypes.ResultNetInfo, error) {
-	return nil, nil
-}
-
-// DumpConsensusState - we doesn't have consensusState
-func (rpc *RPC) DumpConsensusState(_ *rpctypes.Context) (*ctypes.ResultDumpConsensusState, error) {
-	return nil, nil
-}
-
-// GetConsensusState - we doesn't have consensusState
-func (rpc *RPC) GetConsensusState(_ *rpctypes.Context) (*ctypes.ResultConsensusState, error) {
-	return nil, nil
-}
-
 func (rpc *RPC) ConsensusParams(
 	_ *rpctypes.Context,
 	heightPtr *int64,
@@ -448,27 +420,6 @@ func (rpc *RPC) BlockByHash(_ *rpctypes.Context, hash []byte) (*ctypes.ResultBlo
 	}
 	blockMeta := rpc.vm.blockStore.LoadBlockMeta(block.Height)
 	return &ctypes.ResultBlock{BlockID: blockMeta.BlockID, Block: block}, nil
-}
-
-func (rpc *RPC) BlockResults(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBlockResults, error) {
-	// height, err := getHeight(rpc.vm.blockStore, args.Height)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// TODO make IBC reply it realised in landslidevm, but not realised in comet bft
-	// results, err := rpc.vm.stateStore.
-	// if err != nil {
-	// 	return err
-	// }
-
-	// reply.Height = height
-	// reply.TxsResults = results.DeliverTxs
-	// reply.BeginBlockEvents = results.BeginBlock.Events
-	// reply.EndBlockEvents = results.EndBlock.Events
-	// reply.ValidatorUpdates = results.EndBlock.ValidatorUpdates
-	// reply.ConsensusParamUpdates = results.EndBlock.ConsensusParamUpdates
-	return nil, nil
 }
 
 func (rpc *RPC) Commit(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultCommit, error) {
