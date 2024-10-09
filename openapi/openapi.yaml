@@ -391,6 +391,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /block_results:
+    get:
+      summary: Get block results at a specified height
+      operationId: block_results
+      parameters:
+        - in: query
+          name: height
+          description: height to return. If no height is provided, it will fetch information regarding the latest block.
+          schema:
+            type: integer
+            default: 0
+            example: 1
+      tags:
+        - Info
+      description: |
+        Get block_results.
+        
+        If the `height` field is set to a non-default value, upon success, the
+        `Cache-Control` header will be set with the default maximum age.
+      responses:
+        "200":
+          description: Block results.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlockResultsResponse"
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /commit:
     get:
       summary: Get commit results at a specified height
@@ -1229,6 +1261,106 @@ components:
           properties:
             result:
               $ref: "#/components/schemas/BlockComplete"
+
+    BlockResultsResponse:
+      type: object
+      required:
+        - "jsonrpc"
+        - "id"
+        - "result"
+      properties:
+        jsonrpc:
+          type: string
+          example: "2.0"
+        id:
+          type: integer
+          example: 0
+        result:
+          type: object
+          required:
+            - "height"
+          properties:
+            height:
+              type: string
+              example: "12"
+            txs_results:
+              type: array
+              nullable: true
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "0"
+                  data:
+                    type: string
+                    example: ""
+                  log:
+                    type: string
+                    example: "not enough gas"
+                  info:
+                    type: string
+                    example: ""
+                  gas_wanted:
+                    type: string
+                    example: "100"
+                  gas_used:
+                    type: string
+                    example: "100"
+                  events:
+                    type: array
+                    nullable: true
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          example: "app"
+                        attributes:
+                          type: array
+                          nullable: false
+                          items:
+                            $ref: "#/components/schemas/Event"
+                  codespace:
+                    type: string
+                    example: "ibc"
+            finalize_block_events:
+              type: array
+              nullable: true
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: "app"
+                  attributes:
+                    type: array
+                    nullable: false
+                    items:
+                      $ref: "#/components/schemas/Event"
+            validator_updates:
+              type: array
+              nullable: true
+              items:
+                type: object
+                properties:
+                  pub_key:
+                    type: object
+                    required:
+                      - "type"
+                      - "value"
+                    properties:
+                      type:
+                        type: string
+                        example: "tendermint/PubKeyEd25519"
+                      value:
+                        type: string
+                        example: "9tK9IT+FPdf2qm+5c2qaxi10sWP+3erWTKgftn2PaQM="
+                  power:
+                    type: string
+                    example: "300"
+            consensus_param_updates:
+              $ref: "#/components/schemas/ConsensusParams"
 
     CommitResponse:
       type: object

@@ -15,7 +15,6 @@ import (
 	mempl "github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/proxy"
-	"github.com/cometbft/cometbft/rpc/core"
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/cometbft/cometbft/store"
@@ -45,6 +44,7 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 		"genesis_chunked":     jsonrpc.NewRPCFunc(rpc.GenesisChunked, "chunk", jsonrpc.Cacheable()),
 		"block":               jsonrpc.NewRPCFunc(rpc.Block, "height", jsonrpc.Cacheable("height")),
 		"block_by_hash":       jsonrpc.NewRPCFunc(rpc.BlockByHash, "hash", jsonrpc.Cacheable()),
+		"block_results":       jsonrpc.NewRPCFunc(rpc.BlockResults, "height", jsonrpc.Cacheable("height")),
 		"commit":              jsonrpc.NewRPCFunc(rpc.Commit, "height", jsonrpc.Cacheable("height")),
 		"check_tx":            jsonrpc.NewRPCFunc(rpc.CheckTx, "tx"),
 		"tx":                  jsonrpc.NewRPCFunc(rpc.Tx, "hash,prove", jsonrpc.Cacheable()),
@@ -140,7 +140,7 @@ func (rpc *RPC) BroadcastTxCommit(ctx *rpctypes.Context, tx types.Tx) (*ctypes.R
 	}
 
 	// Subscribe to tx being committed in block.
-	subCtx, cancel := context.WithTimeout(context.Background(), core.SubscribeTimeout)
+	subCtx, cancel := context.WithTimeout(context.Background(), time.Duration(rpc.vm.config.TimeoutBroadcastTxCommit)*time.Second)
 	defer cancel()
 
 	q := types.EventQueryTxFor(tx)
@@ -420,6 +420,28 @@ func (rpc *RPC) BlockByHash(_ *rpctypes.Context, hash []byte) (*ctypes.ResultBlo
 	}
 	blockMeta := rpc.vm.blockStore.LoadBlockMeta(block.Height)
 	return &ctypes.ResultBlock{BlockID: blockMeta.BlockID, Block: block}, nil
+}
+
+// BlockResults retrieves the results of a block at a given height.
+func (rpc *RPC) BlockResults(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultBlockResults, error) {
+	height, err := getHeight(rpc.vm.blockStore, heightPtr)
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := rpc.vm.stateStore.LoadFinalizeBlockResponse(height)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ctypes.ResultBlockResults{
+		Height:                height,
+		TxsResults:            results.TxResults,
+		FinalizeBlockEvents:   results.Events,
+		ValidatorUpdates:      results.ValidatorUpdates,
+		ConsensusParamUpdates: results.ConsensusParamUpdates,
+		AppHash:               results.AppHash,
+	}, nil
 }
 
 func (rpc *RPC) Commit(_ *rpctypes.Context, heightPtr *int64) (*ctypes.ResultCommit, error) {
