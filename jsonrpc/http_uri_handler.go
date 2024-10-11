@@ -146,7 +146,7 @@ func nonJSONStringToArg(rt reflect.Type, arg string) (reflect.Value, bool, error
 
 // NOTE: rt.Kind() isn't a pointer.
 func _nonJSONStringToArg(rt reflect.Type, arg string) (reflect.Value, bool, error) {
-	isIntString := reInt.Match([]byte(arg))
+	isIntString := reInt.MatchString(arg)
 	isQuotedString := strings.HasPrefix(arg, `"`) && strings.HasSuffix(arg, `"`)
 	isHexString := strings.HasPrefix(strings.ToLower(arg), "0x")
 
