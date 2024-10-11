@@ -15,6 +15,11 @@ import (
 // interface on which the result objects are registered, and is popualted with
 // every RPCResponse
 func RegisterRPCFuncs(mux *http.ServeMux, funcMap map[string]*RPCFunc, logger log.Logger) {
+	// HTTP endpoints
+	for funcName, rpcFunc := range funcMap {
+		mux.HandleFunc("/"+funcName, makeHTTPHandler(rpcFunc, logger))
+	}
+
 	// JSONRPC endpoints
 	mux.HandleFunc("/", makeJSONRPCHandler(funcMap, logger))
 }
