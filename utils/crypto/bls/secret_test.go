@@ -4,11 +4,10 @@
 package bls
 
 import (
+	"github.com/cometbft/cometbft/crypto"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/ava-labs/avalanchego/utils"
 )
 
 func TestSecretKeyFromBytesZero(t *testing.T) {
@@ -23,7 +22,7 @@ func TestSecretKeyFromBytesZero(t *testing.T) {
 func TestSecretKeyFromBytesWrongSize(t *testing.T) {
 	require := require.New(t)
 
-	skBytes := utils.RandomBytes(SecretKeyLen + 1)
+	skBytes := crypto.CRandBytes(SecretKeyLen + 1)
 	_, err := SecretKeyFromBytes(skBytes)
 	require.ErrorIs(err, errFailedSecretKeyDeserialize)
 }
@@ -31,7 +30,7 @@ func TestSecretKeyFromBytesWrongSize(t *testing.T) {
 func TestSecretKeyBytes(t *testing.T) {
 	require := require.New(t)
 
-	msg := utils.RandomBytes(1234)
+	msg := crypto.CRandBytes(1234)
 
 	sk, err := NewSecretKey()
 	require.NoError(err)

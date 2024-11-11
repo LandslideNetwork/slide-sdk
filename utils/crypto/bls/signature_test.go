@@ -4,17 +4,16 @@
 package bls
 
 import (
+	"github.com/cometbft/cometbft/crypto"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/ava-labs/avalanchego/utils"
 )
 
 func TestSignatureBytes(t *testing.T) {
 	require := require.New(t)
 
-	msg := utils.RandomBytes(1234)
+	msg := crypto.CRandBytes(1234)
 
 	sk, err := NewSecretKey()
 	require.NoError(err)
@@ -32,7 +31,7 @@ func TestSignatureBytes(t *testing.T) {
 func TestAggregateSignaturesNoop(t *testing.T) {
 	require := require.New(t)
 
-	msg := utils.RandomBytes(1234)
+	msg := crypto.CRandBytes(1234)
 
 	sk, err := NewSecretKey()
 	require.NoError(err)
