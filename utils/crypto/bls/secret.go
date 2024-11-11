@@ -49,3 +49,14 @@ func SecretKeyFromBytes(skBytes []byte) (*SecretKey, error) {
 	})
 	return sk, nil
 }
+
+// PublicFromSecretKey returns the public key that corresponds to this secret
+// key.
+func PublicFromSecretKey(sk *SecretKey) *PublicKey {
+	return new(PublicKey).From(sk)
+}
+
+// Sign [msg] to authorize this message from this [sk].
+func Sign(sk *SecretKey, msg []byte) *Signature {
+	return new(Signature).Sign(sk, msg, ciphersuiteSignature)
+}

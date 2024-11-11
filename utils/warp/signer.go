@@ -5,6 +5,7 @@ package warp
 
 import (
 	"errors"
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	blst "github.com/supranational/blst/bindings/go"
 
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
@@ -46,7 +47,6 @@ func (s *signer) Sign(msg *UnsignedMessage) ([]byte, error) {
 	}
 
 	msgBytes := msg.Bytes()
-	sig := blst.P2Affine{}
-	signature := sig.Sign(s.sk, msgBytes, ciphersuiteSignature)
+	signature := bls.Sign(s.sk, msgBytes)
 	return signature.Compress(), nil
 }

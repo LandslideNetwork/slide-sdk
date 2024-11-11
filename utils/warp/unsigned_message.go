@@ -47,7 +47,6 @@ func ParseUnsignedMessage(b []byte) (*UnsignedMessage, error) {
 
 // Initialize recalculates the result of Bytes().
 func (m *UnsignedMessage) Initialize() error {
-	//TODO: it is necessary to introduce MVP codec
 	bytes, err := Codec.Marshal(m)
 	if err != nil {
 		return fmt.Errorf("couldn't marshal warp unsigned message: %w", err)

@@ -80,11 +80,10 @@ func testVerifies(t *testing.T, s Signer, sk *bls.SecretKey, networkID uint32, c
 	require.NoError(err)
 
 	t.Log(sigBytes)
-	//TODO: implement SignatureFromBytes and PublicFromSecretKey
-	//sig, err := bls.SignatureFromBytes(sigBytes)
-	//require.NoError(err)
-	//
-	//pk := bls.PublicFromSecretKey(sk)
-	//msgBytes := msg.Bytes()
-	//require.True(bls.Verify(pk, sig, msgBytes))
+	sig, err := bls.SignatureFromBytes(sigBytes)
+	require.NoError(err)
+
+	pk := bls.PublicFromSecretKey(sk)
+	msgBytes := msg.Bytes()
+	require.True(bls.Verify(pk, sig, msgBytes))
 }
