@@ -16,7 +16,6 @@ var (
 
 	ErrWrongSourceChainID = errors.New("wrong SourceChainID")
 	ErrWrongNetworkID     = errors.New("wrong networkID")
-	ciphersuiteSignature  = []byte("BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_")
 )
 
 type Signer interface {
