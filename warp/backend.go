@@ -5,6 +5,7 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 )
@@ -70,4 +71,27 @@ func (b *backend) GetMessage(messageID ids.ID) (*warputils.UnsignedMessage, erro
 	}
 
 	return unsignedMessage, nil
+}
+
+func (b *backend) GetMessageSignature(unsignedMessage *warputils.UnsignedMessage) ([bls.SignatureLen]byte, error) {
+	messageID := unsignedMessage.ID()
+
+	log.Debug("Getting warp message from backend", "messageID", messageID)
+	if sig, ok := b.messageSignatureCache.Get(messageID); ok {
+		return sig, nil
+	}
+
+	if err := b.ValidateMessage(unsignedMessage); err != nil {
+		return [bls.SignatureLen]byte{}, fmt.Errorf("failed to validate warp message: %w", err)
+	}
+
+	var signature [bls.SignatureLen]byte
+	sig, err := b.warpSigner.Sign(unsignedMessage)
+	if err != nil {
+		return [bls.SignatureLen]byte{}, fmt.Errorf("failed to sign warp message: %w", err)
+	}
+
+	copy(signature[:], sig)
+	b.messageSignatureCache.Put(messageID, signature)
+	return signature, nil
 }
