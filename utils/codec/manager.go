@@ -6,6 +6,7 @@ package codec
 import (
 	"errors"
 	"fmt"
+
 	"github.com/landslidenetwork/slide-sdk/utils/wrappers"
 )
 

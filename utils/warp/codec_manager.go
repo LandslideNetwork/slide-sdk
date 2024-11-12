@@ -1,9 +1,10 @@
 package warp
 
 import (
+	"math"
+
 	"github.com/landslidenetwork/slide-sdk/utils/codec"
 	"github.com/landslidenetwork/slide-sdk/utils/codec/linearcodec"
-	"math"
 )
 
 var Codec codec.Manager

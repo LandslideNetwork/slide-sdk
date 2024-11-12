@@ -4,8 +4,9 @@
 package warp
 
 import (
-	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"testing"
+
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 
 	"github.com/stretchr/testify/require"
 

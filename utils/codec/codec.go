@@ -5,6 +5,7 @@ package codec
 
 import (
 	"errors"
+
 	"github.com/landslidenetwork/slide-sdk/utils/wrappers"
 )
 

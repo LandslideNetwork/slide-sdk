@@ -5,6 +5,7 @@ package warp
 
 import (
 	"errors"
+
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	blst "github.com/supranational/blst/bindings/go"
 

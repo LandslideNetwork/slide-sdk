@@ -4,8 +4,9 @@
 package bls
 
 import (
-	"github.com/cometbft/cometbft/crypto"
 	"testing"
+
+	"github.com/cometbft/cometbft/crypto"
 
 	"github.com/stretchr/testify/require"
 )
