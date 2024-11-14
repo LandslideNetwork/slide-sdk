@@ -42,6 +42,10 @@ LandslideVM has undergone a security audit by Oak Security GmbH. While efforts h
 
 For a full understanding of the security considerations, please refer to the complete audit report.
 
+## Security Audit
+
+Please check [audit](./audit) folder.
+
 ## Contributing
 
 We welcome contributions to the Slide SDK! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) file for details on how to contribute.
