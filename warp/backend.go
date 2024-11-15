@@ -8,6 +8,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/warp/payload"
 )
 
 // Backend tracks signature-eligible warp messages and provides an interface to fetch them.
@@ -15,6 +16,8 @@ import (
 type Backend interface {
 	// AddMessage signs [unsignedMessage] and adds it to the warp backend database
 	AddMessage(unsignedMessage *warputils.UnsignedMessage) error
+	// GetMessageSignature returns the signature of the requested message.
+	GetMessageSignature(message *warputils.UnsignedMessage) ([bls.SignatureLen]byte, error)
 	// GetMessage retrieves the [unsignedMessage] from the warp backend database if available
 	// TODO: After E-Upgrade, the backend no longer needs to store the mapping from messageHash
 	// to unsignedMessage (and this method can be removed).
@@ -55,6 +58,7 @@ func (b *backend) AddMessage(unsignedMessage *warputils.UnsignedMessage) error {
 	if err != nil {
 		return fmt.Errorf("failed to sign warp message: %w", err)
 	}
+	//TODO: save message signature to prefixdb
 	b.logger.Debug("Adding warp message to backend", "messageID", messageID)
 	return nil
 }
@@ -76,11 +80,7 @@ func (b *backend) GetMessage(messageID ids.ID) (*warputils.UnsignedMessage, erro
 func (b *backend) GetMessageSignature(unsignedMessage *warputils.UnsignedMessage) ([bls.SignatureLen]byte, error) {
 	messageID := unsignedMessage.ID()
 
-	log.Debug("Getting warp message from backend", "messageID", messageID)
-	if sig, ok := b.messageSignatureCache.Get(messageID); ok {
-		return sig, nil
-	}
-
+	b.logger.Debug("Getting warp message from backend", "messageID", messageID)
 	if err := b.ValidateMessage(unsignedMessage); err != nil {
 		return [bls.SignatureLen]byte{}, fmt.Errorf("failed to validate warp message: %w", err)
 	}
@@ -92,6 +92,36 @@ func (b *backend) GetMessageSignature(unsignedMessage *warputils.UnsignedMessage
 	}
 
 	copy(signature[:], sig)
-	b.messageSignatureCache.Put(messageID, signature)
 	return signature, nil
+}
+
+func (b *backend) ValidateMessage(unsignedMessage *warputils.UnsignedMessage) error {
+	// Known on-chain messages should be signed
+	if _, err := b.GetMessage(unsignedMessage.ID()); err == nil {
+		return nil
+	}
+
+	// Try to parse the payload as an AddressedCall
+	addressedCall, err := payload.ParseAddressedCall(unsignedMessage.Payload)
+	if err != nil {
+		return fmt.Errorf("failed to parse unknown message as AddressedCall: %w", err)
+	}
+
+	// Further, parse the payload to see if it is a known type.
+	parsed, err := messages.Parse(addressedCall.Payload)
+	if err != nil {
+		return fmt.Errorf("failed to parse unknown message: %w", err)
+	}
+
+	// Check if the message is a known type that can be signed on demand
+	signable, ok := parsed.(messages.Signable)
+	if !ok {
+		return fmt.Errorf("parsed message is not Signable: %T", signable)
+	}
+
+	// Check if the message should be signed according to its type
+	if err := signable.VerifyMesssage(addressedCall.SourceAddress); err != nil {
+		return fmt.Errorf("failed to verify Signable message: %w", err)
+	}
+	return nil
 }
