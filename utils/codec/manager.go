@@ -15,6 +15,8 @@ const (
 	// Larger value --> need less memory allocations but possibly have allocated but unused memory
 	// Smaller value --> need more memory allocations but more efficient use of allocated memory
 	initialSliceCap = 128
+	//default version of codec
+	defaultVersion = 0
 )
 
 var (
@@ -78,6 +80,10 @@ func (m *manager) Marshal(value interface{}) ([]byte, error) {
 		MaxSize: m.maxSize,
 		Bytes:   make([]byte, 0, initialSliceCap),
 	}
+	p.PackShort(defaultVersion)
+	if p.Errored() {
+		return nil, ErrCantPackVersion // Should never happen
+	}
 	return p.Bytes, m.codec.MarshalInto(value, &p)
 }
 
@@ -94,6 +100,10 @@ func (m *manager) Unmarshal(bytes []byte, dest interface{}) error {
 
 	p := wrappers.Packer{
 		Bytes: bytes,
+	}
+	p.UnpackShort()
+	if p.Errored() { // Make sure the codec version is correct
+		return ErrCantUnpackVersion
 	}
 	if err := m.codec.UnmarshalFrom(&p, dest); err != nil {
 		return err
