@@ -14,6 +14,10 @@ import (
 type Backend interface {
 	// AddMessage signs [unsignedMessage] and adds it to the warp backend database
 	AddMessage(unsignedMessage *warputils.UnsignedMessage) error
+	// GetMessage retrieves the [unsignedMessage] from the warp backend database if available
+	// TODO: After E-Upgrade, the backend no longer needs to store the mapping from messageHash
+	// to unsignedMessage (and this method can be removed).
+	GetMessage(messageHash ids.ID) (*warputils.UnsignedMessage, error)
 }
 
 // backend implements Backend, keeps track of warp messages, and generates message signatures.
@@ -26,12 +30,13 @@ type backend struct {
 }
 
 // NewBackend creates a new Backend, and initializes the signature cache and message tracking database.
-func NewBackend(networkID uint32, sourceChainID ids.ID, warpSigner warputils.Signer, db dbm.DB) Backend {
+func NewBackend(networkID uint32, sourceChainID ids.ID, warpSigner warputils.Signer, logger log.Logger, db dbm.DB) Backend {
 	return &backend{
 		networkID:     networkID,
 		sourceChainID: sourceChainID,
-		db:            db,
 		warpSigner:    warpSigner,
+		logger:        logger,
+		db:            db,
 	}
 }
 
@@ -51,4 +56,18 @@ func (b *backend) AddMessage(unsignedMessage *warputils.UnsignedMessage) error {
 	}
 	b.logger.Debug("Adding warp message to backend", "messageID", messageID)
 	return nil
+}
+
+func (b *backend) GetMessage(messageID ids.ID) (*warputils.UnsignedMessage, error) {
+	unsignedMessageBytes, err := b.db.Get(messageID[:])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get warp message %s from db: %w", messageID.String(), err)
+	}
+
+	unsignedMessage, err := warputils.ParseUnsignedMessage(unsignedMessageBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse unsigned message %s: %w", messageID.String(), err)
+	}
+
+	return unsignedMessage, nil
 }
