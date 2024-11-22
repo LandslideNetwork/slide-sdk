@@ -15,7 +15,7 @@ const (
 	// Larger value --> need less memory allocations but possibly have allocated but unused memory
 	// Smaller value --> need more memory allocations but more efficient use of allocated memory
 	initialSliceCap = 128
-	//default version of codec
+	// default version of codec
 	defaultVersion = 0
 )
 

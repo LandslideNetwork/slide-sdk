@@ -29,7 +29,7 @@ func TestParseWrongPayloadType(t *testing.T) {
 
 	shortID := []byte(rand.Str(20))
 	addressedPayload, err := NewAddressedCall(
-		shortID[:],
+		shortID,
 		[]byte{1, 2, 3},
 	)
 	require.NoError(err)

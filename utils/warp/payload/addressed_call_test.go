@@ -16,7 +16,7 @@ func TestAddressedCall(t *testing.T) {
 	shortID := []byte(rand.Str(2))
 
 	addressedPayload, err := NewAddressedCall(
-		shortID[:],
+		shortID,
 		[]byte{1, 2, 3},
 	)
 	require.NoError(err)
