@@ -32,7 +32,7 @@ func Parse(bytes []byte) (Payload, error) {
 	return payload, nil
 }
 
-//lint:ignore SA4006 will be implemented and used for ValidatorUptime struct
+//lint:ignore U1000 will be implemented and used for ValidatorUptime struct
 func initialize(p Payload) error {
 	bytes, err := Codec.Marshal(&p)
 	if err != nil {
