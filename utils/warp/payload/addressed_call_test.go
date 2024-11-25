@@ -5,8 +5,9 @@ package payload
 
 import (
 	"encoding/base64"
-	"github.com/cometbft/cometbft/libs/rand"
 	"testing"
+
+	"github.com/cometbft/cometbft/libs/rand"
 
 	"github.com/stretchr/testify/require"
 )

@@ -4,8 +4,9 @@
 package payload
 
 import (
-	"github.com/cometbft/cometbft/libs/rand"
 	"testing"
+
+	"github.com/cometbft/cometbft/libs/rand"
 
 	"github.com/stretchr/testify/require"
 
