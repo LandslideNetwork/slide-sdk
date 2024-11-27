@@ -7,7 +7,6 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/payload"
@@ -19,7 +18,7 @@ type Backend interface {
 	// AddMessage signs [unsignedMessage] and adds it to the warp backend database
 	AddMessage(unsignedMessage *warputils.UnsignedMessage) error
 	// GetMessageSignature returns the signature of the requested message.
-	GetMessageSignature(message *warputils.UnsignedMessage) ([bls.SignatureLen]byte, error)
+	GetMessageSignature(message *warputils.UnsignedMessage) ([]byte, error)
 	// GetMessage retrieves the [unsignedMessage] from the warp backend database if available
 	// TODO: After E-Upgrade, the backend no longer needs to store the mapping from messageHash
 	// to unsignedMessage (and this method can be removed).
@@ -56,8 +55,7 @@ func (b *backend) AddMessage(unsignedMessage *warputils.UnsignedMessage) error {
 		return fmt.Errorf("failed to put warp signature in db: %w", err)
 	}
 
-	_, err := b.warpSigner.Sign(unsignedMessage)
-	if err != nil {
+	if _, err := b.signMessage(unsignedMessage); err != nil {
 		return fmt.Errorf("failed to sign warp message: %w", err)
 	}
 	//TODO: save message signature to prefixdb
@@ -79,22 +77,15 @@ func (b *backend) GetMessage(messageID ids.ID) (*warputils.UnsignedMessage, erro
 	return unsignedMessage, nil
 }
 
-func (b *backend) GetMessageSignature(unsignedMessage *warputils.UnsignedMessage) ([bls.SignatureLen]byte, error) {
+func (b *backend) GetMessageSignature(unsignedMessage *warputils.UnsignedMessage) ([]byte, error) {
 	messageID := unsignedMessage.ID()
 
 	b.logger.Debug("Getting warp message from backend", "messageID", messageID)
 	if err := b.ValidateMessage(unsignedMessage); err != nil {
-		return [bls.SignatureLen]byte{}, fmt.Errorf("failed to validate warp message: %w", err)
+		return []byte{}, fmt.Errorf("failed to validate warp message: %w", err)
 	}
 
-	var signature [bls.SignatureLen]byte
-	sig, err := b.warpSigner.Sign(unsignedMessage)
-	if err != nil {
-		return [bls.SignatureLen]byte{}, fmt.Errorf("failed to sign warp message: %w", err)
-	}
-
-	copy(signature[:], sig)
-	return signature, nil
+	return b.signMessage(unsignedMessage)
 }
 
 func (b *backend) ValidateMessage(unsignedMessage *warputils.UnsignedMessage) error {
@@ -126,4 +117,13 @@ func (b *backend) ValidateMessage(unsignedMessage *warputils.UnsignedMessage) er
 		return fmt.Errorf("failed to verify Signable message: %w", err)
 	}
 	return nil
+}
+
+func (b *backend) signMessage(unsignedMessage *warputils.UnsignedMessage) ([]byte, error) {
+	sig, err := b.warpSigner.Sign(unsignedMessage)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign warp message: %w", err)
+	}
+
+	return sig, nil
 }
