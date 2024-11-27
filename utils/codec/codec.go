@@ -16,6 +16,8 @@ var (
 	ErrUnexportedField           = errors.New("unexported field")
 	ErrMarshalZeroLength         = errors.New("can't marshal zero length value")
 	ErrUnmarshalZeroLength       = errors.New("can't unmarshal zero length value")
+	ErrCantPackVersion           = errors.New("couldn't pack codec version")
+	ErrCantUnpackVersion         = errors.New("couldn't unpack codec version")
 )
 
 // Codec marshals and unmarshals

@@ -53,7 +53,12 @@ func TestAddAndGetValidMessage(t *testing.T) {
 	expectedSig, err := warpSigner.Sign(testUnsignedMessage)
 	require.NoError(t, err)
 	require.NotNil(t, expectedSig)
-	//	TODO: get signature and compare
+
+	// Verify that a signature is returned successfully, and compare to expected signature.
+	signature, err := backend.GetMessageSignature(testUnsignedMessage)
+	require.NoError(t, err)
+	require.NoError(t, err)
+	require.Equal(t, expectedSig, signature[:])
 }
 
 func TestAddAndGetUnknownMessage(t *testing.T) {
@@ -70,5 +75,7 @@ func TestAddAndGetUnknownMessage(t *testing.T) {
 	msg, err := backend.GetMessage(testUnsignedMessage.ID())
 	require.Error(t, err)
 	require.Nil(t, msg)
-	//TODO: add business logic to check signature
+	// Try getting a signature for a message that was not added.
+	_, err = backend.GetMessageSignature(testUnsignedMessage)
+	require.Error(t, err)
 }
