@@ -58,7 +58,7 @@ func TestAddAndGetValidMessage(t *testing.T) {
 	signature, err := backend.GetMessageSignature(testUnsignedMessage)
 	require.NoError(t, err)
 	require.NoError(t, err)
-	require.Equal(t, expectedSig, signature[:])
+	require.Equal(t, expectedSig, signature)
 }
 
 func TestAddAndGetUnknownMessage(t *testing.T) {
