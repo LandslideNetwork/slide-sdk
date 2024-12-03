@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
+	"github.com/landslidenetwork/slide-sdk/warp"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -64,6 +67,7 @@ var (
 	dbPrefixStateStore   = []byte("state-store")
 	dbPrefixTxIndexer    = []byte("tx-indexer")
 	dbPrefixBlockIndexer = []byte("block-indexer")
+	dbPrefixWarp         = []byte("warp")
 
 	// TODO: use internal app validators instead
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -134,6 +138,10 @@ type (
 		verifiedBlocks sync.Map
 		preferred      [32]byte
 		wrappedBlocks  *vmstate.WrappedBlocksStorage
+
+		// Avalanche Warp Messaging backend
+		// Used to serve BLS signatures of warp messages over RPC
+		warpBackend warp.Backend
 
 		clientConn    grpc.ClientConnInterface
 		optClientConn *grpc.ClientConn
@@ -442,6 +450,20 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	vm.logger.Info("vm initialization completed")
 
 	parentHash := block.ParentHash(blk)
+
+	warpDB := dbm.NewPrefixDB(vm.database, dbPrefixWarp)
+	secretKey, err := bls.NewSecretKey()
+	chainID, err := ids.ToID(req.ChainId)
+	warpSigner := warputils.NewSigner(secretKey, req.NetworkId, chainID)
+	vm.warpBackend = warp.NewBackend(
+		req.NetworkId,
+		chainID,
+		warpSigner,
+		vm.logger,
+		warpDB,
+	)
+
+	//TODO: Add p2p warp message warpHandler
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
