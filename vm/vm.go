@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 	"github.com/landslidenetwork/slide-sdk/warp"
 	http2 "net/http"
@@ -142,6 +141,7 @@ type (
 		// Avalanche Warp Messaging backend
 		// Used to serve BLS signatures of warp messages over RPC
 		warpBackend warp.Backend
+		warpService *warp.API
 
 		clientConn    grpc.ClientConnInterface
 		optClientConn *grpc.ClientConn
@@ -452,9 +452,16 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	parentHash := block.ParentHash(blk)
 
 	warpDB := dbm.NewPrefixDB(vm.database, dbPrefixWarp)
-	secretKey, err := bls.NewSecretKey()
+	if vm.config.BLSSecretKey == nil {
+		if err != nil {
+			return nil, err
+		}
+	}
 	chainID, err := ids.ToID(req.ChainId)
-	warpSigner := warputils.NewSigner(secretKey, req.NetworkId, chainID)
+	if err != nil {
+		return nil, err
+	}
+	warpSigner := warputils.NewSigner(vm.config.BLSSecretKey, req.NetworkId, chainID)
 	vm.warpBackend = warp.NewBackend(
 		req.NetworkId,
 		chainID,
@@ -463,7 +470,11 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		warpDB,
 	)
 
-	//TODO: Add p2p warp message warpHandler
+	subnetID, err := ids.ToID(req.ChainId)
+	if err != nil {
+		return nil, err
+	}
+	vm.warpService = warp.NewAPI(req.NetworkId, subnetID, chainID, vm.warpBackend)
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
