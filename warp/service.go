@@ -5,7 +5,6 @@ package warp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/libs/log"
@@ -14,8 +13,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/warp/payload"
 	"github.com/landslidenetwork/slide-sdk/vm"
 )
-
-var errNoValidators = errors.New("cannot aggregate signatures from subnet with no validators")
 
 // API introduces snowman specific functionality to the evm
 type API struct {
@@ -81,42 +78,6 @@ func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, qu
 }
 
 func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warputils.UnsignedMessage, quorumNum uint64, subnetIDStr string) (tmbytes.HexBytes, error) {
-	subnetID := a.sourceSubnetID
-	if len(subnetIDStr) > 0 {
-		sid, err := ids.FromString(subnetIDStr)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse subnetID: %q", subnetIDStr)
-		}
-		subnetID = sid
-	}
-	pChainHeight, err := a.vm.state.GetCurrentHeight(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	state := warpValidators.NewState(a.state, a.sourceSubnetID, a.sourceChainID, a.requirePrimaryNetworkSigners())
-	validators, totalWeight, err := warp.GetCanonicalValidatorSet(ctx, state, pChainHeight, subnetID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get validator set: %w", err)
-	}
-	if len(validators) == 0 {
-		return nil, fmt.Errorf("%w (SubnetID: %s, Height: %d)", errNoValidators, subnetID, pChainHeight)
-	}
-
-	a.logger.Debug("Fetching signature",
-		"sourceSubnetID", subnetID,
-		"height", pChainHeight,
-		"numValidators", len(validators),
-		"totalWeight", totalWeight,
-	)
-
-	agg := aggregator.New(aggregator.NewSignatureGetter(a.client), validators, totalWeight)
-	signatureResult, err := agg.AggregateSignatures(ctx, unsignedMessage, quorumNum)
-	if err != nil {
-		return nil, err
-	}
-	// TODO: return the signature and total weight as well to the caller for more complete details
-	// Need to decide on the best UI for this and write up documentation with the potential
-	// gotchas that could impact signed messages becoming invalid.
-	return signatureResult.Message.Bytes(), nil
+	// TODO: implement aggregateSignatures
+	return nil, nil
 }
