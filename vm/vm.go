@@ -141,6 +141,7 @@ type (
 		// Avalanche Warp Messaging backend
 		// Used to serve BLS signatures of warp messages over RPC
 		warpBackend warp.Backend
+		warpSigner  warputils.Signer
 		warpService *API
 
 		clientConn    grpc.ClientConnInterface
@@ -462,11 +463,11 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	warpSigner := warputils.NewSigner(&vm.config.BLSSecretKey, req.NetworkId, chainID)
+	vm.warpSigner = warputils.NewSigner(&vm.config.BLSSecretKey, req.NetworkId, chainID)
 	vm.warpBackend = warp.NewBackend(
 		req.NetworkId,
 		chainID,
-		warpSigner,
+		vm.warpSigner,
 		vm.logger,
 		warpDB,
 	)
