@@ -66,7 +66,7 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 		"abci_info":  jsonrpc.NewRPCFunc(rpc.ABCIInfo, "", jsonrpc.Cacheable()),
 
 		// warp
-		"warp_get_message":                     jsonrpc.NewRPCFunc(rpc.vm.warpService.GetMessage, "messageID"),
+		"warp_get_message":                     jsonrpc.NewRPCFunc(rpc.GetMessage, "messageID"),
 		"warp_get_message_signature":           jsonrpc.NewRPCFunc(rpc.vm.warpService.GetMessageSignature, "messageID"),
 		"warp_get_message_aggregate_signature": jsonrpc.NewRPCFunc(rpc.vm.warpService.GetMessageAggregateSignature, "messageID,quorumNum,subnetID"),
 		"warp_get_block_aggregate_signature":   jsonrpc.NewRPCFunc(rpc.vm.warpService.GetBlockAggregateSignature, "blockID,quorumNum,subnetID"),
@@ -804,4 +804,21 @@ func (rpc *RPC) Status(_ *rpctypes.Context) (*ctypes.ResultStatus, error) {
 	}
 
 	return result, nil
+}
+
+// Message content
+type ResultGetMessage struct {
+	Message []byte `json:"message"`
+}
+
+func (rpc *RPC) GetMessage(_ *rpctypes.Context, messageID string) (*ResultGetMessage, error) {
+	msgID, err := ids.FromString(messageID)
+	if err != nil {
+		return nil, err
+	}
+	msgContent, err := rpc.vm.warpService.GetMessage(context.Background(), msgID)
+	if err != nil {
+		return nil, err
+	}
+	return &ResultGetMessage{Message: msgContent.Bytes()}, nil
 }
