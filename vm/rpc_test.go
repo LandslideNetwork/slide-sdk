@@ -78,6 +78,28 @@ func TestWarpGetMessage(t *testing.T) {
 	require.Equal(t, result.Message, testUnsignedMessage.Bytes())
 }
 
+func TestWarpGetMessageSignature(t *testing.T) {
+	server, vm, rpcClient := setupRPC(t)
+	defer server.Close()
+
+	chainID, err := ids.ToID(vm.appOpts.ChainID)
+	require.NoError(t, err)
+	testUnsignedMessage, err := warputils.NewUnsignedMessage(vm.appOpts.NetworkID, chainID, []byte(rand.Str(30)))
+	vm.warpBackend.AddMessage(testUnsignedMessage)
+	result := new(ResultGetMessageSignature)
+	_, err = rpcClient.Call(context.Background(), "warp_get_message_signature", map[string]interface{}{"messageID": testUnsignedMessage.ID().String()}, result)
+	require.NoError(t, err)
+	expectedSig, err := vm.warpSigner.Sign(testUnsignedMessage)
+	require.NoError(t, err)
+	require.NotNil(t, expectedSig)
+
+	t.Log(result.Signature)
+	t.Log(expectedSig)
+
+	require.NoError(t, err)
+	require.Equal(t, expectedSig, result.Signature)
+}
+
 // TestRPC is a test RPC server for the LandslideVM.
 type TestRPC struct {
 	vm *LandslideVM
