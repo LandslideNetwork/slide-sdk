@@ -1,7 +1,7 @@
 // (c) 2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
-package warp
+package vm
 
 import (
 	"context"
@@ -11,20 +11,21 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/payload"
-	"github.com/landslidenetwork/slide-sdk/vm"
+	"github.com/landslidenetwork/slide-sdk/warp"
 )
 
 // API introduces snowman specific functionality to the evm
 type API struct {
-	vm                            vm.LandslideVM
+	vm                            *LandslideVM
 	logger                        log.Logger
 	networkID                     uint32
 	sourceSubnetID, sourceChainID ids.ID
-	backend                       Backend
+	backend                       warp.Backend
 }
 
-func NewAPI(networkID uint32, sourceSubnetID ids.ID, sourceChainID ids.ID, backend Backend) *API {
+func NewAPI(vm *LandslideVM, networkID uint32, sourceSubnetID ids.ID, sourceChainID ids.ID, backend warp.Backend) *API {
 	return &API{
+		vm:             vm,
 		networkID:      networkID,
 		sourceSubnetID: sourceSubnetID,
 		sourceChainID:  sourceChainID,

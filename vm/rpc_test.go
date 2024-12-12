@@ -2,6 +2,9 @@ package vm
 
 import (
 	"context"
+	"github.com/cometbft/cometbft/libs/rand"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 	"net/http"
 	"testing"
 	"time"
@@ -57,6 +60,22 @@ func TestStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Logf("Status result %+v", result)
+}
+
+func TestWarpGetMessage(t *testing.T) {
+	server, vm, rpcClient := setupRPC(t)
+	defer server.Close()
+
+	chainID, err := ids.ToID(vm.appOpts.ChainID)
+	require.NoError(t, err)
+	testUnsignedMessage, err := warputils.NewUnsignedMessage(vm.appOpts.NetworkID, chainID, []byte(rand.Str(30)))
+	vm.warpBackend.AddMessage(testUnsignedMessage)
+	result := new(ResultGetMessage)
+	_, err = rpcClient.Call(context.Background(), "warp_get_message", map[string]interface{}{"messageID": testUnsignedMessage.ID().String()}, result)
+	require.NoError(t, err)
+	t.Log(result.Message)
+	t.Log(testUnsignedMessage.Bytes())
+	require.Equal(t, result.Message, testUnsignedMessage.Bytes())
 }
 
 // TestRPC is a test RPC server for the LandslideVM.

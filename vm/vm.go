@@ -141,7 +141,7 @@ type (
 		// Avalanche Warp Messaging backend
 		// Used to serve BLS signatures of warp messages over RPC
 		warpBackend warp.Backend
-		warpService *warp.API
+		warpService *API
 
 		clientConn    grpc.ClientConnInterface
 		optClientConn *grpc.ClientConn
@@ -452,16 +452,17 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	parentHash := block.ParentHash(blk)
 
 	warpDB := dbm.NewPrefixDB(vm.database, dbPrefixWarp)
-	if vm.config.BLSSecretKey == nil {
-		if err != nil {
-			return nil, err
-		}
-	}
+	// TODO: implement bls secret key check
+	//if vm.config.BLSSecretKey == nil {
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
 	chainID, err := ids.ToID(req.ChainId)
 	if err != nil {
 		return nil, err
 	}
-	warpSigner := warputils.NewSigner(vm.config.BLSSecretKey, req.NetworkId, chainID)
+	warpSigner := warputils.NewSigner(&vm.config.BLSSecretKey, req.NetworkId, chainID)
 	vm.warpBackend = warp.NewBackend(
 		req.NetworkId,
 		chainID,
@@ -470,11 +471,11 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		warpDB,
 	)
 
-	subnetID, err := ids.ToID(req.ChainId)
+	subnetID, err := ids.ToID(req.SubnetId)
 	if err != nil {
 		return nil, err
 	}
-	vm.warpService = warp.NewAPI(req.NetworkId, subnetID, chainID, vm.warpBackend)
+	vm.warpService = NewAPI(vm, req.NetworkId, subnetID, chainID, vm.warpBackend)
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),

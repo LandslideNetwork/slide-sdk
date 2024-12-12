@@ -3,6 +3,7 @@ package vm
 import (
 	"context"
 	_ "embed"
+	"github.com/cometbft/cometbft/libs/rand"
 	"net"
 	"testing"
 
@@ -58,6 +59,8 @@ func newKvApp(t *testing.T, vmdb, appdb dbm.DB) vmpb.VMServer {
 	initRes, err := vm.Initialize(context.TODO(), &vmpb.InitializeRequest{
 		DbServerAddr: "inmemory",
 		GenesisBytes: kvstorevmGenesis,
+		ChainId:      []byte(rand.Str(32)),
+		SubnetId:     []byte(rand.Str(32)),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, initRes)
