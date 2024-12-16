@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 	"github.com/landslidenetwork/slide-sdk/warp"
 	http2 "net/http"
@@ -463,7 +464,12 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	vm.warpSigner = warputils.NewSigner(&vm.config.BLSSecretKey, req.NetworkId, chainID)
+	fmt.Println(vm.config.BLSSecretKey)
+	secretKey, err := bls.SecretKeyFromBytes(vm.config.BLSSecretKey)
+	if err != nil {
+		return nil, err
+	}
+	vm.warpSigner = warputils.NewSigner(secretKey, req.NetworkId, chainID)
 	vm.warpBackend = warp.NewBackend(
 		req.NetworkId,
 		chainID,

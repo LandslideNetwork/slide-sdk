@@ -3,17 +3,19 @@ package vm
 import (
 	"context"
 	_ "embed"
-	"github.com/cometbft/cometbft/libs/rand"
-	"net"
-	"testing"
-
+	"encoding/json"
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/abci/example/kvstore"
+	"github.com/cometbft/cometbft/libs/rand"
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
+	vmtypes "github.com/landslidenetwork/slide-sdk/vm/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"net"
+	"testing"
 
 	vmpb "github.com/landslidenetwork/slide-sdk/proto/vm"
 )
@@ -56,11 +58,26 @@ func newKvApp(t *testing.T, vmdb, appdb dbm.DB) vmpb.VMServer {
 		return kvstore.NewApplication(appdb), nil
 	}, WithOptClientConn(mockConn))
 	require.NotNil(t, vm)
+	sk, err := bls.NewSecretKey()
+	if err != nil {
+		t.Fatalf("Failed to generate secret key: %v", err)
+	}
+	skBytes := bls.SecretKeyToBytes(sk)
+	vmCfg := vmtypes.Config{}
+	vmCfg.VMConfig.SetDefaults()
+
+	vmCfg.VMConfig.BLSSecretKey = skBytes
+
+	cfg, err := json.Marshal(vmCfg)
+	if err != nil {
+		t.Fatalf("Failed to marshal vm config to json: %v", err)
+	}
 	initRes, err := vm.Initialize(context.TODO(), &vmpb.InitializeRequest{
 		DbServerAddr: "inmemory",
 		GenesisBytes: kvstorevmGenesis,
 		ChainId:      []byte(rand.Str(32)),
 		SubnetId:     []byte(rand.Str(32)),
+		ConfigBytes:  cfg,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, initRes)

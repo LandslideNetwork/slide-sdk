@@ -8,11 +8,22 @@ import (
 	"fmt"
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/libs/log"
+	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/payload"
 	"github.com/landslidenetwork/slide-sdk/warp"
 )
+
+const failedParseIDPattern = "failed to parse ID %s with error %w"
+
+type ResultGetMessage struct {
+	Message []byte `json:"message"`
+}
+
+type ResultGetMessageSignature struct {
+	Signature []byte `json:"signature"`
+}
 
 // API introduces snowman specific functionality to the evm
 type API struct {
@@ -34,17 +45,25 @@ func NewAPI(vm *LandslideVM, networkID uint32, sourceSubnetID ids.ID, sourceChai
 }
 
 // GetMessage returns the Warp message associated with a messageID.
-func (a *API) GetMessage(ctx context.Context, messageID ids.ID) (tmbytes.HexBytes, error) {
-	message, err := a.backend.GetMessage(messageID)
+func (a *API) GetMessage(_ *rpctypes.Context, messageID string) (*ResultGetMessage, error) {
+	msgID, err := ids.FromString(messageID)
+	if err != nil {
+		return nil, fmt.Errorf(failedParseIDPattern, messageID, err)
+	}
+	message, err := a.backend.GetMessage(msgID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get message %s with error %w", messageID, err)
 	}
-	return message.Bytes(), nil
+	return &ResultGetMessage{Message: message.Bytes()}, nil
 }
 
 // GetMessageSignature returns the BLS signature associated with a messageID.
-func (a *API) GetMessageSignature(ctx context.Context, messageID ids.ID) (tmbytes.HexBytes, error) {
-	unsignedMessage, err := a.backend.GetMessage(messageID)
+func (a *API) GetMessageSignature(_ *rpctypes.Context, messageID string) (*ResultGetMessageSignature, error) {
+	msgID, err := ids.FromString(messageID)
+	if err != nil {
+		return nil, fmt.Errorf(failedParseIDPattern, messageID, err)
+	}
+	unsignedMessage, err := a.backend.GetMessage(msgID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get message %s with error %w", messageID, err)
 	}
@@ -52,7 +71,7 @@ func (a *API) GetMessageSignature(ctx context.Context, messageID ids.ID) (tmbyte
 	if err != nil {
 		return nil, fmt.Errorf("failed to get signature for message %s with error %w", messageID, err)
 	}
-	return signature[:], nil
+	return &ResultGetMessageSignature{Signature: signature}, nil
 }
 
 // GetMessageAggregateSignature fetches the aggregate signature for the requested [messageID]

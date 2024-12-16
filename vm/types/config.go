@@ -3,8 +3,6 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
-
 	"github.com/cometbft/cometbft/types"
 )
 
@@ -32,7 +30,7 @@ type (
 		ConsensusParams           ConsensusParams `json:"consensus_params"`
 		MaxSubscriptionClients    int             `json:"max_subscription_clients"`
 		MaxSubscriptionsPerClient int             `json:"max_subscriptions_per_client"`
-		BLSSecretKey              bls.SecretKey   `json:"bls_secret_key"`
+		BLSSecretKey              []byte          `json:"bls_secret_key"`
 	}
 
 	// ConsensusParams contains consensus critical parameters that determine the
