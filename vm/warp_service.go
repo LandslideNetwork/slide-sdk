@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
-	"github.com/cometbft/cometbft/libs/log"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
@@ -28,7 +27,6 @@ type ResultGetMessageSignature struct {
 // API introduces snowman specific functionality to the evm
 type API struct {
 	vm                            *LandslideVM
-	logger                        log.Logger
 	networkID                     uint32
 	sourceSubnetID, sourceChainID ids.ID
 	backend                       warp.Backend
