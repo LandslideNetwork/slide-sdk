@@ -2,12 +2,13 @@ package vm
 
 import (
 	"context"
-	"github.com/cometbft/cometbft/libs/rand"
-	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/cometbft/cometbft/libs/rand"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/rpc/jsonrpc/client"

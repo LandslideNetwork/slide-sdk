@@ -4,6 +4,9 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"net"
+	"testing"
+
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/abci/example/kvstore"
 	"github.com/cometbft/cometbft/libs/rand"
@@ -14,8 +17,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"net"
-	"testing"
 
 	vmpb "github.com/landslidenetwork/slide-sdk/proto/vm"
 )

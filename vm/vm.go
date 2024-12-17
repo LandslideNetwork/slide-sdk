@@ -6,14 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
-	"github.com/landslidenetwork/slide-sdk/warp"
 	http2 "net/http"
 	"os"
 	"slices"
 	"sync"
 	"time"
+
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
+	"github.com/landslidenetwork/slide-sdk/warp"
 
 	dbm "github.com/cometbft/cometbft-db"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
@@ -455,11 +456,11 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 	warpDB := dbm.NewPrefixDB(vm.database, dbPrefixWarp)
 	// TODO: implement bls secret key check
-	//if vm.config.BLSSecretKey == nil {
+	// if vm.config.BLSSecretKey == nil {
 	//	if err != nil {
 	//		return nil, err
 	//	}
-	//}
+	// }
 	chainID, err := ids.ToID(req.ChainId)
 	if err != nil {
 		return nil, err
