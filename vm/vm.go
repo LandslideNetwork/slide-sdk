@@ -12,6 +12,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
+	"github.com/landslidenetwork/slide-sdk/warp"
+
 	dbm "github.com/cometbft/cometbft-db"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/config"
@@ -64,6 +68,7 @@ var (
 	dbPrefixStateStore   = []byte("state-store")
 	dbPrefixTxIndexer    = []byte("tx-indexer")
 	dbPrefixBlockIndexer = []byte("block-indexer")
+	dbPrefixWarp         = []byte("warp")
 
 	// TODO: use internal app validators instead
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -134,6 +139,12 @@ type (
 		verifiedBlocks sync.Map
 		preferred      [32]byte
 		wrappedBlocks  *vmstate.WrappedBlocksStorage
+
+		// Avalanche Warp Messaging backend
+		// Used to serve BLS signatures of warp messages over RPC
+		warpBackend warp.Backend
+		warpSigner  warputils.Signer
+		warpService *API
 
 		clientConn    grpc.ClientConnInterface
 		optClientConn *grpc.ClientConn
@@ -442,6 +453,37 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	vm.logger.Info("vm initialization completed")
 
 	parentHash := block.ParentHash(blk)
+
+	warpDB := dbm.NewPrefixDB(vm.database, dbPrefixWarp)
+	// TODO: implement bls secret key check
+	// if vm.config.BLSSecretKey == nil {
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	// }
+	chainID, err := ids.ToID(req.ChainId)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(vm.config.BLSSecretKey)
+	secretKey, err := bls.SecretKeyFromBytes(vm.config.BLSSecretKey)
+	if err != nil {
+		return nil, err
+	}
+	vm.warpSigner = warputils.NewSigner(secretKey, req.NetworkId, chainID)
+	vm.warpBackend = warp.NewBackend(
+		req.NetworkId,
+		chainID,
+		vm.warpSigner,
+		vm.logger,
+		warpDB,
+	)
+
+	subnetID, err := ids.ToID(req.SubnetId)
+	if err != nil {
+		return nil, err
+	}
+	vm.warpService = NewAPI(vm, req.NetworkId, subnetID, chainID, vm.warpBackend)
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
