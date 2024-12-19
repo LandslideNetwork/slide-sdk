@@ -45,7 +45,7 @@ const (
 	// rpcChainVMProtocol should be bumped anytime changes are made which
 	// require the plugin vm to upgrade to latest avalanchego release to be
 	// compatible.
-	rpcChainVMProtocol          uint = 35
+	rpcChainVMProtocol          uint = 38
 	defaultMaxRecvMsgSize            = 50 * 1024 * 1024 // 50 MB
 	defaultMaxConcurrentStreams      = 1000
 )
