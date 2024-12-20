@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"golang.org/x/crypto/ripemd160"
 )
 
 const (
@@ -14,6 +15,9 @@ var ErrInvalidHashLen = errors.New("invalid hash length")
 
 // Hash256 A 256 bit long hash value.
 type Hash256 = [HashLen]byte
+
+// Hash160 A 160 bit long hash value.
+type Hash160 = [ripemd160.Size]byte
 
 // ComputeHash256Array computes a cryptographically strong 256 bit hash of the
 // input byte slice.
@@ -58,6 +62,15 @@ func ToHash256(bytes []byte) (Hash256, error) {
 	hash := Hash256{}
 	if bytesLen := len(bytes); bytesLen != HashLen {
 		return hash, fmt.Errorf("%w: expected 32 bytes but got %d", ErrInvalidHashLen, bytesLen)
+	}
+	copy(hash[:], bytes)
+	return hash, nil
+}
+
+func ToHash160(bytes []byte) (Hash160, error) {
+	hash := Hash160{}
+	if bytesLen := len(bytes); bytesLen != ripemd160.Size {
+		return hash, fmt.Errorf("%w: expected 20 bytes but got %d", ErrInvalidHashLen, bytesLen)
 	}
 	copy(hash[:], bytes)
 	return hash, nil
