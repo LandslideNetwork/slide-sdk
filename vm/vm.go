@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/grpcutils/gvalidators"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -48,6 +49,7 @@ import (
 	httppb "github.com/landslidenetwork/slide-sdk/proto/http"
 	messengerpb "github.com/landslidenetwork/slide-sdk/proto/messenger"
 	"github.com/landslidenetwork/slide-sdk/proto/rpcdb"
+	validatorstatepb "github.com/landslidenetwork/slide-sdk/proto/validatorstate"
 	vmpb "github.com/landslidenetwork/slide-sdk/proto/vm"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	vmtypes "github.com/landslidenetwork/slide-sdk/vm/types"
@@ -58,7 +60,8 @@ import (
 )
 
 const (
-	genesisChunkSize = 16 * 1024 * 1024 // 16
+	genesisChunkSize             = 16 * 1024 * 1024 // 16
+	requirePrimaryNetworkSigners = true
 )
 
 var (
@@ -242,6 +245,8 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}
 
 	msgClient := messengerpb.NewMessengerClient(vm.clientConn)
+
+	validatorStateClient := gvalidators.NewClient(validatorstatepb.NewValidatorStateClient(vm.clientConn))
 
 	vm.toEngine = make(chan messengerpb.Message, 1)
 	vm.closed = make(chan struct{})
@@ -483,7 +488,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	vm.warpService = NewAPI(vm, req.NetworkId, subnetID, chainID, vm.warpBackend)
+	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, requirePrimaryNetworkSigners)
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
