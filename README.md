@@ -24,7 +24,7 @@ LandslideVM relies on the following major dependencies:
 
 - Go v 1.22.7
 - Cosmos SDK 0.50.9 (https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.9)
-- AvalancheGo v1.11.11 (https://github.com/ava-labs/avalanchego/releases/tag/v1.11.11)
+- AvalancheGo v1.12.1 (https://github.com/ava-labs/avalanchego/releases/tag/v1.12.1)
 
 Please ensure you have the latest versions of these dependencies installed to avoid any known vulnerabilities.
 
