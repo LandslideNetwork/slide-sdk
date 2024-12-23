@@ -26,3 +26,20 @@ type NetworkClient interface {
 	// (length of response divided by request time), and with 0 if the response is invalid.
 	TrackBandwidth(nodeID ids.NodeID, bandwidth float64)
 }
+
+type HTTPNetworkClient struct{}
+
+func (HTTPNetworkClient) SendAppRequestAny(ctx context.Context, minVersion *version.Application, request []byte) ([]byte, ids.NodeID, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (HTTPNetworkClient) SendAppRequest(ctx context.Context, nodeID ids.NodeID, request []byte) ([]byte, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (HTTPNetworkClient) TrackBandwidth(nodeID ids.NodeID, bandwidth float64) {
+	//TODO implement me
+	panic("implement me")
+}

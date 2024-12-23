@@ -41,7 +41,7 @@ type API struct {
 	sourceSubnetID, sourceChainID ids.ID
 	backend                       warp.Backend
 	client                        peer.NetworkClient
-	//TODO: investigate necessity to set up value according to validation of Primary Network
+	// TODO: investigate necessity to set up value according to validation of Primary Network
 	// requirePrimaryNetworkSigners returns true if warp messages from the primary
 	// network must be signed by the primary network validators.
 	// This is necessary when the subnet is not validating the primary network.
@@ -49,7 +49,7 @@ type API struct {
 }
 
 func NewAPI(vm *LandslideVM, logger log.Logger, networkID uint32, state validators.State, sourceSubnetID ids.ID, sourceChainID ids.ID,
-	backend warp.Backend, requirePrimaryNetworkSigners bool) *API {
+	backend warp.Backend, client peer.NetworkClient, requirePrimaryNetworkSigners bool) *API {
 	return &API{
 		vm:                           vm,
 		logger:                       logger,
@@ -58,6 +58,7 @@ func NewAPI(vm *LandslideVM, logger log.Logger, networkID uint32, state validato
 		sourceSubnetID:               sourceSubnetID,
 		sourceChainID:                sourceChainID,
 		backend:                      backend,
+		client:                       client,
 		requirePrimaryNetworkSigners: requirePrimaryNetworkSigners,
 	}
 }
@@ -116,7 +117,6 @@ func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, qu
 }
 
 func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warputils.UnsignedMessage, quorumNum uint64, subnetIDStr string) (tmbytes.HexBytes, error) {
-	// TODO: implement aggregateSignatures
 	subnetID := a.sourceSubnetID
 	if len(subnetIDStr) > 0 {
 		sid, err := ids.FromString(subnetIDStr)
