@@ -85,7 +85,14 @@ func (s *BitSetSignature) Verify(
 		return err
 	}
 
-	vdrs, totalWeight, err := GetCanonicalValidatorSet(ctx, pChainState, pChainHeight, subnetID)
+	// Get the validator set at the given height.
+	vdrSet, err := pChainState.GetValidatorSet(ctx, pChainHeight, subnetID)
+	if err != nil {
+		return fmt.Errorf("failed to get validator set: %w", err)
+	}
+
+	// Convert the validator set into the canonical ordering.
+	vdrs, totalWeight, err := FlattenValidatorSet(vdrSet)
 	if err != nil {
 		return err
 	}

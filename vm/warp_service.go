@@ -40,7 +40,7 @@ type API struct {
 	valState                      *warpValidators.State
 	sourceSubnetID, sourceChainID ids.ID
 	backend                       warp.Backend
-	client                        peer.NetworkClient
+	signatureGetter               *aggregator.NetworkSignatureGetter
 	// TODO: investigate necessity to set up value according to validation of Primary Network
 	// requirePrimaryNetworkSigners returns true if warp messages from the primary
 	// network must be signed by the primary network validators.
@@ -58,7 +58,7 @@ func NewAPI(vm *LandslideVM, logger log.Logger, networkID uint32, state validato
 		sourceSubnetID:               sourceSubnetID,
 		sourceChainID:                sourceChainID,
 		backend:                      backend,
-		client:                       client,
+		signatureGetter:              aggregator.NewSignatureGetter(client),
 		requirePrimaryNetworkSigners: requirePrimaryNetworkSigners,
 	}
 }
@@ -150,7 +150,7 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warputil
 		"numValidators", len(validators),
 		"totalWeight", totalWeight,
 	)
-	agg := aggregator.New(aggregator.NewSignatureGetter(a.client), a.logger, validators, totalWeight)
+	agg := aggregator.New(a.signatureGetter, a.logger, validators, totalWeight)
 	signatureResult, err := agg.AggregateSignatures(ctx, unsignedMessage, quorumNum)
 	if err != nil {
 		return nil, err
