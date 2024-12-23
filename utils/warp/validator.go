@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils/set"
 
 	"golang.org/x/exp/maps"
 
@@ -97,4 +98,59 @@ func FlattenValidatorSet(vdrSet map[ids.NodeID]*validators.GetValidatorOutput) (
 	vdrList := maps.Values(vdrs)
 	utils.Sort(vdrList)
 	return vdrList, totalWeight, nil
+}
+
+// FilterValidators returns the validators in [vdrs] whose bit is set to 1 in
+// [indices].
+//
+// Returns an error if [indices] references an unknown validator.
+func FilterValidators(
+	indices set.Bits,
+	vdrs []*Validator,
+) ([]*Validator, error) {
+	// Verify that all alleged signers exist
+	if indices.BitLen() > len(vdrs) {
+		return nil, fmt.Errorf(
+			"%w: NumIndices (%d) >= NumFilteredValidators (%d)",
+			ErrUnknownValidator,
+			indices.BitLen()-1, // -1 to convert from length to index
+			len(vdrs),
+		)
+	}
+
+	filteredVdrs := make([]*Validator, 0, len(vdrs))
+	for i, vdr := range vdrs {
+		if !indices.Contains(i) {
+			continue
+		}
+
+		filteredVdrs = append(filteredVdrs, vdr)
+	}
+	return filteredVdrs, nil
+}
+
+// SumWeight returns the total weight of the provided validators.
+func SumWeight(vdrs []*Validator) (uint64, error) {
+	var (
+		weight uint64
+		err    error
+	)
+	for _, vdr := range vdrs {
+		weight, err = math.Add(weight, vdr.Weight)
+		if err != nil {
+			return 0, fmt.Errorf("%w: %w", ErrWeightOverflow, err)
+		}
+	}
+	return weight, nil
+}
+
+// AggregatePublicKeys returns the public key of the provided validators.
+//
+// Invariant: All of the public keys in [vdrs] are valid.
+func AggregatePublicKeys(vdrs []*Validator) (*bls.PublicKey, error) {
+	pks := make([]*bls.PublicKey, len(vdrs))
+	for i, vdr := range vdrs {
+		pks[i] = vdr.PublicKey
+	}
+	return bls.AggregatePublicKeys(pks)
 }

@@ -20,7 +20,7 @@ type Payload interface {
 // Signable is an optional interface that payloads can implement to allow
 // on-the-fly signing of incoming messages by the warp backend.
 type Signable interface {
-	VerifyMesssage(sourceAddress []byte) error
+	VerifyMessage(sourceAddress []byte) error
 }
 
 func Parse(bytes []byte) (Payload, error) {

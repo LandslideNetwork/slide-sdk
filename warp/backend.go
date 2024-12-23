@@ -113,7 +113,7 @@ func (b *backend) ValidateMessage(unsignedMessage *warputils.UnsignedMessage) er
 	}
 
 	// Check if the message should be signed according to its type
-	if err := signable.VerifyMesssage(addressedCall.SourceAddress); err != nil {
+	if err := signable.VerifyMessage(addressedCall.SourceAddress); err != nil {
 		return fmt.Errorf("failed to verify Signable message: %w", err)
 	}
 	return nil
