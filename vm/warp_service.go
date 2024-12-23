@@ -37,7 +37,7 @@ type API struct {
 	vm                            *LandslideVM
 	logger                        log.Logger
 	networkID                     uint32
-	state                         validators.State
+	valState                      *warpValidators.State
 	sourceSubnetID, sourceChainID ids.ID
 	backend                       warp.Backend
 	client                        peer.NetworkClient
@@ -54,7 +54,7 @@ func NewAPI(vm *LandslideVM, logger log.Logger, networkID uint32, state validato
 		vm:                           vm,
 		logger:                       logger,
 		networkID:                    networkID,
-		state:                        state,
+		valState:                     warpValidators.NewState(state, sourceSubnetID, sourceChainID, requirePrimaryNetworkSigners),
 		sourceSubnetID:               sourceSubnetID,
 		sourceChainID:                sourceChainID,
 		backend:                      backend,
@@ -125,14 +125,20 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warputil
 		}
 		subnetID = sid
 	}
-	pChainHeight, err := a.state.GetCurrentHeight(ctx)
+	pChainHeight, err := a.valState.GetCurrentHeight(ctx)
 	if err != nil {
 		return nil, err
 	}
-	state := warpValidators.NewState(a.state, a.sourceSubnetID, a.sourceChainID, a.requirePrimaryNetworkSigners)
-	validators, totalWeight, err := warputils.GetCanonicalValidatorSet(ctx, state, pChainHeight, subnetID)
+	// Get the validator set at the given height.
+	vdrSet, err := a.valState.GetValidatorSet(ctx, pChainHeight, subnetID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get validator set: %w", err)
+	}
+
+	// Convert the validator set into the canonical ordering.
+	validators, totalWeight, err := warputils.FlattenValidatorSet(vdrSet)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert the validator set into the canonical ordering: %w", err)
 	}
 	if len(validators) == 0 {
 		return nil, fmt.Errorf("%w (SubnetID: %s, Height: %d)", errNoValidators, subnetID, pChainHeight)
