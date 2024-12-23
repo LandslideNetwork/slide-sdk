@@ -6,12 +6,17 @@ import (
 )
 
 var (
-	ciphersuiteSignature         = []byte("BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_")
-	ErrFailedPublicKeyDecompress = errors.New("couldn't decompress public key")
-	errInvalidPublicKey          = errors.New("invalid public key")
+	ciphersuiteSignature          = []byte("BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_")
+	ErrNoPublicKeys               = errors.New("no public keys")
+	ErrFailedPublicKeyDecompress  = errors.New("couldn't decompress public key")
+	errInvalidPublicKey           = errors.New("invalid public key")
+	errFailedPublicKeyAggregation = errors.New("couldn't aggregate public keys")
 )
 
-type PublicKey = blst.P1Affine
+type (
+	PublicKey          = blst.P1Affine
+	AggregatePublicKey = blst.P1Aggregate
+)
 
 // Verify the [sig] of [msg] against the [pk].
 // The [sig] and [pk] may have been an aggregation of other signatures and keys.
@@ -50,4 +55,19 @@ func PublicKeyFromCompressedBytes(pkBytes []byte) (*PublicKey, error) {
 		return nil, errInvalidPublicKey
 	}
 	return pk, nil
+}
+
+// AggregatePublicKeys aggregates a non-zero number of public keys into a single
+// aggregated public key.
+// Invariant: all [pks] have been validated.
+func AggregatePublicKeys(pks []*PublicKey) (*PublicKey, error) {
+	if len(pks) == 0 {
+		return nil, ErrNoPublicKeys
+	}
+
+	var agg AggregatePublicKey
+	if !agg.Aggregate(pks, false) {
+		return nil, errFailedPublicKeyAggregation
+	}
+	return agg.ToAffine(), nil
 }

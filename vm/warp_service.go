@@ -11,8 +11,10 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/validators"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/warp/aggregator"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/payload"
 	warpValidators "github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 	"github.com/landslidenetwork/slide-sdk/warp"
@@ -38,6 +40,7 @@ type API struct {
 	state                         validators.State
 	sourceSubnetID, sourceChainID ids.ID
 	backend                       warp.Backend
+	client                        peer.NetworkClient
 	//TODO: investigate necessity to set up value according to validation of Primary Network
 	// requirePrimaryNetworkSigners returns true if warp messages from the primary
 	// network must be signed by the primary network validators.
@@ -141,6 +144,13 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warputil
 		"numValidators", len(validators),
 		"totalWeight", totalWeight,
 	)
-	agg := aggregator.New(aggregator.NewSignatureGetter(a.client), validators, totalWeight)
-	return nil, nil
+	agg := aggregator.New(aggregator.NewSignatureGetter(a.client), a.logger, validators, totalWeight)
+	signatureResult, err := agg.AggregateSignatures(ctx, unsignedMessage, quorumNum)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: return the signature and total weight as well to the caller for more complete details
+	// Need to decide on the best UI for this and write up documentation with the potential
+	// gotchas that could impact signed messages becoming invalid.
+	return signatureResult.Message.Bytes(), nil
 }
