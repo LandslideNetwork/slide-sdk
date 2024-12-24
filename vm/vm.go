@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/landslidenetwork/slide-sdk/grpcutils/gvalidators"
-	"github.com/landslidenetwork/slide-sdk/utils/peer"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -146,7 +145,6 @@ type (
 
 		// Avalanche Warp Messaging backend
 		// Used to serve BLS signatures of warp messages over RPC
-		nwClient    peer.HTTPNetworkClient
 		warpBackend warp.Backend
 		warpSigner  warputils.Signer
 		warpService *API
@@ -490,8 +488,8 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	vm.nwClient = peer.HTTPNetworkClient{}
-	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, vm.nwClient, requirePrimaryNetworkSigners)
+	rpcClients := map[ids.NodeID]warp.Client{}
+	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, rpcClients, requirePrimaryNetworkSigners)
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),

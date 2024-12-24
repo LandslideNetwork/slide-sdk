@@ -11,7 +11,6 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	"github.com/landslidenetwork/slide-sdk/utils/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/validators"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/aggregator"
@@ -40,7 +39,7 @@ type API struct {
 	valState                      *warpValidators.State
 	sourceSubnetID, sourceChainID ids.ID
 	backend                       warp.Backend
-	signatureGetter               *aggregator.NetworkSignatureGetter
+	signatureGetter               aggregator.SignatureGetter
 	// TODO: investigate necessity to set up value according to validation of Primary Network
 	// requirePrimaryNetworkSigners returns true if warp messages from the primary
 	// network must be signed by the primary network validators.
@@ -49,7 +48,7 @@ type API struct {
 }
 
 func NewAPI(vm *LandslideVM, logger log.Logger, networkID uint32, state validators.State, sourceSubnetID ids.ID, sourceChainID ids.ID,
-	backend warp.Backend, client peer.NetworkClient, requirePrimaryNetworkSigners bool) *API {
+	backend warp.Backend, rpcClients map[ids.NodeID]warp.Client, requirePrimaryNetworkSigners bool) *API {
 	return &API{
 		vm:                           vm,
 		logger:                       logger,
@@ -58,7 +57,7 @@ func NewAPI(vm *LandslideVM, logger log.Logger, networkID uint32, state validato
 		sourceSubnetID:               sourceSubnetID,
 		sourceChainID:                sourceChainID,
 		backend:                      backend,
-		signatureGetter:              aggregator.NewSignatureGetter(client),
+		signatureGetter:              warp.NewAPIFetcher(rpcClients),
 		requirePrimaryNetworkSigners: requirePrimaryNetworkSigners,
 	}
 }
@@ -100,6 +99,15 @@ func (a *API) GetMessageAggregateSignature(ctx context.Context, messageID ids.ID
 		return nil, err
 	}
 	return a.aggregateSignatures(ctx, unsignedMessage, quorumNum, subnetIDStr)
+}
+
+// GetBlockSignature returns the BLS signature associated with a blockID.
+func (a *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (tmbytes.HexBytes, error) {
+	signature, err := a.backend.GetBlockSignature(blockID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get signature for block %s with error %w", blockID, err)
+	}
+	return signature[:], nil
 }
 
 // GetBlockAggregateSignature fetches the aggregate signature for the requested [blockID]

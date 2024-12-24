@@ -69,6 +69,7 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 		"warp_get_message":                     jsonrpc.NewRPCFunc(rpc.vm.warpService.GetMessage, "messageID"),
 		"warp_get_message_signature":           jsonrpc.NewRPCFunc(rpc.vm.warpService.GetMessageSignature, "messageID"),
 		"warp_get_message_aggregate_signature": jsonrpc.NewRPCFunc(rpc.vm.warpService.GetMessageAggregateSignature, "messageID,quorumNum,subnetID"),
+		"warp_get_block_signature":             jsonrpc.NewRPCFunc(rpc.vm.warpService.GetBlockSignature, "blockID"),
 		"warp_get_block_aggregate_signature":   jsonrpc.NewRPCFunc(rpc.vm.warpService.GetBlockAggregateSignature, "blockID,quorumNum,subnetID"),
 	}
 }
