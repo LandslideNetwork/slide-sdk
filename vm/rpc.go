@@ -34,6 +34,7 @@ func NewRPC(vm *LandslideVM) *RPC {
 }
 
 func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
+
 	return map[string]*jsonrpc.RPCFunc{
 
 		// info AP
@@ -63,6 +64,12 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 		// abci API
 		"abci_query": jsonrpc.NewRPCFunc(rpc.ABCIQuery, "path,data,height,prove"),
 		"abci_info":  jsonrpc.NewRPCFunc(rpc.ABCIInfo, "", jsonrpc.Cacheable()),
+
+		// warp
+		"warp_get_message":                     jsonrpc.NewRPCFunc(rpc.vm.warpService.GetMessage, "messageID"),
+		"warp_get_message_signature":           jsonrpc.NewRPCFunc(rpc.vm.warpService.GetMessageSignature, "messageID"),
+		"warp_get_message_aggregate_signature": jsonrpc.NewRPCFunc(rpc.vm.warpService.GetMessageAggregateSignature, "messageID,quorumNum,subnetID"),
+		"warp_get_block_aggregate_signature":   jsonrpc.NewRPCFunc(rpc.vm.warpService.GetBlockAggregateSignature, "blockID,quorumNum,subnetID"),
 	}
 }
 

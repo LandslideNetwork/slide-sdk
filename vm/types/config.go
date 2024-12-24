@@ -31,6 +31,7 @@ type (
 		ConsensusParams           ConsensusParams `json:"consensus_params"`
 		MaxSubscriptionClients    int             `json:"max_subscription_clients"`
 		MaxSubscriptionsPerClient int             `json:"max_subscriptions_per_client"`
+		BLSSecretKey              []byte          `json:"bls_secret_key"`
 	}
 
 	// ConsensusParams contains consensus critical parameters that determine the
