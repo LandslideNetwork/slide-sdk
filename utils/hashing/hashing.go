@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	//lint:ignore SA1019
+	//nolint:staticcheck // This is necessary for compatibility with legacy code.
 	"golang.org/x/crypto/ripemd160"
 )
 
