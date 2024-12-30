@@ -7,11 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/big"
+
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/validators"
 	blst "github.com/supranational/blst/bindings/go"
-	"math/big"
 )
 
 var (

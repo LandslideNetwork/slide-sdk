@@ -6,6 +6,7 @@ package aggregator
 import (
 	"context"
 	"fmt"
+
 	"github.com/cometbft/cometbft/libs/log"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 

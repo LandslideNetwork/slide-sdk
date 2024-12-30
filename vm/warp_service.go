@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/libs/log"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
@@ -107,7 +108,7 @@ func (a *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (tmbytes.He
 	if err != nil {
 		return nil, fmt.Errorf("failed to get signature for block %s with error %w", blockID, err)
 	}
-	return signature[:], nil
+	return signature, nil
 }
 
 // GetBlockAggregateSignature fetches the aggregate signature for the requested [blockID]

@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/landslidenetwork/slide-sdk/grpcutils/gvalidators"
 	http2 "net/http"
 	"os"
 	"slices"
 	"sync"
 	"time"
+
+	"github.com/landslidenetwork/slide-sdk/grpcutils/gvalidators"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"

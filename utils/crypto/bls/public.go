@@ -2,6 +2,7 @@ package bls
 
 import (
 	"errors"
+
 	blst "github.com/supranational/blst/bindings/go"
 )
 

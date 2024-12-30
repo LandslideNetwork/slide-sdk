@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 
 	"golang.org/x/exp/maps"
