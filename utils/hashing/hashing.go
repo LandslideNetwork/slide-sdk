@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	//nolint:SA1019
+	//lint:ignore SA1019 it is necessary for compatibility with subnet-evm
 	"golang.org/x/crypto/ripemd160"
 )
 
