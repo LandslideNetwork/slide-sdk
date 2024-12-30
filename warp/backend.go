@@ -105,7 +105,6 @@ func (b *backend) GetBlockSignature(blockID ids.ID) ([]byte, error) {
 
 	//TODO: validate block by hash
 
-	//sig, err := b.signMessage(unsignedMessage)
 	sig, err := b.warpSigner.Sign(unsignedMessage)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign warp message: %w", err)

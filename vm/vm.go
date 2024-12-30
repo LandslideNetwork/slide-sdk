@@ -488,7 +488,18 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	rpcClients := map[ids.NodeID]warp.Client{}
+	rpcClients := make(map[ids.NodeID]warp.Client)
+	for id, nodeURI := range vm.config.AddressBook {
+		nodeID, err := ids.ToNodeID([]byte(id))
+		if err != nil {
+			return nil, err
+		}
+		rpcClient, err := warp.NewClient(nodeURI, string(req.ChainId))
+		if err != nil {
+			return nil, err
+		}
+		rpcClients[nodeID] = rpcClient
+	}
 	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, rpcClients, requirePrimaryNetworkSigners)
 
 	return &vmpb.InitializeResponse{
