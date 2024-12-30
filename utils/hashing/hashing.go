@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	//lint:ignore SA1019,G507 it is necessary for compatibility with subnet-evm
+	//lint:ignore SA1019,gosec it is necessary for compatibility with subnet-evm
 	"golang.org/x/crypto/ripemd160"
 )
 
