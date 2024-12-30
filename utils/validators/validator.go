@@ -19,6 +19,7 @@ type Validator struct {
 	// index is used to efficiently remove validators from the validator set. It
 	// represents the index of this validator in the vdrSlice and weights
 	// arrays.
+	//lint:ignore U1000
 	index int
 }
 

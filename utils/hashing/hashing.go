@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	//lint:ignore SA1019
 	"golang.org/x/crypto/ripemd160"
 )
 
