@@ -4,7 +4,8 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"golang.org/x/crypto/ripemd160" //nolint:staticcheck // This is necessary for compatibility with legacy code.
+	//nolint:SA1019
+	"golang.org/x/crypto/ripemd160"
 )
 
 const (
