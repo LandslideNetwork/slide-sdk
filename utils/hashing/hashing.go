@@ -4,13 +4,12 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-
-	//lint:ignore SA1019 it is necessary for compatibility with subnet-evm
-	"golang.org/x/crypto/ripemd160"
 )
 
 const (
 	HashLen = sha256.Size
+	// The size of the checksum in bytes.
+	RIPEMD160Size = 20
 )
 
 var ErrInvalidHashLen = errors.New("invalid hash length")
@@ -19,7 +18,7 @@ var ErrInvalidHashLen = errors.New("invalid hash length")
 type Hash256 = [HashLen]byte
 
 // Hash160 A 160 bit long hash value.
-type Hash160 = [ripemd160.Size]byte
+type Hash160 = [RIPEMD160Size]byte
 
 // ComputeHash256Array computes a cryptographically strong 256 bit hash of the
 // input byte slice.
@@ -71,7 +70,7 @@ func ToHash256(bytes []byte) (Hash256, error) {
 
 func ToHash160(bytes []byte) (Hash160, error) {
 	hash := Hash160{}
-	if bytesLen := len(bytes); bytesLen != ripemd160.Size {
+	if bytesLen := len(bytes); bytesLen != RIPEMD160Size {
 		return hash, fmt.Errorf("%w: expected 20 bytes but got %d", ErrInvalidHashLen, bytesLen)
 	}
 	copy(hash[:], bytes)
