@@ -15,7 +15,14 @@ import (
 	"github.com/landslidenetwork/slide-sdk/warp"
 )
 
-const failedParseIDPattern = "failed to parse ID %s with error %w"
+const (
+	failedParseIDPattern = "failed to parse ID %s with error %w"
+	failedParseWARPMessage = "failed to parse warp message %s with error %w"
+)
+
+type ResultAddMessage struct {
+	MessageID string `json:"messageID"`
+}
 
 type ResultGetMessage struct {
 	Message []byte `json:"message"`
@@ -41,6 +48,19 @@ func NewAPI(vm *LandslideVM, networkID uint32, sourceSubnetID ids.ID, sourceChai
 		sourceChainID:  sourceChainID,
 		backend:        backend,
 	}
+}
+
+// AddMessage returns the Warp message associated with a messageID.
+func (a *API) AddMessage(_ *rpctypes.Context, message []byte) (*ResultAddMessage, error) {
+	msg, err := warputils.ParseUnsignedMessage(message)
+	if err != nil {
+		return nil, fmt.Errorf(failedParseIDPattern, message, err)
+	}
+	err = a.backend.AddMessage(msg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add message {ID: %s} with error %w", msg.ID().String(), err)
+	}
+	return &ResultAddMessage{MessageID: msg.ID().String()}, nil
 }
 
 // GetMessage returns the Warp message associated with a messageID.

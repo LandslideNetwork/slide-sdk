@@ -66,6 +66,8 @@ func (rpc *RPC) Routes() map[string]*jsonrpc.RPCFunc {
 		"abci_info":  jsonrpc.NewRPCFunc(rpc.ABCIInfo, "", jsonrpc.Cacheable()),
 
 		// warp
+		// TODO: implement add message functionality through block Accept process
+		"warp_add_message":                     jsonrpc.NewRPCFunc(rpc.vm.warpService.AddMessage, "message"),
 		"warp_get_message":                     jsonrpc.NewRPCFunc(rpc.vm.warpService.GetMessage, "messageID"),
 		"warp_get_message_signature":           jsonrpc.NewRPCFunc(rpc.vm.warpService.GetMessageSignature, "messageID"),
 		"warp_get_message_aggregate_signature": jsonrpc.NewRPCFunc(rpc.vm.warpService.GetMessageAggregateSignature, "messageID,quorumNum,subnetID"),
