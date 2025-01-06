@@ -54,7 +54,7 @@ func NewAPI(vm *LandslideVM, networkID uint32, sourceSubnetID ids.ID, sourceChai
 func (a *API) AddMessage(_ *rpctypes.Context, message []byte) (*ResultAddMessage, error) {
 	msg, err := warputils.ParseUnsignedMessage(message)
 	if err != nil {
-		return nil, fmt.Errorf(failedParseIDPattern, message, err)
+		return nil, fmt.Errorf(failedParseWARPMessage, message, err)
 	}
 	err = a.backend.AddMessage(msg)
 	if err != nil {
