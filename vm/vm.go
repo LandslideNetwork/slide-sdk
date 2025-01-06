@@ -491,7 +491,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}
 	rpcClients := make(map[ids.NodeID]warp.Client)
 	for id, nodeURI := range vm.config.AddressBook {
-		nodeID, err := ids.ToNodeID([]byte(id))
+		nodeID, err := ids.NodeIDFromString(id)
 		if err != nil {
 			return nil, err
 		}
