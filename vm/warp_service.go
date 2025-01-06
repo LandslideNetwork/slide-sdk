@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	failedParseIDPattern = "failed to parse ID %s with error %w"
+	failedParseIDPattern   = "failed to parse ID %s with error %w"
 	failedParseWARPMessage = "failed to parse warp message %s with error %w"
 )
 
