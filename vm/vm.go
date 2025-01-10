@@ -456,7 +456,6 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		return nil, err
 	}
 	// vm.logger.Debug("initialize block", "bytes ", blockBytes)
-	vm.logger.Info("vm initialization completed")
 
 	parentHash := block.ParentHash(blk)
 
@@ -469,12 +468,12 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	// }
 	chainID, err := ids.ToID(req.ChainId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse chain ID: %w", err)
 	}
 	fmt.Println(vm.config.BLSSecretKey)
 	secretKey, err := bls.SecretKeyFromBytes(vm.config.BLSSecretKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse secret key from bytes: %w", err)
 	}
 	vm.warpSigner = warputils.NewSigner(secretKey, req.NetworkId, chainID)
 	vm.warpBackend = warp.NewBackend(
@@ -487,22 +486,23 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 
 	subnetID, err := ids.ToID(req.SubnetId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse subnet ID: %w", err)
 	}
 	rpcClients := make(map[ids.NodeID]warp.Client)
 	for id, nodeURI := range vm.config.AddressBook {
 		nodeID, err := ids.ToNodeID([]byte(id))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to parse node ID: %w", err)
 		}
 		rpcClient, err := warp.NewClient(fmt.Sprintf("%s/ext/bc/%s/rpc", nodeURI, string(req.ChainId)))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to create warp client: %w", err)
 		}
 		rpcClients[nodeID] = rpcClient
 	}
 	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, rpcClients, requirePrimaryNetworkSigners)
 
+	vm.logger.Info("vm initialization completed")
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
 		LastAcceptedParentId: parentHash[:],
