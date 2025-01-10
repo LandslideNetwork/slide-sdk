@@ -16,6 +16,7 @@ import (
 var _ Client = (*client)(nil)
 
 type Client interface {
+	AddMessage(ctx context.Context, message []byte) ([]byte, error)
 	GetMessage(ctx context.Context, messageID ids.ID) ([]byte, error)
 	GetMessageSignature(ctx context.Context, messageID ids.ID) ([]byte, error)
 	GetMessageAggregateSignature(ctx context.Context, messageID ids.ID, quorumNum uint64, subnetIDStr string) ([]byte, error)
@@ -29,14 +30,22 @@ type client struct {
 }
 
 // NewClient returns a Client for interacting with EVM [chain]
-func NewClient(uri, chain string) (Client, error) {
-	rpcClient, err := jsonrpc.New(fmt.Sprintf("%s/ext/bc/%s/rpc", uri, chain))
+func NewClient(rpcAddr string) (Client, error) {
+	rpcClient, err := jsonrpc.New(rpcAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial client. err: %w", err)
 	}
 	return &client{
 		Client: rpcClient,
 	}, nil
+}
+
+func (c *client) AddMessage(ctx context.Context, message []byte) ([]byte, error) {
+	var res tmbytes.HexBytes
+	if _, err := c.Call(ctx, "warp_add_message", map[string]interface{}{"message": message}, &res); err != nil {
+		return nil, fmt.Errorf("call to warp_add_message failed. err: %w", err)
+	}
+	return res, nil
 }
 
 func (c *client) GetMessage(ctx context.Context, messageID ids.ID) ([]byte, error) {

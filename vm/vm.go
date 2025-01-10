@@ -495,7 +495,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		if err != nil {
 			return nil, err
 		}
-		rpcClient, err := warp.NewClient(nodeURI, string(req.ChainId))
+		rpcClient, err := warp.NewClient(fmt.Sprintf("%s/ext/bc/%s/rpc", nodeURI, string(req.ChainId)))
 		if err != nil {
 			return nil, err
 		}
