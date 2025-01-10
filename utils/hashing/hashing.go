@@ -8,12 +8,17 @@ import (
 
 const (
 	HashLen = sha256.Size
+	// The size of the checksum in bytes.
+	RIPEMD160Size = 20
 )
 
 var ErrInvalidHashLen = errors.New("invalid hash length")
 
 // Hash256 A 256 bit long hash value.
 type Hash256 = [HashLen]byte
+
+// Hash160 A 160 bit long hash value.
+type Hash160 = [RIPEMD160Size]byte
 
 // ComputeHash256Array computes a cryptographically strong 256 bit hash of the
 // input byte slice.
@@ -58,6 +63,15 @@ func ToHash256(bytes []byte) (Hash256, error) {
 	hash := Hash256{}
 	if bytesLen := len(bytes); bytesLen != HashLen {
 		return hash, fmt.Errorf("%w: expected 32 bytes but got %d", ErrInvalidHashLen, bytesLen)
+	}
+	copy(hash[:], bytes)
+	return hash, nil
+}
+
+func ToHash160(bytes []byte) (Hash160, error) {
+	hash := Hash160{}
+	if bytesLen := len(bytes); bytesLen != RIPEMD160Size {
+		return hash, fmt.Errorf("%w: expected 20 bytes but got %d", ErrInvalidHashLen, bytesLen)
 	}
 	copy(hash[:], bytes)
 	return hash, nil

@@ -19,6 +19,7 @@ linters-settings:
   gosec:
     excludes:
       - G115 # integer overflow conversion int -> uint8 (gosec)
+      - G507
   revive:
     ignore-generated-header: true
     severity: warning

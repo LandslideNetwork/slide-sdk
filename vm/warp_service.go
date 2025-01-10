@@ -5,17 +5,24 @@ package vm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
+	"github.com/cometbft/cometbft/libs/log"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/validators"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/warp/aggregator"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/payload"
+	warpValidators "github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 	"github.com/landslidenetwork/slide-sdk/warp"
 )
 
 const failedParseIDPattern = "failed to parse ID %s with error %w"
+
+var errNoValidators = errors.New("cannot aggregate signatures from subnet with no validators")
 
 type ResultGetMessage struct {
 	Message []byte `json:"message"`
@@ -28,18 +35,31 @@ type ResultGetMessageSignature struct {
 // API introduces snowman specific functionality to the evm
 type API struct {
 	vm                            *LandslideVM
+	logger                        log.Logger
 	networkID                     uint32
+	valState                      *warpValidators.State
 	sourceSubnetID, sourceChainID ids.ID
 	backend                       warp.Backend
+	signatureGetter               aggregator.SignatureGetter
+	// TODO: investigate necessity to set up value according to validation of Primary Network
+	// requirePrimaryNetworkSigners returns true if warp messages from the primary
+	// network must be signed by the primary network validators.
+	// This is necessary when the subnet is not validating the primary network.
+	requirePrimaryNetworkSigners bool
 }
 
-func NewAPI(vm *LandslideVM, networkID uint32, sourceSubnetID ids.ID, sourceChainID ids.ID, backend warp.Backend) *API {
+func NewAPI(vm *LandslideVM, logger log.Logger, networkID uint32, state validators.State, sourceSubnetID ids.ID, sourceChainID ids.ID,
+	backend warp.Backend, rpcClients map[ids.NodeID]warp.Client, requirePrimaryNetworkSigners bool) *API {
 	return &API{
-		vm:             vm,
-		networkID:      networkID,
-		sourceSubnetID: sourceSubnetID,
-		sourceChainID:  sourceChainID,
-		backend:        backend,
+		vm:                           vm,
+		logger:                       logger,
+		networkID:                    networkID,
+		valState:                     warpValidators.NewState(state, sourceSubnetID, sourceChainID, requirePrimaryNetworkSigners),
+		sourceSubnetID:               sourceSubnetID,
+		sourceChainID:                sourceChainID,
+		backend:                      backend,
+		signatureGetter:              warp.NewAPIFetcher(rpcClients),
+		requirePrimaryNetworkSigners: requirePrimaryNetworkSigners,
 	}
 }
 
@@ -82,6 +102,15 @@ func (a *API) GetMessageAggregateSignature(ctx context.Context, messageID ids.ID
 	return a.aggregateSignatures(ctx, unsignedMessage, quorumNum, subnetIDStr)
 }
 
+// GetBlockSignature returns the BLS signature associated with a blockID.
+func (a *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (tmbytes.HexBytes, error) {
+	signature, err := a.backend.GetBlockSignature(blockID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get signature for block %s with error %w", blockID, err)
+	}
+	return signature, nil
+}
+
 // GetBlockAggregateSignature fetches the aggregate signature for the requested [blockID]
 func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, quorumNum uint64, subnetIDStr string) (signedMessageBytes tmbytes.HexBytes, err error) {
 	blockHashPayload, err := payload.NewHash(blockID)
@@ -97,6 +126,46 @@ func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, qu
 }
 
 func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warputils.UnsignedMessage, quorumNum uint64, subnetIDStr string) (tmbytes.HexBytes, error) {
-	// TODO: implement aggregateSignatures
-	return nil, nil
+	subnetID := a.sourceSubnetID
+	if len(subnetIDStr) > 0 {
+		sid, err := ids.FromString(subnetIDStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse subnetID: %q", subnetIDStr)
+		}
+		subnetID = sid
+	}
+	pChainHeight, err := a.valState.GetCurrentHeight(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// Get the validator set at the given height.
+	vdrSet, err := a.valState.GetValidatorSet(ctx, pChainHeight, subnetID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get validator set: %w", err)
+	}
+
+	// Convert the validator set into the canonical ordering.
+	validators, totalWeight, err := warputils.FlattenValidatorSet(vdrSet)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert the validator set into the canonical ordering: %w", err)
+	}
+	if len(validators) == 0 {
+		return nil, fmt.Errorf("%w (SubnetID: %s, Height: %d)", errNoValidators, subnetID, pChainHeight)
+	}
+
+	a.logger.Debug("Fetching signature",
+		"sourceSubnetID", subnetID,
+		"height", pChainHeight,
+		"numValidators", len(validators),
+		"totalWeight", totalWeight,
+	)
+	agg := aggregator.New(a.signatureGetter, a.logger, validators, totalWeight)
+	signatureResult, err := agg.AggregateSignatures(ctx, unsignedMessage, quorumNum)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: return the signature and total weight as well to the caller for more complete details
+	// Need to decide on the best UI for this and write up documentation with the potential
+	// gotchas that could impact signed messages becoming invalid.
+	return signatureResult.Message.Bytes(), nil
 }

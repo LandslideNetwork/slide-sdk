@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/landslidenetwork/slide-sdk/grpcutils/gvalidators"
+
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 	"github.com/landslidenetwork/slide-sdk/warp"
@@ -48,6 +50,7 @@ import (
 	httppb "github.com/landslidenetwork/slide-sdk/proto/http"
 	messengerpb "github.com/landslidenetwork/slide-sdk/proto/messenger"
 	"github.com/landslidenetwork/slide-sdk/proto/rpcdb"
+	validatorstatepb "github.com/landslidenetwork/slide-sdk/proto/validatorstate"
 	vmpb "github.com/landslidenetwork/slide-sdk/proto/vm"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	vmtypes "github.com/landslidenetwork/slide-sdk/vm/types"
@@ -58,7 +61,8 @@ import (
 )
 
 const (
-	genesisChunkSize = 16 * 1024 * 1024 // 16
+	genesisChunkSize             = 16 * 1024 * 1024 // 16
+	requirePrimaryNetworkSigners = true
 )
 
 var (
@@ -242,6 +246,8 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}
 
 	msgClient := messengerpb.NewMessengerClient(vm.clientConn)
+
+	validatorStateClient := gvalidators.NewClient(validatorstatepb.NewValidatorStateClient(vm.clientConn))
 
 	vm.toEngine = make(chan messengerpb.Message, 1)
 	vm.closed = make(chan struct{})
@@ -483,7 +489,19 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	vm.warpService = NewAPI(vm, req.NetworkId, subnetID, chainID, vm.warpBackend)
+	rpcClients := make(map[ids.NodeID]warp.Client)
+	for id, nodeURI := range vm.config.AddressBook {
+		nodeID, err := ids.ToNodeID([]byte(id))
+		if err != nil {
+			return nil, err
+		}
+		rpcClient, err := warp.NewClient(nodeURI, string(req.ChainId))
+		if err != nil {
+			return nil, err
+		}
+		rpcClients[nodeID] = rpcClient
+	}
+	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, rpcClients, requirePrimaryNetworkSigners)
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),

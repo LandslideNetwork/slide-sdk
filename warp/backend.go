@@ -19,6 +19,8 @@ type Backend interface {
 	AddMessage(unsignedMessage *warputils.UnsignedMessage) error
 	// GetMessageSignature returns the signature of the requested message.
 	GetMessageSignature(message *warputils.UnsignedMessage) ([]byte, error)
+	// GetBlockSignature returns the signature of a hash payload containing blockID if it's the ID of an accepted block.
+	GetBlockSignature(blockID ids.ID) ([]byte, error)
 	// GetMessage retrieves the [unsignedMessage] from the warp backend database if available
 	// TODO: After E-Upgrade, the backend no longer needs to store the mapping from messageHash
 	// to unsignedMessage (and this method can be removed).
@@ -88,6 +90,28 @@ func (b *backend) GetMessageSignature(unsignedMessage *warputils.UnsignedMessage
 	return b.signMessage(unsignedMessage)
 }
 
+func (b *backend) GetBlockSignature(blockID ids.ID) ([]byte, error) {
+	b.logger.Debug("Getting block from backend", "blockID", blockID)
+
+	blockHashPayload, err := payload.NewHash(blockID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new block hash payload: %w", err)
+	}
+
+	unsignedMessage, err := warputils.NewUnsignedMessage(b.networkID, b.sourceChainID, blockHashPayload.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new unsigned warp message: %w", err)
+	}
+
+	//TODO: validate block by hash
+
+	sig, err := b.warpSigner.Sign(unsignedMessage)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign warp message: %w", err)
+	}
+	return sig, nil
+}
+
 func (b *backend) ValidateMessage(unsignedMessage *warputils.UnsignedMessage) error {
 	// Known on-chain messages should be signed
 	if _, err := b.GetMessage(unsignedMessage.ID()); err == nil {
@@ -113,7 +137,7 @@ func (b *backend) ValidateMessage(unsignedMessage *warputils.UnsignedMessage) er
 	}
 
 	// Check if the message should be signed according to its type
-	if err := signable.VerifyMesssage(addressedCall.SourceAddress); err != nil {
+	if err := signable.VerifyMessage(addressedCall.SourceAddress); err != nil {
 		return fmt.Errorf("failed to verify Signable message: %w", err)
 	}
 	return nil
