@@ -490,11 +490,11 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}
 	rpcClients := make(map[ids.NodeID]warp.Client)
 	for id, nodeURI := range vm.config.AddressBook {
-		nodeID, err := ids.ToNodeID([]byte(id))
+		nodeID, err := ids.NodeIDFromString(id)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse node ID: %w", err)
 		}
-		rpcClient, err := warp.NewClient(fmt.Sprintf("%s/ext/bc/%s/rpc", nodeURI, string(req.ChainId)))
+		rpcClient, err := warp.NewClient(fmt.Sprintf("%s/ext/bc/%s/rpc", nodeURI, chainID.String()))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create warp client: %w", err)
 		}
