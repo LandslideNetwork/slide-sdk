@@ -39,6 +39,10 @@ type ResultGetMessageSignature struct {
 	Signature []byte `json:"signature"`
 }
 
+type ResultGetBlockSignature struct {
+	Signature []byte `json:"signature"`
+}
+
 // API introduces snowman specific functionality to the evm
 type API struct {
 	vm                            *LandslideVM
@@ -123,12 +127,12 @@ func (a *API) GetMessageAggregateSignature(ctx context.Context, messageID ids.ID
 }
 
 // GetBlockSignature returns the BLS signature associated with a blockID.
-func (a *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (tmbytes.HexBytes, error) {
+func (a *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (*ResultGetBlockSignature, error) {
 	signature, err := a.backend.GetBlockSignature(blockID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get signature for block %s with error %w", blockID, err)
 	}
-	return signature, nil
+	return &ResultGetBlockSignature{Signature: signature}, nil
 }
 
 // GetBlockAggregateSignature fetches the aggregate signature for the requested [blockID]
