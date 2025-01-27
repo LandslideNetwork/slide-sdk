@@ -3,15 +3,15 @@
 
 package p2p
 
-import "github.com/ava-labs/avalanchego/snow/engine/common"
+import "github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 
 var (
-	// ErrUnexpected should be used to indicate that a request failed due to a
-	// generic error
-	ErrUnexpected = &common.AppError{
-		Code:    -1,
-		Message: "unexpected error",
-	}
+	//// ErrUnexpected should be used to indicate that a request failed due to a
+	//// generic error
+	//ErrUnexpected = &common.AppError{
+	//	Code:    -1,
+	//	Message: "unexpected error",
+	//}
 	// ErrUnregisteredHandler should be used to indicate that a request failed
 	// due to it not matching a registered handler
 	ErrUnregisteredHandler = &common.AppError{
@@ -24,10 +24,10 @@ var (
 		Code:    -3,
 		Message: "not a validator",
 	}
-	// ErrThrottled should be used to indicate that a request failed due to the
-	// requesting peer exceeding a rate limit
-	ErrThrottled = &common.AppError{
-		Code:    -4,
-		Message: "throttled",
-	}
+	//// ErrThrottled should be used to indicate that a request failed due to the
+	//// requesting peer exceeding a rate limit
+	//ErrThrottled = &common.AppError{
+	//	Code:    -4,
+	//	Message: "throttled",
+	//}
 )

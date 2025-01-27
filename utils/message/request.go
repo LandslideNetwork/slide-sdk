@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/codec"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
 // Request represents a Network request type
@@ -24,7 +24,7 @@ type Request interface {
 // BytesToRequest unmarshals the given requestBytes into Request object
 func BytesToRequest(codec codec.Manager, requestBytes []byte) (Request, error) {
 	var request Request
-	if _, err := codec.Unmarshal(requestBytes, &request); err != nil {
+	if err := codec.Unmarshal(requestBytes, &request); err != nil {
 		return nil, err
 	}
 	return request, nil
@@ -32,5 +32,5 @@ func BytesToRequest(codec codec.Manager, requestBytes []byte) (Request, error) {
 
 // RequestToBytes marshals the given request object into bytes
 func RequestToBytes(codec codec.Manager, request Request) ([]byte, error) {
-	return codec.Marshal(Version, &request)
+	return codec.Marshal(&request)
 }

@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/libs/log"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
@@ -56,7 +55,13 @@ type API struct {
 }
 
 func NewAPI(vm *LandslideVM, logger log.Logger, networkID uint32, state validators.State, sourceSubnetID ids.ID, sourceChainID ids.ID,
-	backend warp.Backend, rpcClients map[ids.NodeID]warp.Client, requirePrimaryNetworkSigners bool) *API {
+	backend warp.Backend, sigGetter *aggregator.NetworkSignatureGetter, rpcClients map[ids.NodeID]warp.Client, requirePrimaryNetworkSigners bool) *API {
+	var signatureGetter aggregator.SignatureGetter
+	if sigGetter != nil {
+		signatureGetter = sigGetter
+	} else {
+		signatureGetter = warp.NewAPIFetcher(rpcClients)
+	}
 	return &API{
 		vm:                           vm,
 		logger:                       logger,
@@ -65,7 +70,7 @@ func NewAPI(vm *LandslideVM, logger log.Logger, networkID uint32, state validato
 		sourceSubnetID:               sourceSubnetID,
 		sourceChainID:                sourceChainID,
 		backend:                      backend,
-		signatureGetter:              warp.NewAPIFetcher(rpcClients),
+		signatureGetter:              signatureGetter,
 		requirePrimaryNetworkSigners: requirePrimaryNetworkSigners,
 	}
 }

@@ -1,13 +1,11 @@
 // (c) 2019-2022, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
-package p2p
+package peer
 
 import (
 	"context"
 	"errors"
-	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
-
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
@@ -38,11 +36,11 @@ type NetworkClient interface {
 // provides ability to send request / responses through the Network and wait for a response
 // so that the caller gets the result synchronously.
 type client struct {
-	network peer.Network
+	network Network
 }
 
 // NewNetworkClient returns Client for a given network
-func NewNetworkClient(network peer.Network) NetworkClient {
+func NewNetworkClient(network Network) NetworkClient {
 	return &client{
 		network: network,
 	}

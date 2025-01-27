@@ -6,6 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/timeout"
+	"github.com/landslidenetwork/slide-sdk/utils/network/p2p"
+	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
+	"github.com/landslidenetwork/slide-sdk/utils/sender"
+	"github.com/landslidenetwork/slide-sdk/utils/warp/aggregator"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -106,6 +112,7 @@ type (
 	AppCreator func(*AppCreatorOpts) (Application, error)
 
 	LandslideVM struct {
+		*p2p.Network
 		allowShutdown *vmtypes.Atomic[bool]
 
 		processMetrics prometheus.Gatherer
@@ -149,6 +156,8 @@ type (
 		warpBackend warp.Backend
 		warpSigner  warputils.Signer
 		warpService *API
+
+		p2pClient peer.NetworkClient
 
 		clientConn    grpc.ClientConnInterface
 		optClientConn *grpc.ClientConn
@@ -501,7 +510,59 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		}
 		rpcClients[nodeID] = rpcClient
 	}
-	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, rpcClients, requirePrimaryNetworkSigners)
+
+	nodeID, err := ids.ToNodeID(req.NodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	p2pRouter := &router.P2PRouter{}
+	timeoutManager, err := timeout.NewManager()
+	if err != nil {
+		return nil, err
+	}
+	err = p2pRouter.Initialize(vm.logger, timeoutManager)
+	if err != nil {
+		return nil, err
+	}
+	// Passes messages from the snowman engines to the network
+	appSender := sender.New(chainID, subnetID, nodeID, vm.logger, p2pRouter)
+
+	//// Passes messages from the avalanche engines to the network
+	//avalancheMessageSender, err := sender.New(
+	//	ctx,
+	//	m.MsgCreator,
+	//	m.Net,
+	//	m.ManagerConfig.Router,
+	//	m.TimeoutManager,
+	//	p2ppb.EngineType_ENGINE_TYPE_AVALANCHE,
+	//	sb,
+	//	avalancheMetrics,
+	//)
+
+	vm.Network, err = p2p.NewNetwork(
+		vm.logger,
+		appSender,
+		registerer,
+		"",
+	)
+	if err != nil {
+		return nil, err
+	}
+	network := peer.NewNetwork(vm.Network, appSender, vm.logger, 100)
+	vm.p2pClient = peer.NewNetworkClient(network)
+	signatureGetter := aggregator.NewSignatureGetter(vm.p2pClient)
+
+	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, signatureGetter, rpcClients, requirePrimaryNetworkSigners)
+
+	// Allow signing of all warp messages. This is not typically safe, but is
+	// allowed for this example.
+	acp118Handler := warp.NewHandler(
+		vm.warpSigner,
+	)
+	if err := vm.Network.AddHandler(p2p.SignatureRequestHandlerID, acp118Handler); err != nil {
+		return nil, err
+	}
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),

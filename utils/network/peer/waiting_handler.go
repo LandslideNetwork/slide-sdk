@@ -6,7 +6,7 @@ package peer
 import (
 	"context"
 
-	"github.com/ava-labs/subnet-evm/plugin/evm/message"
+	"github.com/landslidenetwork/slide-sdk/utils/message"
 )
 
 var _ message.ResponseHandler = &waitingResponseHandler{}

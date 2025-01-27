@@ -8,11 +8,9 @@ import (
 	"encoding/json"
 	"slices"
 
-	"github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/sampler"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
-
-	avajson "github.com/ava-labs/avalanchego/utils/json"
+	"github.com/landslidenetwork/slide-sdk/utils"
+	"github.com/landslidenetwork/slide-sdk/utils/sampler"
+	"github.com/landslidenetwork/slide-sdk/utils/wrappers"
 )
 
 var _ json.Marshaler = (*Set[int])(nil)
@@ -147,7 +145,7 @@ func (s SampleableSet[T]) Sample(numToSample int) []T {
 
 func (s *SampleableSet[T]) UnmarshalJSON(b []byte) error {
 	str := string(b)
-	if str == avajson.Null {
+	if str == Null {
 		return nil
 	}
 	var elements []T

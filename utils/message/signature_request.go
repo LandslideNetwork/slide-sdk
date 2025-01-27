@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
 var (
