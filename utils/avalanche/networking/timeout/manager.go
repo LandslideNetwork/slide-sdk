@@ -4,6 +4,8 @@
 package timeout
 
 import (
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/benchlist"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/math"
 	"github.com/prometheus/client_golang/prometheus"
 	"time"
@@ -18,9 +20,9 @@ type Manager interface {
 	//Dispatch()
 	// TimeoutDuration returns the current timeout duration.
 	TimeoutDuration() time.Duration
-	//// IsBenched returns true if messages to [nodeID] regarding [chainID]
-	//// should not be sent over the network and should immediately fail.
-	//IsBenched(nodeID ids.NodeID, chainID ids.ID) bool
+	// IsBenched returns true if messages to [nodeID] regarding [chainID]
+	// should not be sent over the network and should immediately fail.
+	IsBenched(nodeID ids.NodeID) bool
 	//// Register the existence of the given chain.
 	//// Must be called before any method calls that use the
 	//// ID of the chain.
@@ -97,7 +99,7 @@ type manager struct {
 	// [timeoutCoefficient] must be > 1
 	timeoutCoefficient               float64
 	networkTimeoutMetric, avgLatency prometheus.Gauge
-	//	benchlistMgr benchlist.Manager
+	benchlist                        benchlist.Benchlist
 	//	metrics      *timeoutMetrics
 	//	stopOnce     sync.Once
 }
@@ -110,12 +112,12 @@ func (m *manager) TimeoutDuration() time.Duration {
 	return m.currentTimeout
 }
 
-//// IsBenched returns true if messages to [nodeID] regarding [chainID]
-//// should not be sent over the network and should immediately fail.
-//func (m *manager) IsBenched(nodeID ids.NodeID, chainID ids.ID) bool {
-//	return m.benchlistMgr.IsBenched(nodeID, chainID)
-//}
-//
+// IsBenched returns true if messages to [nodeID]
+// should not be sent over the network and should immediately fail.
+func (m *manager) IsBenched(nodeID ids.NodeID) bool {
+	return m.benchlist.IsBenched(nodeID)
+}
+
 //func (m *manager) RegisterChain(ctx *snow.ConsensusContext) error {
 //	if err := m.metrics.RegisterChain(ctx); err != nil {
 //		return fmt.Errorf("couldn't register timeout metrics for chain %s: %w", ctx.ChainID, err)

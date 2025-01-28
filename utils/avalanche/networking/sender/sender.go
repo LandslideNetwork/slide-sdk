@@ -19,6 +19,14 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 )
 
+const opLabel = "op"
+
+var (
+	_ common.Sender = (*P2PAppSender)(nil)
+
+	opLabels = []string{opLabel}
+)
+
 type P2PAppSender struct {
 	ChainID    ids.ID
 	SubnetID   ids.ID
@@ -27,15 +35,28 @@ type P2PAppSender struct {
 	router     router.Router
 	timeouts   timeout.Manager
 	msgCreator message.OutboundMsgBuilder
+	sender     ExternalSender // Actually does the sending over the network
+	// Counts how many request have failed because the node was benched
+	failedDueToBench *prometheus.CounterVec // op
 }
 
-func New(chainID ids.ID, subnetID ids.ID, nodeID ids.NodeID, logger log.Logger, router router.Router) *P2PAppSender {
+func New(chainID ids.ID, subnetID ids.ID, nodeID ids.NodeID, logger log.Logger, timeouts timeout.Manager, msgCreator message.OutboundMsgBuilder, externalSender ExternalSender, router router.Router) *P2PAppSender {
 	return &P2PAppSender{
-		ChainID:  chainID,
-		SubnetID: subnetID,
-		NodeID:   nodeID,
-		logger:   logger,
-		router:   router,
+		ChainID:    chainID,
+		SubnetID:   subnetID,
+		NodeID:     nodeID,
+		logger:     logger,
+		timeouts:   timeouts,
+		msgCreator: msgCreator,
+		sender:     externalSender,
+		failedDueToBench: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "failed_benched",
+				Help: "requests dropped because a node was benched",
+			},
+			opLabels,
+		),
+		router: router,
 	}
 }
 
@@ -88,7 +109,7 @@ func (s *P2PAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.N
 	// unresponsive so we don't even bother sending messages to them. We just
 	// have them immediately fail.
 	for nodeID := range nodeIDs {
-		if s.timeouts.IsBenched(nodeID, s.ChainID) {
+		if s.timeouts.IsBenched(nodeID) {
 			s.failedDueToBench.With(prometheus.Labels{
 				opLabel: message2.AppRequestOp.String(),
 			}).Inc()
@@ -126,7 +147,7 @@ func (s *P2PAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.N
 				NodeIDs: nodeIDs,
 			},
 			s.SubnetID,
-			s.subnet,
+			//s.subnet,
 		)
 	} else {
 		s.logger.Error("failed to build message",
