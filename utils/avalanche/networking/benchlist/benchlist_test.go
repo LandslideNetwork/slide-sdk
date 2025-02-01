@@ -12,7 +12,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/snow/snowtest"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	"github.com/landslidenetwork/slide-sdk/utils/validators"
+	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 )
 
 var minimumFailingDuration = 5 * time.Minute
