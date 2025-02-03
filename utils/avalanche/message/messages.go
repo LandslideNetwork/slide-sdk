@@ -6,16 +6,13 @@ package message
 import (
 	"errors"
 	"fmt"
+	"github.com/cometbft/cometbft/libs/log"
 	"time"
 
+	"github.com/landslidenetwork/slide-sdk/proto/p2p"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/compression"
 	"github.com/prometheus/client_golang/prometheus"
-	"google.golang.org/protobuf/proto"
-
-	"github.com/ava-labs/avalanchego/proto/pb/p2p"
-	"github.com/ava-labs/avalanchego/utils/compression"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/avalanchego/utils/timer/mockable"
+	//"github.com/landslidenetwork/slide-sdk/utils/constants"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
@@ -137,29 +134,30 @@ func (m *outboundMessage) BytesSavedCompression() int {
 
 // TODO: add other compression algorithms with extended interface
 type msgBuilder struct {
-	log logging.Logger
-
-	zstdCompressor compression.Compressor
-	count          *prometheus.CounterVec // type + op + direction
-	duration       *prometheus.GaugeVec   // type + op + direction
+	log log.Logger
+	//TODO: implement
+	//zstdCompressor compression.Compressor
+	count    *prometheus.CounterVec // type + op + direction
+	duration *prometheus.GaugeVec   // type + op + direction
 
 	maxMessageTimeout time.Duration
 }
 
 func newMsgBuilder(
-	log logging.Logger,
+	log log.Logger,
 	metrics prometheus.Registerer,
 	maxMessageTimeout time.Duration,
 ) (*msgBuilder, error) {
-	zstdCompressor, err := compression.NewZstdCompressor(constants.DefaultMaxMessageSize)
-	if err != nil {
-		return nil, err
-	}
+	//TODO: implement
+	//zstdCompressor, err := compression.NewZstdCompressor(constants.DefaultMaxMessageSize)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	mb := &msgBuilder{
 		log: log,
 
-		zstdCompressor: zstdCompressor,
+		//zstdCompressor: zstdCompressor,
 		count: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "codec_compressed_count",
@@ -187,111 +185,119 @@ func (mb *msgBuilder) marshal(
 	uncompressedMsg *p2p.Message,
 	compressionType compression.Type,
 ) ([]byte, int, Op, error) {
-	uncompressedMsgBytes, err := proto.Marshal(uncompressedMsg)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	op, err := ToOp(uncompressedMsg)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	// If compression is enabled, we marshal twice:
-	// 1. the original message
-	// 2. the message with compressed bytes
+	//TODO: implement
+	//uncompressedMsgBytes, err := proto.Marshal(uncompressedMsg)
+	//if err != nil {
+	//	return nil, 0, 0, err
+	//}
 	//
-	// This recursive packing allows us to avoid an extra compression on/off
-	// field in the message.
-	var (
-		startTime     = time.Now()
-		compressedMsg p2p.Message
-	)
-	switch compressionType {
-	case compression.TypeNone:
-		return uncompressedMsgBytes, 0, op, nil
-	case compression.TypeZstd:
-		compressedBytes, err := mb.zstdCompressor.Compress(uncompressedMsgBytes)
-		if err != nil {
-			return nil, 0, 0, err
-		}
-		compressedMsg = p2p.Message{
-			Message: &p2p.Message_CompressedZstd{
-				CompressedZstd: compressedBytes,
-			},
-		}
-	default:
-		return nil, 0, 0, errUnknownCompressionType
-	}
-
-	compressedMsgBytes, err := proto.Marshal(&compressedMsg)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-	compressTook := time.Since(startTime)
-
-	labels := prometheus.Labels{
-		typeLabel:      compressionType.String(),
-		opLabel:        op.String(),
-		directionLabel: compressionLabel,
-	}
-	mb.count.With(labels).Inc()
-	mb.duration.With(labels).Add(float64(compressTook))
-
-	bytesSaved := len(uncompressedMsgBytes) - len(compressedMsgBytes)
-	return compressedMsgBytes, bytesSaved, op, nil
+	////op, err := ToOp(uncompressedMsg)
+	////if err != nil {
+	////	return nil, 0, 0, err
+	////}
+	//
+	//// If compression is enabled, we marshal twice:
+	//// 1. the original message
+	//// 2. the message with compressed bytes
+	////
+	//// This recursive packing allows us to avoid an extra compression on/off
+	//// field in the message.
+	//var (
+	//	startTime     = time.Now()
+	//	compressedMsg p2p.Message
+	//)
+	//switch compressionType {
+	//case compression.TypeNone:
+	//	//TODO:
+	//	//return uncompressedMsgBytes, 0, op, nil
+	//	return uncompressedMsgBytes, 0, Op(0), nil
+	//case compression.TypeZstd:
+	//	//TODO:
+	//	//compressedBytes, err := mb.zstdCompressor.Compress(uncompressedMsgBytes)
+	//	compressedBytes := []byte{'a', 'b', 'c', 'd'}
+	//	if err != nil {
+	//		return nil, 0, 0, err
+	//	}
+	//	compressedMsg = p2p.Message{
+	//		Message: &p2p.Message_CompressedZstd{
+	//			CompressedZstd: compressedBytes,
+	//		},
+	//	}
+	//default:
+	//	return nil, 0, 0, errUnknownCompressionType
+	//}
+	//
+	//compressedMsgBytes, err := proto.Marshal(&compressedMsg)
+	//if err != nil {
+	//	return nil, 0, 0, err
+	//}
+	//compressTook := time.Since(startTime)
+	//
+	//labels := prometheus.Labels{
+	//	typeLabel:      compressionType.String(),
+	//	opLabel:        op.String(),
+	//	directionLabel: compressionLabel,
+	//}
+	//mb.count.With(labels).Inc()
+	//mb.duration.With(labels).Add(float64(compressTook))
+	//
+	//bytesSaved := len(uncompressedMsgBytes) - len(compressedMsgBytes)
+	//return compressedMsgBytes, bytesSaved, op, nil
+	return []byte{}, 10, Op(0), nil
 }
 
 func (mb *msgBuilder) unmarshal(b []byte) (*p2p.Message, int, Op, error) {
-	m := new(p2p.Message)
-	if err := proto.Unmarshal(b, m); err != nil {
-		return nil, 0, 0, err
-	}
-
-	// Figure out what compression type, if any, was used to compress the message.
-	var (
-		compressor      compression.Compressor
-		compressedBytes []byte
-		zstdCompressed  = m.GetCompressedZstd()
-	)
-	switch {
-	case len(zstdCompressed) > 0:
-		compressor = mb.zstdCompressor
-		compressedBytes = zstdCompressed
-	default:
-		// The message wasn't compressed
-		op, err := ToOp(m)
-		return m, 0, op, err
-	}
-
-	startTime := time.Now()
-
-	decompressed, err := compressor.Decompress(compressedBytes)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-	bytesSavedCompression := len(decompressed) - len(compressedBytes)
-
-	if err := proto.Unmarshal(decompressed, m); err != nil {
-		return nil, 0, 0, err
-	}
-	decompressTook := time.Since(startTime)
-
-	// Record decompression time metric
-	op, err := ToOp(m)
-	if err != nil {
-		return nil, 0, 0, err
-	}
-
-	labels := prometheus.Labels{
-		typeLabel:      compression.TypeZstd.String(),
-		opLabel:        op.String(),
-		directionLabel: decompressionLabel,
-	}
-	mb.count.With(labels).Inc()
-	mb.duration.With(labels).Add(float64(decompressTook))
-
-	return m, bytesSavedCompression, op, nil
+	//TODO: implement
+	//m := new(p2p.Message)
+	//if err := proto.Unmarshal(b, m); err != nil {
+	//	return nil, 0, 0, err
+	//}
+	//
+	//// Figure out what compression type, if any, was used to compress the message.
+	//var (
+	//	compressor      compression.Compressor
+	//	compressedBytes []byte
+	//	zstdCompressed  = m.GetCompressedZstd()
+	//)
+	//switch {
+	//case len(zstdCompressed) > 0:
+	//	compressor = mb.zstdCompressor
+	//	compressedBytes = zstdCompressed
+	//default:
+	//	// The message wasn't compressed
+	//	op, err := ToOp(m)
+	//	return m, 0, op, err
+	//}
+	//
+	//startTime := time.Now()
+	//
+	//decompressed, err := compressor.Decompress(compressedBytes)
+	//if err != nil {
+	//	return nil, 0, 0, err
+	//}
+	//bytesSavedCompression := len(decompressed) - len(compressedBytes)
+	//
+	//if err := proto.Unmarshal(decompressed, m); err != nil {
+	//	return nil, 0, 0, err
+	//}
+	//decompressTook := time.Since(startTime)
+	//
+	//// Record decompression time metric
+	//op, err := ToOp(m)
+	//if err != nil {
+	//	return nil, 0, 0, err
+	//}
+	//
+	//labels := prometheus.Labels{
+	//	typeLabel:      compression.TypeZstd.String(),
+	//	opLabel:        op.String(),
+	//	directionLabel: decompressionLabel,
+	//}
+	//mb.count.With(labels).Inc()
+	//mb.duration.With(labels).Add(float64(decompressTook))
+	//
+	//return m, bytesSavedCompression, op, nil
+	return nil, 10, Op(0), nil
 }
 
 func (mb *msgBuilder) createOutbound(m *p2p.Message, compressionType compression.Type, bypassThrottling bool) (*outboundMessage, error) {
@@ -313,28 +319,29 @@ func (mb *msgBuilder) parseInbound(
 	nodeID ids.NodeID,
 	onFinishedHandling func(),
 ) (*inboundMessage, error) {
-	m, bytesSavedCompression, op, err := mb.unmarshal(bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	msg, err := Unwrap(m)
-	if err != nil {
-		return nil, err
-	}
-
-	expiration := mockable.MaxTime
-	if deadline, ok := GetDeadline(msg); ok {
-		deadline = min(deadline, mb.maxMessageTimeout)
-		expiration = time.Now().Add(deadline)
-	}
+	//TODO: implement
+	//m, bytesSavedCompression, op, err := mb.unmarshal(bytes)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//msg, err := Unwrap(m)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//expiration := mockable.MaxTime
+	//if deadline, ok := GetDeadline(msg); ok {
+	//	deadline = min(deadline, mb.maxMessageTimeout)
+	//	expiration = time.Now().Add(deadline)
+	//}
 
 	return &inboundMessage{
-		nodeID:                nodeID,
-		op:                    op,
-		message:               msg,
-		expiration:            expiration,
-		onFinishedHandling:    onFinishedHandling,
-		bytesSavedCompression: bytesSavedCompression,
+		nodeID: nodeID,
+		//op:                    op,
+		//message:               msg,
+		//expiration:            expiration,
+		onFinishedHandling: onFinishedHandling,
+		//bytesSavedCompression: bytesSavedCompression,
 	}, nil
 }

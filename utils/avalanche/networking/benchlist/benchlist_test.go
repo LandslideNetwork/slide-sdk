@@ -10,7 +10,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ava-labs/avalanchego/snow/snowtest"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 )
@@ -21,8 +20,6 @@ var minimumFailingDuration = 5 * time.Minute
 func TestBenchlistAdd(t *testing.T) {
 	require := require.New(t)
 
-	snowCtx := snowtest.Context(t, snowtest.CChainID)
-	ctx := snowtest.ConsensusContext(snowCtx)
 	vdrs := validators.NewManager()
 	vdrID0 := ids.GenerateTestNodeID()
 	vdrID1 := ids.GenerateTestNodeID()
@@ -30,11 +27,13 @@ func TestBenchlistAdd(t *testing.T) {
 	vdrID3 := ids.GenerateTestNodeID()
 	vdrID4 := ids.GenerateTestNodeID()
 
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID0, nil, ids.Empty, 50))
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID1, nil, ids.Empty, 50))
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID2, nil, ids.Empty, 50))
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID3, nil, ids.Empty, 50))
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID4, nil, ids.Empty, 50))
+	subnetID := ids.ID{'a', 'b', 'c', 'd'}
+
+	require.NoError(vdrs.AddStaker(subnetID, vdrID0, nil, ids.Empty, 50))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID1, nil, ids.Empty, 50))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID2, nil, ids.Empty, 50))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID3, nil, ids.Empty, 50))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID4, nil, ids.Empty, 50))
 
 	benchable := &TestBenchable{T: t}
 	benchable.Default(true)
@@ -43,7 +42,6 @@ func TestBenchlistAdd(t *testing.T) {
 	duration := time.Minute
 	maxPortion := 0.5
 	benchIntf, err := NewBenchlist(
-		ctx,
 		benchable,
 		vdrs,
 		threshold,
@@ -147,8 +145,6 @@ func TestBenchlistAdd(t *testing.T) {
 func TestBenchlistMaxStake(t *testing.T) {
 	require := require.New(t)
 
-	snowCtx := snowtest.Context(t, snowtest.CChainID)
-	ctx := snowtest.ConsensusContext(snowCtx)
 	vdrs := validators.NewManager()
 	vdrID0 := ids.GenerateTestNodeID()
 	vdrID1 := ids.GenerateTestNodeID()
@@ -156,19 +152,20 @@ func TestBenchlistMaxStake(t *testing.T) {
 	vdrID3 := ids.GenerateTestNodeID()
 	vdrID4 := ids.GenerateTestNodeID()
 
+	subnetID := ids.ID{'a', 'b', 'c', 'd'}
+
 	// Total weight is 5100
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID0, nil, ids.Empty, 1000))
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID1, nil, ids.Empty, 1000))
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID2, nil, ids.Empty, 1000))
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID3, nil, ids.Empty, 2000))
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID4, nil, ids.Empty, 100))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID0, nil, ids.Empty, 1000))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID1, nil, ids.Empty, 1000))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID2, nil, ids.Empty, 1000))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID3, nil, ids.Empty, 2000))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID4, nil, ids.Empty, 100))
 
 	threshold := 3
 	duration := 1 * time.Hour
 	// Shouldn't bench more than 2550 (5100/2)
 	maxPortion := 0.5
 	benchIntf, err := NewBenchlist(
-		ctx,
 		&TestBenchable{T: t},
 		vdrs,
 		threshold,
@@ -262,8 +259,6 @@ func TestBenchlistMaxStake(t *testing.T) {
 func TestBenchlistRemove(t *testing.T) {
 	require := require.New(t)
 
-	snowCtx := snowtest.Context(t, snowtest.CChainID)
-	ctx := snowtest.ConsensusContext(snowCtx)
 	vdrs := validators.NewManager()
 	vdrID0 := ids.GenerateTestNodeID()
 	vdrID1 := ids.GenerateTestNodeID()
@@ -271,12 +266,14 @@ func TestBenchlistRemove(t *testing.T) {
 	vdrID3 := ids.GenerateTestNodeID()
 	vdrID4 := ids.GenerateTestNodeID()
 
+	subnetID := ids.ID{'a', 'b', 'c', 'd'}
+
 	// Total weight is 5000
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID0, nil, ids.Empty, 1000))
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID1, nil, ids.Empty, 1000))
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID2, nil, ids.Empty, 1000))
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID3, nil, ids.Empty, 1000))
-	require.NoError(vdrs.AddStaker(ctx.SubnetID, vdrID4, nil, ids.Empty, 1000))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID0, nil, ids.Empty, 1000))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID1, nil, ids.Empty, 1000))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID2, nil, ids.Empty, 1000))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID3, nil, ids.Empty, 1000))
+	require.NoError(vdrs.AddStaker(subnetID, vdrID4, nil, ids.Empty, 1000))
 
 	count := 0
 	benchable := &TestBenchable{
@@ -291,7 +288,6 @@ func TestBenchlistRemove(t *testing.T) {
 	duration := 2 * time.Second
 	maxPortion := 0.76 // can bench 3 of the 5 validators
 	benchIntf, err := NewBenchlist(
-		ctx,
 		benchable,
 		vdrs,
 		threshold,

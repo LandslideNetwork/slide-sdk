@@ -4,15 +4,16 @@
 package peer
 
 import (
+	"github.com/cometbft/cometbft/libs/log"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPeerTracker(t *testing.T) {
 	require := require.New(t)
-	p := NewPeerTracker()
+	p := NewPeerTracker(log.NewNopLogger())
 
 	// Connect some peers
 	numExtraPeers := 10
