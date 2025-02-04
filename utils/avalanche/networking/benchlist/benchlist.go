@@ -358,3 +358,20 @@ func (b *benchlist) bench(nodeID ids.NodeID) {
 	b.numBenched.Set(float64(b.benchedHeap.Len()))
 	b.weightBenched.Set(float64(newBenchedStake))
 }
+
+type nopBenchlist struct{}
+
+// NewNopBenchlist returns an empty benchlist that will never stop any queries
+func NewNopBenchlist() Benchlist {
+	return &nopBenchlist{}
+}
+
+func (nopBenchlist) RegisterResponse(ids.NodeID) {}
+
+func (nopBenchlist) RegisterFailure(ids.NodeID) {}
+
+func (nopBenchlist) RegisterRequestToUnreachableValidator() {}
+
+func (nopBenchlist) IsBenched(ids.NodeID) bool {
+	return false
+}
