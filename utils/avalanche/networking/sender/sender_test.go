@@ -3,9 +3,9 @@
 
 package sender_test
 
-//
 //import (
 //	"context"
+//	"github.com/cometbft/cometbft/libs/log"
 //	"math/rand"
 //	"sync"
 //	"testing"
@@ -15,37 +15,35 @@ package sender_test
 //	"github.com/stretchr/testify/require"
 //	"go.uber.org/mock/gomock"
 //
-//	"github.com/ava-labs/avalanchego/ids"
-//	"github.com/ava-labs/avalanchego/message"
 //	"github.com/ava-labs/avalanchego/message/messagemock"
 //	"github.com/ava-labs/avalanchego/network/p2p"
 //	"github.com/ava-labs/avalanchego/snow"
-//	"github.com/ava-labs/avalanchego/snow/engine/common"
 //	"github.com/ava-labs/avalanchego/snow/engine/enginetest"
-//	"github.com/ava-labs/avalanchego/snow/networking/benchlist"
 //	"github.com/ava-labs/avalanchego/snow/networking/handler"
-//	"github.com/ava-labs/avalanchego/snow/networking/router"
 //	"github.com/ava-labs/avalanchego/snow/networking/router/routermock"
 //	"github.com/ava-labs/avalanchego/snow/networking/sender/sendermock"
 //	"github.com/ava-labs/avalanchego/snow/networking/sender/sendertest"
-//	"github.com/ava-labs/avalanchego/snow/networking/timeout"
 //	"github.com/ava-labs/avalanchego/snow/networking/timeout/timeoutmock"
 //	"github.com/ava-labs/avalanchego/snow/networking/tracker"
-//	"github.com/ava-labs/avalanchego/snow/snowtest"
-//	"github.com/ava-labs/avalanchego/snow/validators"
 //	"github.com/ava-labs/avalanchego/subnets"
 //	"github.com/ava-labs/avalanchego/utils/constants"
-//	"github.com/ava-labs/avalanchego/utils/logging"
-//	"github.com/ava-labs/avalanchego/utils/math/meter"
 //	"github.com/ava-labs/avalanchego/utils/resource"
-//	"github.com/ava-labs/avalanchego/utils/set"
-//	"github.com/ava-labs/avalanchego/utils/timer"
-//	"github.com/ava-labs/avalanchego/version"
+//	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
+//	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
+//	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/benchlist"
+//	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
+//	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/timeout"
+//	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer"
+//	"github.com/landslidenetwork/slide-sdk/utils/ids"
+//	"github.com/landslidenetwork/slide-sdk/utils/math/meter"
+//	"github.com/landslidenetwork/slide-sdk/utils/set"
+//	"github.com/landslidenetwork/slide-sdk/utils/version"
+//	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 //
-//	p2ppb "github.com/ava-labs/avalanchego/proto/pb/p2p"
 //	commontracker "github.com/ava-labs/avalanchego/snow/engine/common/tracker"
+//	p2ppb "github.com/landslidenetwork/slide-sdk/proto/p2p"
 //
-//	. "github.com/ava-labs/avalanchego/snow/networking/sender"
+//	. "github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/sender"
 //)
 //
 //const testThreadPoolSize = 2
@@ -53,66 +51,50 @@ package sender_test
 //func TestTimeout(t *testing.T) {
 //	require := require.New(t)
 //
-//	snowCtx := snowtest.Context(t, snowtest.CChainID)
-//	ctx := snowtest.ConsensusContext(snowCtx)
 //	vdrs := validators.NewManager()
-//	require.NoError(vdrs.AddStaker(ctx.SubnetID, ids.GenerateTestNodeID(), nil, ids.Empty, 1))
-//	benchlist := benchlist.NewNoBenchlist()
+//	nodeID := ids.GenerateTestNodeID()
+//	chainID := ids.GenerateTestID()
+//	subnetID := ids.GenerateTestID()
+//	require.NoError(vdrs.AddStaker(subnetID, ids.GenerateTestNodeID(), nil, ids.Empty, 1))
+//	benchlist, err := benchlist.NewBenchlist()
+//	require.NoError(err)
 //	tm, err := timeout.NewManager(
-//		&timer.AdaptiveTimeoutConfig{
-//			InitialTimeout:     time.Millisecond,
-//			MinimumTimeout:     time.Millisecond,
-//			MaximumTimeout:     10 * time.Second,
-//			TimeoutHalflife:    5 * time.Minute,
-//			TimeoutCoefficient: 1.25,
-//		},
 //		benchlist,
-//		prometheus.NewRegistry(),
-//		prometheus.NewRegistry(),
 //	)
 //	require.NoError(err)
 //	go tm.Dispatch()
 //
-//	chainRouter := router.ChainRouter{}
+//	p2pRouter := router.P2PRouter{}
 //
 //	metrics := prometheus.NewRegistry()
-//	mc, err := message.NewCreator(
-//		logging.NoLog{},
+//	msgCreator, err := message.NewCreator(
+//		log.NewNopLogger(),
 //		metrics,
 //		constants.DefaultNetworkCompressionType,
 //		10*time.Second,
 //	)
 //	require.NoError(err)
 //
-//	require.NoError(chainRouter.Initialize(
-//		ids.EmptyNodeID,
-//		logging.NoLog{},
+//	require.NoError(p2pRouter.Initialize(
+//		log.NewNopLogger(),
 //		tm,
-//		time.Second,
-//		set.Set[ids.ID]{},
-//		true,
-//		set.Set[ids.ID]{},
-//		nil,
-//		router.HealthConfig{},
-//		prometheus.NewRegistry(),
 //	))
 //
 //	externalSender := &sendertest.External{TB: t}
 //	externalSender.Default(false)
 //
-//	sender, err := New(
-//		ctx,
-//		mc,
-//		externalSender,
-//		&chainRouter,
+//	sender := New(
+//		chainID,
+//		subnetID,
+//		nodeID,
+//		log.NewNopLogger(),
 //		tm,
-//		p2ppb.EngineType_ENGINE_TYPE_SNOWMAN,
-//		subnets.New(ctx.NodeID, subnets.Config{}),
-//		prometheus.NewRegistry(),
+//		msgCreator,
+//		externalSender,
+//		&p2pRouter,
 //	)
 //	require.NoError(err)
 //
-//	ctx2 := snowtest.ConsensusContext(snowCtx)
 //	resourceTracker, err := tracker.NewResourceTracker(
 //		prometheus.NewRegistry(),
 //		resource.NoUsage,
@@ -122,7 +104,7 @@ package sender_test
 //	require.NoError(err)
 //
 //	p2pTracker, err := p2p.NewPeerTracker(
-//		logging.NoLog{},
+//		log.NewNopLogger(),
 //		"",
 //		prometheus.NewRegistry(),
 //		nil,
@@ -230,62 +212,6 @@ package sender_test
 //			vdrIDs.Union(nodeIDs)
 //			wg.Add(1)
 //			requestID++
-//			sender.SendGetStateSummaryFrontier(cancelledCtx, nodeIDs, requestID)
-//		}
-//		{
-//			nodeIDs := set.Of(ids.GenerateTestNodeID())
-//			vdrIDs.Union(nodeIDs)
-//			wg.Add(1)
-//			requestID++
-//			sender.SendGetAcceptedStateSummary(cancelledCtx, nodeIDs, requestID, nil)
-//		}
-//		{
-//			nodeIDs := set.Of(ids.GenerateTestNodeID())
-//			vdrIDs.Union(nodeIDs)
-//			wg.Add(1)
-//			requestID++
-//			sender.SendGetAcceptedFrontier(cancelledCtx, nodeIDs, requestID)
-//		}
-//		{
-//			nodeIDs := set.Of(ids.GenerateTestNodeID())
-//			vdrIDs.Union(nodeIDs)
-//			wg.Add(1)
-//			requestID++
-//			sender.SendGetAccepted(cancelledCtx, nodeIDs, requestID, nil)
-//		}
-//		{
-//			nodeID := ids.GenerateTestNodeID()
-//			vdrIDs.Add(nodeID)
-//			wg.Add(1)
-//			requestID++
-//			sender.SendGetAncestors(cancelledCtx, nodeID, requestID, ids.Empty)
-//		}
-//		{
-//			nodeID := ids.GenerateTestNodeID()
-//			vdrIDs.Add(nodeID)
-//			wg.Add(1)
-//			requestID++
-//			sender.SendGet(cancelledCtx, nodeID, requestID, ids.Empty)
-//		}
-//		{
-//			nodeIDs := set.Of(ids.GenerateTestNodeID())
-//			vdrIDs.Union(nodeIDs)
-//			wg.Add(1)
-//			requestID++
-//			sender.SendPullQuery(cancelledCtx, nodeIDs, requestID, ids.Empty, 0)
-//		}
-//		{
-//			nodeIDs := set.Of(ids.GenerateTestNodeID())
-//			vdrIDs.Union(nodeIDs)
-//			wg.Add(1)
-//			requestID++
-//			sender.SendPushQuery(cancelledCtx, nodeIDs, requestID, nil, 0)
-//		}
-//		{
-//			nodeIDs := set.Of(ids.GenerateTestNodeID())
-//			vdrIDs.Union(nodeIDs)
-//			wg.Add(1)
-//			requestID++
 //			require.NoError(sender.SendAppRequest(cancelledCtx, nodeIDs, requestID, nil))
 //		}
 //	}
@@ -311,10 +237,11 @@ package sender_test
 //func TestReliableMessages(t *testing.T) {
 //	require := require.New(t)
 //
-//	snowCtx := snowtest.Context(t, snowtest.CChainID)
-//	ctx := snowtest.ConsensusContext(snowCtx)
 //	vdrs := validators.NewManager()
-//	require.NoError(vdrs.AddStaker(ctx.SubnetID, ids.BuildTestNodeID([]byte{1}), nil, ids.Empty, 1))
+//	nodeID := ids.GenerateTestNodeID()
+//	chainID := ids.GenerateTestID()
+//	subnetID := ids.GenerateTestID()
+//	require.NoError(vdrs.AddStaker(subnetID, ids.BuildTestNodeID([]byte{1}), nil, ids.Empty, 1))
 //	benchlist := benchlist.NewNoBenchlist()
 //	tm, err := timeout.NewManager(
 //		&timer.AdaptiveTimeoutConfig{
@@ -336,7 +263,7 @@ package sender_test
 //
 //	metrics := prometheus.NewRegistry()
 //	mc, err := message.NewCreator(
-//		logging.NoLog{},
+//		log.NewNopLogger(),
 //		metrics,
 //		constants.DefaultNetworkCompressionType,
 //		10*time.Second,
@@ -345,7 +272,7 @@ package sender_test
 //
 //	require.NoError(chainRouter.Initialize(
 //		ids.EmptyNodeID,
-//		logging.NoLog{},
+//		log.NewNopLogger(),
 //		tm,
 //		time.Second,
 //		set.Set[ids.ID]{},
@@ -359,19 +286,18 @@ package sender_test
 //	externalSender := &sendertest.External{TB: t}
 //	externalSender.Default(false)
 //
-//	sender, err := New(
-//		ctx,
+//	sender := New(
+//		chainID,
+//		subnetID,
+//		nodeID,
+//		log.NewNopLogger(),
+//		tm,
 //		mc,
 //		externalSender,
 //		&chainRouter,
-//		tm,
-//		p2ppb.EngineType_ENGINE_TYPE_SNOWMAN,
-//		subnets.New(ctx.NodeID, subnets.Config{}),
-//		prometheus.NewRegistry(),
 //	)
 //	require.NoError(err)
 //
-//	ctx2 := snowtest.ConsensusContext(snowCtx)
 //	resourceTracker, err := tracker.NewResourceTracker(
 //		prometheus.NewRegistry(),
 //		resource.NoUsage,
@@ -381,7 +307,7 @@ package sender_test
 //	require.NoError(err)
 //
 //	p2pTracker, err := p2p.NewPeerTracker(
-//		logging.NoLog{},
+//		log.NewNopLogger(),
 //		"",
 //		prometheus.NewRegistry(),
 //		nil,
@@ -396,7 +322,7 @@ package sender_test
 //		1,
 //		testThreadPoolSize,
 //		resourceTracker,
-//		subnets.New(ctx.NodeID, subnets.Config{}),
+//		subnets.New(nodeID, subnets.Config{}),
 //		commontracker.NewPeers(),
 //		p2pTracker,
 //		prometheus.NewRegistry(),
@@ -469,10 +395,11 @@ package sender_test
 //	require := require.New(t)
 //
 //	benchlist := benchlist.NewNoBenchlist()
-//	snowCtx := snowtest.Context(t, snowtest.CChainID)
-//	ctx := snowtest.ConsensusContext(snowCtx)
 //	vdrs := validators.NewManager()
-//	require.NoError(vdrs.AddStaker(ctx.SubnetID, ids.GenerateTestNodeID(), nil, ids.Empty, 1))
+//	nodeID := ids.GenerateTestNodeID()
+//	chainID := ids.GenerateTestID()
+//	subnetID := ids.GenerateTestID()
+//	require.NoError(vdrs.AddStaker(subnetID, ids.GenerateTestNodeID(), nil, ids.Empty, 1))
 //	tm, err := timeout.NewManager(
 //		&timer.AdaptiveTimeoutConfig{
 //			InitialTimeout:     10 * time.Millisecond,
@@ -493,7 +420,7 @@ package sender_test
 //
 //	metrics := prometheus.NewRegistry()
 //	mc, err := message.NewCreator(
-//		logging.NoLog{},
+//		log.NewNopLogger(),
 //		metrics,
 //		constants.DefaultNetworkCompressionType,
 //		10*time.Second,
@@ -502,7 +429,7 @@ package sender_test
 //
 //	require.NoError(chainRouter.Initialize(
 //		ids.EmptyNodeID,
-//		logging.NoLog{},
+//		log.NewNopLogger(),
 //		tm,
 //		time.Second,
 //		set.Set[ids.ID]{},
@@ -516,19 +443,17 @@ package sender_test
 //	externalSender := &sendertest.External{TB: t}
 //	externalSender.Default(false)
 //
-//	sender, err := New(
-//		ctx,
+//	sender := New(
+//		chainID,
+//		subnetID,
+//		nodeID,
+//		log.NewNopLogger(),
+//		tm,
 //		mc,
 //		externalSender,
 //		&chainRouter,
-//		tm,
-//		p2ppb.EngineType_ENGINE_TYPE_SNOWMAN,
-//		subnets.New(ctx.NodeID, subnets.Config{}),
-//		prometheus.NewRegistry(),
 //	)
-//	require.NoError(err)
 //
-//	ctx2 := snowtest.ConsensusContext(snowCtx)
 //	resourceTracker, err := tracker.NewResourceTracker(
 //		prometheus.NewRegistry(),
 //		resource.NoUsage,
@@ -538,7 +463,7 @@ package sender_test
 //	require.NoError(err)
 //
 //	p2pTracker, err := p2p.NewPeerTracker(
-//		logging.NoLog{},
+//		log.NewNopLogger(),
 //		"",
 //		prometheus.NewRegistry(),
 //		nil,
@@ -553,7 +478,7 @@ package sender_test
 //		time.Second,
 //		testThreadPoolSize,
 //		resourceTracker,
-//		subnets.New(ctx.NodeID, subnets.Config{}),
+//		subnets.New(nodeID, subnets.Config{}),
 //		commontracker.NewPeers(),
 //		p2pTracker,
 //		prometheus.NewRegistry(),
@@ -630,9 +555,10 @@ package sender_test
 //		requestID     = uint32(1337)
 //		heights       = []uint64{1, 2, 3}
 //		containerIDs  = []ids.ID{ids.GenerateTestID(), ids.GenerateTestID()}
+//		nodeID        = ids.GenerateTestNodeID()
+//		chainID       = ids.GenerateTestID()
+//		subnetID      = ids.GenerateTestID()
 //	)
-//	snowCtx := snowtest.Context(t, snowtest.PChainID)
-//	ctx := snowtest.ConsensusContext(snowCtx)
 //
 //	type test struct {
 //		name                    string
@@ -650,21 +576,21 @@ package sender_test
 //			failedMsgF: func(nodeID ids.NodeID) message.InboundMessage {
 //				return message.InternalGetStateSummaryFrontierFailed(
 //					nodeID,
-//					ctx.ChainID,
+//					chainID,
 //					requestID,
 //				)
 //			},
 //			assertMsgToMyself: func(require *require.Assertions, msg message.InboundMessage) {
 //				require.IsType(&p2ppb.GetStateSummaryFrontier{}, msg.Message())
 //				innerMsg := msg.Message().(*p2ppb.GetStateSummaryFrontier)
-//				require.Equal(ctx.ChainID[:], innerMsg.ChainId)
+//				require.Equal(chainID[:], innerMsg.ChainId)
 //				require.Equal(requestID, innerMsg.RequestId)
 //				require.Equal(uint64(deadline), innerMsg.Deadline)
 //			},
 //			expectedResponseOp: message.StateSummaryFrontierOp,
 //			setMsgCreatorExpect: func(msgCreator *messagemock.OutboundMsgBuilder) {
 //				msgCreator.EXPECT().GetStateSummaryFrontier(
-//					ctx.ChainID,
+//					chainID,
 //					requestID,
 //					deadline,
 //				).Return(nil, nil)
@@ -693,7 +619,7 @@ package sender_test
 //			failedMsgF: func(nodeID ids.NodeID) message.InboundMessage {
 //				return message.InternalGetAcceptedStateSummaryFailed(
 //					nodeID,
-//					ctx.ChainID,
+//					chainID,
 //					requestID,
 //				)
 //			},
@@ -708,7 +634,7 @@ package sender_test
 //			expectedResponseOp: message.AcceptedStateSummaryOp,
 //			setMsgCreatorExpect: func(msgCreator *messagemock.OutboundMsgBuilder) {
 //				msgCreator.EXPECT().GetAcceptedStateSummary(
-//					ctx.ChainID,
+//					chainID,
 //					requestID,
 //					deadline,
 //					heights,
@@ -721,7 +647,7 @@ package sender_test
 //						// Note [myNodeID] is not in this set
 //						NodeIDs: set.Of(successNodeID, failedNodeID),
 //					},
-//					ctx.SubnetID, // Subnet ID
+//					subnetID, // Subnet ID
 //					gomock.Any(),
 //				).Return(set.Of(successNodeID))
 //			},
@@ -734,7 +660,7 @@ package sender_test
 //			failedMsgF: func(nodeID ids.NodeID) message.InboundMessage {
 //				return message.InternalGetAcceptedFrontierFailed(
 //					nodeID,
-//					ctx.ChainID,
+//					chainID,
 //					requestID,
 //				)
 //			},
@@ -748,7 +674,7 @@ package sender_test
 //			expectedResponseOp: message.AcceptedFrontierOp,
 //			setMsgCreatorExpect: func(msgCreator *messagemock.OutboundMsgBuilder) {
 //				msgCreator.EXPECT().GetAcceptedFrontier(
-//					ctx.ChainID,
+//					chainID,
 //					requestID,
 //					deadline,
 //				).Return(nil, nil)
@@ -760,7 +686,7 @@ package sender_test
 //						// Note [myNodeID] is not in this set
 //						NodeIDs: set.Of(successNodeID, failedNodeID),
 //					},
-//					ctx.SubnetID, // Subnet ID
+//					subnetID, // Subnet ID
 //					gomock.Any(),
 //				).Return(set.Of(successNodeID))
 //			},
@@ -773,7 +699,7 @@ package sender_test
 //			failedMsgF: func(nodeID ids.NodeID) message.InboundMessage {
 //				return message.InternalGetAcceptedFailed(
 //					nodeID,
-//					ctx.ChainID,
+//					chainID,
 //					requestID,
 //				)
 //			},
@@ -836,8 +762,18 @@ package sender_test
 //				router,
 //				timeoutManager,
 //				p2ppb.EngineType_ENGINE_TYPE_SNOWMAN,
-//				subnets.New(ctx.NodeID, subnets.Config{}),
+//				subnets.New(nodeID, subnets.Config{}),
 //				prometheus.NewRegistry(),
+//			)
+//			sender := New(
+//				chainID,
+//				subnetID,
+//				nodeID,
+//				log.NewNopLogger(),
+//				timeoutManager,
+//				msgCreator,
+//				externalSender,
+//				&chainRouter,
 //			)
 //			require.NoError(err)
 //
@@ -850,7 +786,7 @@ package sender_test
 //				router.EXPECT().RegisterRequest(
 //					gomock.Any(),          // Context
 //					nodeID,                // Node ID
-//					ctx.ChainID,           // Destination Chain
+//					chainID,               // Destination Chain
 //					requestID,             // Request ID
 //					tt.expectedResponseOp, // Operation
 //					expectedFailedMsg,     // Failure Message
@@ -892,9 +828,8 @@ package sender_test
 //		requestID         = uint32(1337)
 //		summaryIDs        = []ids.ID{ids.GenerateTestID(), ids.GenerateTestID()}
 //		summary           = []byte{1, 2, 3}
+//		chainID           = ids.GenerateTestID()
 //	)
-//	snowCtx := snowtest.Context(t, snowtest.PChainID)
-//	ctx := snowtest.ConsensusContext(snowCtx)
 //
 //	type test struct {
 //		name                    string
@@ -909,7 +844,7 @@ package sender_test
 //			name: "StateSummaryFrontier",
 //			setMsgCreatorExpect: func(msgCreator *messagemock.OutboundMsgBuilder) {
 //				msgCreator.EXPECT().StateSummaryFrontier(
-//					ctx.ChainID,
+//					chainID,
 //					requestID,
 //					summary,
 //				).Return(nil, nil) // Don't care about the message
@@ -1043,17 +978,16 @@ package sender_test
 //				router         = routermock.NewRouter(ctrl)
 //			)
 //
-//			sender, err := New(
-//				ctx,
+//			sender := New(
+//				chainID,
+//				subnetID,
+//				nodeID,
+//				log.NewNopLogger(),
+//				timeoutManager,
 //				msgCreator,
 //				externalSender,
 //				router,
-//				timeoutManager,
-//				p2ppb.EngineType_ENGINE_TYPE_SNOWMAN,
-//				subnets.New(ctx.NodeID, subnets.Config{}),
-//				prometheus.NewRegistry(),
 //			)
-//			require.NoError(err)
 //
 //			// Set the timeout (deadline)
 //			timeoutManager.EXPECT().TimeoutDuration().Return(deadline).AnyTimes()
@@ -1094,8 +1028,6 @@ package sender_test
 //		containerID       = ids.GenerateTestID()
 //		engineType        = p2ppb.EngineType_ENGINE_TYPE_SNOWMAN
 //	)
-//	snowCtx := snowtest.Context(t, snowtest.PChainID)
-//	ctx := snowtest.ConsensusContext(snowCtx)
 //
 //	type test struct {
 //		name                    string
@@ -1221,6 +1153,16 @@ package sender_test
 //				prometheus.NewRegistry(),
 //			)
 //			require.NoError(err)
+//			sender := New(
+//				chainID,
+//				subnetID,
+//				nodeID,
+//				log.NewNopLogger(),
+//				timeoutManager,
+//				msgCreator,
+//				externalSender,
+//				router,
+//			)
 //
 //			// Set the timeout (deadline)
 //			timeoutManager.EXPECT().TimeoutDuration().Return(deadline).AnyTimes()

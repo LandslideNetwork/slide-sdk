@@ -63,10 +63,10 @@ type Manager interface {
 }
 
 func NewManager(
-// timeoutConfig *timer.AdaptiveTimeoutConfig,
-// benchlistMgr benchlist.Manager,
-// requestReg prometheus.Registerer,
-// responseReg prometheus.Registerer,
+	// timeoutConfig *timer.AdaptiveTimeoutConfig,
+	nwBenchlist benchlist.Benchlist,
+	// requestReg prometheus.Registerer,
+	// responseReg prometheus.Registerer,
 ) (Manager, error) {
 	//	tm, err := timer.NewAdaptiveTimeoutManager(
 	//		timeoutConfig,
@@ -83,7 +83,7 @@ func NewManager(
 	//
 	return &manager{
 		//		tm:           tm,
-		//		benchlistMgr: benchlistMgr,
+		benchlist: nwBenchlist,
 		//		metrics:      m,
 	}, nil
 }
