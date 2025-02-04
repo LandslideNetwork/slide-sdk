@@ -21,10 +21,10 @@ message Message {
 
     //    // Fields lower than 10 are reserved for other compression algorithms.
     //    // TODO: support COMPRESS_SNAPPY
-    //
-    //    // Network messages:
-    //    Ping ping = 11;
-    //    Pong pong = 12;
+
+    // Network messages:
+    Ping ping = 11;
+    Pong pong = 12;
     //    Handshake handshake = 13;
     //    GetPeerList get_peer_list = 35;
     //    PeerList peer_list = 14;
@@ -58,20 +58,20 @@ message Message {
   }
 }
 
-//// Ping reports a peer's perceived uptime percentage.
-////
-//// Peers should respond to Ping with a Pong.
-//message Ping {
-//  // Uptime percentage on the primary network [0, 100]
-//  uint32 uptime = 1;
-//  reserved 2; // Until Etna upgrade is activated.
-//}
+// Ping reports a peer's perceived uptime percentage.
 //
-//// Pong is sent in response to a Ping.
-//message Pong {
-//  reserved 1, 2; // Until E upgrade is activated.
-//}
-//
+// Peers should respond to Ping with a Pong.
+message Ping {
+  // Uptime percentage on the primary network [0, 100]
+  uint32 uptime = 1;
+  reserved 2; // Until Etna upgrade is activated.
+}
+
+// Pong is sent in response to a Ping.
+message Pong {
+  reserved 1, 2; // Until E upgrade is activated.
+}
+
 //// Handshake is the first outbound message sent to a peer when a connection is
 //// established to start the p2p handshake.
 ////
