@@ -61,25 +61,25 @@ func (NoOpHandler) AppRequest(context.Context, ids.NodeID, time.Time, []byte) ([
 	return nil, nil
 }
 
-//func NewValidatorHandler(
-//	handler Handler,
-//	validatorSet ValidatorSet,
-//	log logging.Logger,
-//) *ValidatorHandler {
-//	return &ValidatorHandler{
-//		handler:      handler,
-//		validatorSet: validatorSet,
-//		log:          log,
-//	}
-//}
-//
-//// ValidatorHandler drops messages from non-validators
-//type ValidatorHandler struct {
-//	handler      Handler
-//	validatorSet ValidatorSet
-//	log          logging.Logger
-//}
-//
+func NewValidatorHandler(
+	handler Handler,
+	validatorSet ValidatorSet,
+	log log.Logger,
+) *ValidatorHandler {
+	return &ValidatorHandler{
+		handler:      handler,
+		validatorSet: validatorSet,
+		log:          log,
+	}
+}
+
+// ValidatorHandler drops messages from non-validators
+type ValidatorHandler struct {
+	handler      Handler
+	validatorSet ValidatorSet
+	log          log.Logger
+}
+
 //func (v ValidatorHandler) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte) {
 //	if !v.validatorSet.Has(ctx, nodeID) {
 //		v.log.Debug("dropping message",
@@ -91,14 +91,14 @@ func (NoOpHandler) AppRequest(context.Context, ids.NodeID, time.Time, []byte) ([
 //
 //	v.handler.AppGossip(ctx, nodeID, gossipBytes)
 //}
-//
-//func (v ValidatorHandler) AppRequest(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *common.AppError) {
-//	if !v.validatorSet.Has(ctx, nodeID) {
-//		return nil, ErrNotValidator
-//	}
-//
-//	return v.handler.AppRequest(ctx, nodeID, deadline, requestBytes)
-//}
+
+func (v ValidatorHandler) AppRequest(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *common.AppError) {
+	if !v.validatorSet.Has(ctx, nodeID) {
+		return nil, ErrNotValidator
+	}
+
+	return v.handler.AppRequest(ctx, nodeID, deadline, requestBytes)
+}
 
 // responder automatically sends the response for a given request
 type responder struct {
