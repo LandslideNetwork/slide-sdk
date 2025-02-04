@@ -298,7 +298,8 @@ func InboundAppError(
 			ErrorCode:    errorCode,
 			ErrorMessage: errorMessage,
 		},
-		expiration: mockable.MaxTime,
+		//TODO: implement if necessary
+		//expiration: mockable.MaxTime,
 	}
 }
 
