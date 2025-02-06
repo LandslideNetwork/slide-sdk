@@ -368,258 +368,262 @@ func (r *P2PRouter) HandleInbound(ctx context.Context, msg message.InboundMessag
 	//	)
 }
 
-//// Shutdown shuts down this router
-//func (r *P2PRouter) Shutdown(ctx context.Context) {
-//	cr.log.Info("shutting down chain router")
-//	cr.lock.Lock()
-//	prevChains := cr.chainHandlers
-//	cr.chainHandlers = map[ids.ID]handler.Handler{}
-//	cr.closing = true
-//	cr.lock.Unlock()
+// // Shutdown shuts down this router
 //
-//	for _, chain := range prevChains {
-//		chain.Stop(ctx)
-//	}
+//	func (r *P2PRouter) Shutdown(ctx context.Context) {
+//		cr.log.Info("shutting down chain router")
+//		cr.lock.Lock()
+//		prevChains := cr.chainHandlers
+//		cr.chainHandlers = map[ids.ID]handler.Handler{}
+//		cr.closing = true
+//		cr.lock.Unlock()
 //
-//	ctx, cancel := context.WithTimeout(ctx, cr.closeTimeout)
-//	defer cancel()
+//		for _, chain := range prevChains {
+//			chain.Stop(ctx)
+//		}
 //
-//	for _, chain := range prevChains {
-//		shutdownDuration, err := chain.AwaitStopped(ctx)
+//		ctx, cancel := context.WithTimeout(ctx, cr.closeTimeout)
+//		defer cancel()
 //
-//		chainLog := chain.Context().Log
-//		if err != nil {
-//			chainLog.Warn("timed out while shutting down",
-//				zap.String("stack", utils.GetStacktrace(true)),
-//				zap.Error(err),
-//			)
-//		} else {
-//			chainLog.Info("chain shutdown",
-//				zap.Duration("shutdownDuration", shutdownDuration),
-//			)
+//		for _, chain := range prevChains {
+//			shutdownDuration, err := chain.AwaitStopped(ctx)
+//
+//			chainLog := chain.Context().Log
+//			if err != nil {
+//				chainLog.Warn("timed out while shutting down",
+//					zap.String("stack", utils.GetStacktrace(true)),
+//					zap.Error(err),
+//				)
+//			} else {
+//				chainLog.Info("chain shutdown",
+//					zap.Duration("shutdownDuration", shutdownDuration),
+//				)
+//			}
 //		}
 //	}
-//}
 //
-//// AddChain registers the specified chain so that incoming
-//// messages can be routed to it
-//func (r *P2PRouter) AddChain(ctx context.Context, chain handler.Handler) {
-//	cr.lock.Lock()
-//	defer cr.lock.Unlock()
+// // AddChain registers the specified chain so that incoming
+// // messages can be routed to it
 //
-//	chainID := chain.Context().ChainID
-//	if cr.closing {
-//		cr.log.Debug("dropping add chain request",
+//	func (r *P2PRouter) AddChain(ctx context.Context, chain handler.Handler) {
+//		cr.lock.Lock()
+//		defer cr.lock.Unlock()
+//
+//		chainID := chain.Context().ChainID
+//		if cr.closing {
+//			cr.log.Debug("dropping add chain request",
+//				zap.Stringer("chainID", chainID),
+//				zap.Error(errClosing),
+//			)
+//			return
+//		}
+//		cr.log.Debug("registering chain with chain router",
 //			zap.Stringer("chainID", chainID),
-//			zap.Error(errClosing),
 //		)
-//		return
-//	}
-//	cr.log.Debug("registering chain with chain router",
-//		zap.Stringer("chainID", chainID),
-//	)
-//	chain.SetOnStopped(func() {
-//		cr.removeChain(ctx, chainID)
-//	})
-//	cr.chainHandlers[chainID] = chain
+//		chain.SetOnStopped(func() {
+//			cr.removeChain(ctx, chainID)
+//		})
+//		cr.chainHandlers[chainID] = chain
 //
-//	// Notify connected validators
-//	subnetID := chain.Context().SubnetID
-//	for validatorID, peer := range cr.peers {
-//		// If this validator is benched on any chain, treat them as disconnected
-//		// on all chains
-//		_, benched := cr.benched[validatorID]
-//		if benched {
-//			continue
+//		// Notify connected validators
+//		subnetID := chain.Context().SubnetID
+//		for validatorID, peer := range cr.peers {
+//			// If this validator is benched on any chain, treat them as disconnected
+//			// on all chains
+//			_, benched := cr.benched[validatorID]
+//			if benched {
+//				continue
+//			}
+//
+//			// If this peer isn't running this chain, then we shouldn't mark them as
+//			// connected
+//			if !peer.trackedSubnets.Contains(subnetID) && cr.sybilProtectionEnabled {
+//				continue
+//			}
+//
+//			msg := message.InternalConnected(validatorID, peer.version)
+//			chain.Push(ctx,
+//				handler.Message{
+//					InboundMessage: msg,
+//					EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
+//				},
+//			)
+//		}
+//	}
+//
+// // Connected routes an incoming notification that a validator was just connected
+//
+//	func (r *P2PRouter) Connected(nodeID ids.NodeID, nodeVersion *version.Application, subnetID ids.ID) {
+//		cr.lock.Lock()
+//		defer cr.lock.Unlock()
+//
+//		if cr.closing {
+//			cr.log.Debug("dropping connected message",
+//				zap.Stringer("nodeID", nodeID),
+//				zap.Error(errClosing),
+//			)
+//			return
 //		}
 //
-//		// If this peer isn't running this chain, then we shouldn't mark them as
-//		// connected
-//		if !peer.trackedSubnets.Contains(subnetID) && cr.sybilProtectionEnabled {
-//			continue
+//		connectedPeer, exists := cr.peers[nodeID]
+//		if !exists {
+//			connectedPeer = &peer{
+//				version: nodeVersion,
+//			}
+//			cr.peers[nodeID] = connectedPeer
+//		}
+//		connectedPeer.trackedSubnets.Add(subnetID)
+//
+//		// If this validator is benched on any chain, treat them as disconnected on all chains
+//		if _, benched := cr.benched[nodeID]; benched {
+//			return
 //		}
 //
-//		msg := message.InternalConnected(validatorID, peer.version)
-//		chain.Push(ctx,
-//			handler.Message{
-//				InboundMessage: msg,
-//				EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
-//			},
-//		)
-//	}
-//}
+//		msg := message.InternalConnected(nodeID, nodeVersion)
 //
-//// Connected routes an incoming notification that a validator was just connected
-//func (r *P2PRouter) Connected(nodeID ids.NodeID, nodeVersion *version.Application, subnetID ids.ID) {
-//	cr.lock.Lock()
-//	defer cr.lock.Unlock()
-//
-//	if cr.closing {
-//		cr.log.Debug("dropping connected message",
-//			zap.Stringer("nodeID", nodeID),
-//			zap.Error(errClosing),
-//		)
-//		return
-//	}
-//
-//	connectedPeer, exists := cr.peers[nodeID]
-//	if !exists {
-//		connectedPeer = &peer{
-//			version: nodeVersion,
+//		// TODO: fire up an event when validator state changes i.e when they leave
+//		// set, disconnect. we cannot put an L1 validator check here since
+//		// Disconnected would not be handled properly.
+//		//
+//		// When sybil protection is disabled, we only want this clause to happen
+//		// once. Therefore, we only update the chains during the connection of the
+//		// primary network, which is guaranteed to happen for every peer.
+//		if cr.sybilProtectionEnabled || subnetID == constants.PrimaryNetworkID {
+//			for _, chain := range cr.chainHandlers {
+//				// If sybil protection is disabled, send a Connected message to
+//				// every chain when connecting to the primary network.
+//				if subnetID == chain.Context().SubnetID || !cr.sybilProtectionEnabled {
+//					chain.Push(
+//						context.TODO(),
+//						handler.Message{
+//							InboundMessage: msg,
+//							EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
+//						},
+//					)
+//				}
+//			}
 //		}
-//		cr.peers[nodeID] = connectedPeer
-//	}
-//	connectedPeer.trackedSubnets.Add(subnetID)
-//
-//	// If this validator is benched on any chain, treat them as disconnected on all chains
-//	if _, benched := cr.benched[nodeID]; benched {
-//		return
 //	}
 //
-//	msg := message.InternalConnected(nodeID, nodeVersion)
+// // Disconnected routes an incoming notification that a validator was connected
 //
-//	// TODO: fire up an event when validator state changes i.e when they leave
-//	// set, disconnect. we cannot put an L1 validator check here since
-//	// Disconnected would not be handled properly.
-//	//
-//	// When sybil protection is disabled, we only want this clause to happen
-//	// once. Therefore, we only update the chains during the connection of the
-//	// primary network, which is guaranteed to happen for every peer.
-//	if cr.sybilProtectionEnabled || subnetID == constants.PrimaryNetworkID {
+//	func (r *P2PRouter) Disconnected(nodeID ids.NodeID) {
+//		cr.lock.Lock()
+//		defer cr.lock.Unlock()
+//
+//		if cr.closing {
+//			cr.log.Debug("dropping disconnected message",
+//				zap.Stringer("nodeID", nodeID),
+//				zap.Error(errClosing),
+//			)
+//			return
+//		}
+//
+//		peer := cr.peers[nodeID]
+//		delete(cr.peers, nodeID)
+//		if _, benched := cr.benched[nodeID]; benched {
+//			return
+//		}
+//
+//		msg := message.InternalDisconnected(nodeID)
+//
+//		// TODO: fire up an event when validator state changes i.e when they leave
+//		// set, disconnect. we cannot put an L1 validator check here since
+//		// if a validator connects then it leaves validator-set, it would not be
+//		// disconnected properly.
 //		for _, chain := range cr.chainHandlers {
-//			// If sybil protection is disabled, send a Connected message to
-//			// every chain when connecting to the primary network.
-//			if subnetID == chain.Context().SubnetID || !cr.sybilProtectionEnabled {
+//			if peer.trackedSubnets.Contains(chain.Context().SubnetID) || !cr.sybilProtectionEnabled {
 //				chain.Push(
 //					context.TODO(),
 //					handler.Message{
 //						InboundMessage: msg,
 //						EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
-//					},
-//				)
+//					})
 //			}
 //		}
 //	}
-//}
 //
-//// Disconnected routes an incoming notification that a validator was connected
-//func (r *P2PRouter) Disconnected(nodeID ids.NodeID) {
-//	cr.lock.Lock()
-//	defer cr.lock.Unlock()
-//
-//	if cr.closing {
-//		cr.log.Debug("dropping disconnected message",
-//			zap.Stringer("nodeID", nodeID),
-//			zap.Error(errClosing),
-//		)
-//		return
-//	}
-//
-//	peer := cr.peers[nodeID]
-//	delete(cr.peers, nodeID)
-//	if _, benched := cr.benched[nodeID]; benched {
-//		return
-//	}
-//
-//	msg := message.InternalDisconnected(nodeID)
-//
-//	// TODO: fire up an event when validator state changes i.e when they leave
-//	// set, disconnect. we cannot put an L1 validator check here since
-//	// if a validator connects then it leaves validator-set, it would not be
-//	// disconnected properly.
-//	for _, chain := range cr.chainHandlers {
-//		if peer.trackedSubnets.Contains(chain.Context().SubnetID) || !cr.sybilProtectionEnabled {
-//			chain.Push(
-//				context.TODO(),
-//				handler.Message{
-//					InboundMessage: msg,
-//					EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
-//				})
-//		}
-//	}
-//}
-//
-//// Benched routes an incoming notification that a validator was benched
-//func (r *P2PRouter) Benched(chainID ids.ID, nodeID ids.NodeID) {
-//	cr.lock.Lock()
-//	defer cr.lock.Unlock()
-//
-//	if cr.closing {
-//		cr.log.Debug("dropping benched message",
-//			zap.Stringer("nodeID", nodeID),
-//			zap.Stringer("chainID", chainID),
-//			zap.Error(errClosing),
-//		)
-//		return
-//	}
-//
-//	benchedChains, exists := cr.benched[nodeID]
-//	benchedChains.Add(chainID)
-//	cr.benched[nodeID] = benchedChains
-//	peer, hasPeer := cr.peers[nodeID]
-//	if exists || !hasPeer {
-//		// If the set already existed, then the node was previously benched.
-//		return
-//	}
-//
-//	// This will disconnect the node from all subnets when issued to P-chain.
-//	// Even if there is no chain in the subnet.
-//	msg := message.InternalDisconnected(nodeID)
-//
-//	for _, chain := range cr.chainHandlers {
-//		if peer.trackedSubnets.Contains(chain.Context().SubnetID) || !cr.sybilProtectionEnabled {
-//			chain.Push(
-//				context.TODO(),
-//				handler.Message{
-//					InboundMessage: msg,
-//					EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
-//				})
-//		}
-//	}
-//}
-//
-//// Unbenched routes an incoming notification that a validator was just unbenched
-//func (r *P2PRouter) Unbenched(chainID ids.ID, nodeID ids.NodeID) {
-//	cr.lock.Lock()
-//	defer cr.lock.Unlock()
-//
-//	if cr.closing {
-//		cr.log.Debug("dropping unbenched message",
-//			zap.Stringer("nodeID", nodeID),
-//			zap.Stringer("chainID", chainID),
-//			zap.Error(errClosing),
-//		)
-//		return
-//	}
-//
-//	benchedChains := cr.benched[nodeID]
-//	benchedChains.Remove(chainID)
-//	if benchedChains.Len() != 0 {
-//		cr.benched[nodeID] = benchedChains
-//		return // This node is still benched
-//	}
-//
-//	delete(cr.benched, nodeID)
-//
-//	peer, found := cr.peers[nodeID]
-//	if !found {
-//		return
-//	}
-//
-//	msg := message.InternalConnected(nodeID, peer.version)
-//
-//	for _, chain := range cr.chainHandlers {
-//		if peer.trackedSubnets.Contains(chain.Context().SubnetID) || !cr.sybilProtectionEnabled {
-//			chain.Push(
-//				context.TODO(),
-//				handler.Message{
-//					InboundMessage: msg,
-//					EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
-//				})
-//		}
-//	}
-//}
-//
+// Benched routes an incoming notification that a validator was benched
+func (r *P2PRouter) Benched(chainID ids.ID, nodeID ids.NodeID) {
+	//	cr.lock.Lock()
+	//	defer cr.lock.Unlock()
+	//
+	//	if cr.closing {
+	//		cr.log.Debug("dropping benched message",
+	//			zap.Stringer("nodeID", nodeID),
+	//			zap.Stringer("chainID", chainID),
+	//			zap.Error(errClosing),
+	//		)
+	//		return
+	//	}
+	//
+	//	benchedChains, exists := cr.benched[nodeID]
+	//	benchedChains.Add(chainID)
+	//	cr.benched[nodeID] = benchedChains
+	//	peer, hasPeer := cr.peers[nodeID]
+	//	if exists || !hasPeer {
+	//		// If the set already existed, then the node was previously benched.
+	//		return
+	//	}
+	//
+	//	// This will disconnect the node from all subnets when issued to P-chain.
+	//	// Even if there is no chain in the subnet.
+	//	msg := message.InternalDisconnected(nodeID)
+	//
+	//	for _, chain := range cr.chainHandlers {
+	//		if peer.trackedSubnets.Contains(chain.Context().SubnetID) || !cr.sybilProtectionEnabled {
+	//			chain.Push(
+	//				context.TODO(),
+	//				handler.Message{
+	//					InboundMessage: msg,
+	//					EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
+	//				})
+	//		}
+	//	}
+}
+
+// Unbenched routes an incoming notification that a validator was just unbenched
+func (r *P2PRouter) Unbenched(chainID ids.ID, nodeID ids.NodeID) {
+	//	cr.lock.Lock()
+	//	defer cr.lock.Unlock()
+	//
+	//	if cr.closing {
+	//		cr.log.Debug("dropping unbenched message",
+	//			zap.Stringer("nodeID", nodeID),
+	//			zap.Stringer("chainID", chainID),
+	//			zap.Error(errClosing),
+	//		)
+	//		return
+	//	}
+	//
+	//	benchedChains := cr.benched[nodeID]
+	//	benchedChains.Remove(chainID)
+	//	if benchedChains.Len() != 0 {
+	//		cr.benched[nodeID] = benchedChains
+	//		return // This node is still benched
+	//	}
+	//
+	//	delete(cr.benched, nodeID)
+	//
+	//	peer, found := cr.peers[nodeID]
+	//	if !found {
+	//		return
+	//	}
+	//
+	//	msg := message.InternalConnected(nodeID, peer.version)
+	//
+	//	for _, chain := range cr.chainHandlers {
+	//		if peer.trackedSubnets.Contains(chain.Context().SubnetID) || !cr.sybilProtectionEnabled {
+	//			chain.Push(
+	//				context.TODO(),
+	//				handler.Message{
+	//					InboundMessage: msg,
+	//					EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
+	//				})
+	//		}
+	//	}
+}
+
 //// HealthCheck returns results of router health checks. Returns:
 //// 1) Information about health check results
 //// 2) An error if the health check reports unhealthy

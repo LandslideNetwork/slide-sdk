@@ -7,6 +7,7 @@ import (
 	"context"
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/benchlist"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	//"github.com/ava-labs/avalanchego/api/health"
 	//"github.com/ava-labs/avalanchego/ids"
@@ -44,7 +45,7 @@ type Router interface {
 
 // InternalHandler deals with messages internal to this node
 type InternalHandler interface {
-	//benchlist.Benchable
+	benchlist.Benchable
 
 	RegisterRequest(
 		ctx context.Context,

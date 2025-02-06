@@ -6,12 +6,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/compression"
+	message "github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
+	network2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/network"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/benchlist"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/sender"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/timeout"
 	"github.com/landslidenetwork/slide-sdk/utils/network/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/aggregator"
+	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
+	"math"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -517,7 +523,16 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}
 
 	p2pRouter := &router.P2PRouter{}
-	timeoutManager, err := timeout.NewManager()
+	validatorsManager := validators.NewManager()
+	threshold := 5
+	minimumFailingDuration := time.Second
+	duration := 2 * time.Second
+	maxPortion := math.Pi
+	nwBenchlist, err := benchlist.NewBenchlist(p2pRouter, validatorsManager, threshold, minimumFailingDuration, duration, maxPortion, registerer)
+	if err != nil {
+		return nil, err
+	}
+	timeoutManager, err := timeout.NewManager(nwBenchlist)
 	if err != nil {
 		return nil, err
 	}
@@ -525,8 +540,17 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
+	maxMessageTimeout := time.Second
+	msgCreator, err := message.NewCreator(vm.logger, registerer, compression.TypeZstd, maxMessageTimeout)
+	if err != nil {
+		return nil, err
+	}
 	// Passes messages from the snowman engines to the network
-	appSender := sender.New(chainID, subnetID, nodeID, vm.logger, p2pRouter)
+	externalSender, err := network2.NewNetwork()
+	if err != nil {
+		return nil, err
+	}
+	appSender := sender.New(chainID, subnetID, nodeID, vm.logger, timeoutManager, msgCreator, externalSender, p2pRouter)
 
 	//// Passes messages from the avalanche engines to the network
 	//avalancheMessageSender, err := sender.New(
