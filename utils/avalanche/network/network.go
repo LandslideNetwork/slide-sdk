@@ -6,6 +6,7 @@ package network
 import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/sender"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 )
@@ -63,55 +64,55 @@ import (
 //	errExpectedTCPProtocol    = errors.New("expected TCP protocol")
 //	errTrackingPrimaryNetwork = errors.New("cannot track primary network")
 //)
-//
-//// Network defines the functionality of the networking library.
-//type Network interface {
-//	// All consensus messages can be sent through this interface. Thread safety
-//	// must be managed internally in the network.
-//	sender.ExternalSender
-//
-//	// Has a health check
-//	health.Checker
-//
-//	peer.Network
-//
-//	// StartClose this network and all existing connections it has. Calling
-//	// StartClose multiple times is handled gracefully.
-//	StartClose()
-//
-//	// Should only be called once, will run until either a fatal error occurs,
-//	// or the network is closed.
-//	Dispatch() error
-//
-//	// Attempt to connect to this IP. The network will never stop attempting to
-//	// connect to this ID.
-//	ManuallyTrack(nodeID ids.NodeID, ip netip.AddrPort)
-//
-//	// PeerInfo returns information about peers. If [nodeIDs] is empty, returns
-//	// info about all peers that have finished the handshake. Otherwise, returns
-//	// info about the peers in [nodeIDs] that have finished the handshake.
-//	PeerInfo(nodeIDs []ids.NodeID) []peer.Info
-//
-//	// NodeUptime returns given node's primary network UptimeResults in the view of
-//	// this node's peer validators.
-//	NodeUptime() (UptimeResult, error)
-//}
-//
-//type UptimeResult struct {
-//	// RewardingStakePercentage shows what percent of network stake thinks we're
-//	// above the uptime requirement.
-//	RewardingStakePercentage float64
-//
-//	// WeightedAveragePercentage is the average perceived uptime of this node,
-//	// weighted by stake.
-//	// Note that this is different from RewardingStakePercentage, which shows
-//	// the percent of the network stake that thinks this node is above the
-//	// uptime requirement. WeightedAveragePercentage is weighted by uptime.
-//	// i.e If uptime requirement is 85 and a peer reports 40 percent it will be
-//	// counted (40*weight) in WeightedAveragePercentage but not in
-//	// RewardingStakePercentage since 40 < 85
-//	WeightedAveragePercentage float64
-//}
+
+// Network defines the functionality of the networking library.
+type Network interface {
+	// All consensus messages can be sent through this interface. Thread safety
+	// must be managed internally in the network.
+	sender.ExternalSender
+	//
+	//	// Has a health check
+	//	health.Checker
+	//
+	//	peer.Network
+	//
+	//	// StartClose this network and all existing connections it has. Calling
+	//	// StartClose multiple times is handled gracefully.
+	//	StartClose()
+	//
+	//	// Should only be called once, will run until either a fatal error occurs,
+	//	// or the network is closed.
+	//	Dispatch() error
+	//
+	//	// Attempt to connect to this IP. The network will never stop attempting to
+	//	// connect to this ID.
+	//	ManuallyTrack(nodeID ids.NodeID, ip netip.AddrPort)
+	//
+	//	// PeerInfo returns information about peers. If [nodeIDs] is empty, returns
+	//	// info about all peers that have finished the handshake. Otherwise, returns
+	//	// info about the peers in [nodeIDs] that have finished the handshake.
+	//	PeerInfo(nodeIDs []ids.NodeID) []peer.Info
+	//
+	//	// NodeUptime returns given node's primary network UptimeResults in the view of
+	//	// this node's peer validators.
+	//	NodeUptime() (UptimeResult, error)
+	//}
+	//
+	//type UptimeResult struct {
+	//	// RewardingStakePercentage shows what percent of network stake thinks we're
+	//	// above the uptime requirement.
+	//	RewardingStakePercentage float64
+	//
+	//	// WeightedAveragePercentage is the average perceived uptime of this node,
+	//	// weighted by stake.
+	//	// Note that this is different from RewardingStakePercentage, which shows
+	//	// the percent of the network stake that thinks this node is above the
+	//	// uptime requirement. WeightedAveragePercentage is weighted by uptime.
+	//	// i.e If uptime requirement is 85 and a peer reports 40 percent it will be
+	//	// counted (40*weight) in WeightedAveragePercentage but not in
+	//	// RewardingStakePercentage since 40 < 85
+	//	WeightedAveragePercentage float64
+}
 
 // To avoid potential deadlocks, we maintain that locks must be grabbed in the
 // following order:
@@ -290,42 +291,41 @@ func NewNetwork(
 	//	}
 	//
 	//	onCloseCtx, cancel := context.WithCancel(context.Background())
-	//	n := &network{
-	//		config:               config,
-	//		peerConfig:           peerConfig,
-	//		metrics:              metrics,
-	//		outboundMsgThrottler: outboundMsgThrottler,
-	//
-	//		inboundConnUpgradeThrottler: throttling.NewInboundConnUpgradeThrottler(log, config.ThrottlerConfig.InboundConnUpgradeThrottlerConfig),
-	//		listener:                    listener,
-	//		dialer:                      dialer,
-	//		serverUpgrader:              peer.NewTLSServerUpgrader(config.TLSConfig, metrics.tlsConnRejected),
-	//		clientUpgrader:              peer.NewTLSClientUpgrader(config.TLSConfig, metrics.tlsConnRejected),
-	//
-	//		onCloseCtx:       onCloseCtx,
-	//		onCloseCtxCancel: cancel,
-	//
-	//		sendFailRateCalculator: safemath.NewSyncAverager(safemath.NewAverager(
-	//			0,
-	//			config.SendFailRateHalflife,
-	//			time.Now(),
-	//		)),
-	//
-	//		trackedIPs:      make(map[ids.NodeID]*trackedIP),
-	//		ipTracker:       ipTracker,
-	//		connectingPeers: peer.NewSet(),
-	//		connectedPeers:  peer.NewSet(),
-	//		router:          router,
-	//	}
+	n := &network{
+		//		config:               config,
+		//		peerConfig:           peerConfig,
+		//		metrics:              metrics,
+		//		outboundMsgThrottler: outboundMsgThrottler,
+		//
+		//		inboundConnUpgradeThrottler: throttling.NewInboundConnUpgradeThrottler(log, config.ThrottlerConfig.InboundConnUpgradeThrottlerConfig),
+		//		listener:                    listener,
+		//		dialer:                      dialer,
+		//		serverUpgrader:              peer.NewTLSServerUpgrader(config.TLSConfig, metrics.tlsConnRejected),
+		//		clientUpgrader:              peer.NewTLSClientUpgrader(config.TLSConfig, metrics.tlsConnRejected),
+		//
+		//		onCloseCtx:       onCloseCtx,
+		//		onCloseCtxCancel: cancel,
+		//
+		//		sendFailRateCalculator: safemath.NewSyncAverager(safemath.NewAverager(
+		//			0,
+		//			config.SendFailRateHalflife,
+		//			time.Now(),
+		//		)),
+		//
+		//		trackedIPs:      make(map[ids.NodeID]*trackedIP),
+		//		ipTracker:       ipTracker,
+		//		connectingPeers: peer.NewSet(),
+		//		connectedPeers:  peer.NewSet(),
+		//		router:          router,
+	}
 	//	n.peerConfig.Network = n
-	//	return n, nil
+	return n, nil
 }
 
 func (n *network) Send(
 	msg message.OutboundMessage,
 	config common.SendConfig,
 	subnetID ids.ID,
-	allower subnets.Allower,
 ) set.Set[ids.NodeID] {
 	//	namedPeers := n.getPeers(config.NodeIDs, subnetID, allower)
 	//	n.peerConfig.Metrics.MultipleSendsFailed(
