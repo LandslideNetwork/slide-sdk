@@ -15,7 +15,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/version"
 	//"github.com/ethereum/go-ethereum/log"
 	//
-	//"github.com/ava-labs/subnet-evm/metrics"
+	//"github.com/ava-labs/subnets-evm/metrics"
 )
 
 const (

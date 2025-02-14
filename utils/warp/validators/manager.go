@@ -3,6 +3,8 @@
 
 package validators
 
+//TODO: get rid of validator manager. we can use validator set directly
+
 import (
 	"errors"
 	"fmt"
@@ -36,18 +38,18 @@ type SetCallbackListener interface {
 	OnValidatorWeightChanged(nodeID ids.NodeID, oldWeight, newWeight uint64)
 }
 
-// Manager holds the validator set of each subnet
+// Manager holds the validator set of each subnets
 type Manager interface {
 	fmt.Stringer
 
-	// Add a new staker to the subnet.
+	// Add a new staker to the subnets.
 	// Returns an error if:
 	// - [weight] is 0
 	// - [nodeID] is already in the validator set
 	// If an error is returned, the set will be unmodified.
 	AddStaker(subnetID ids.ID, nodeID ids.NodeID, pk *bls.PublicKey, txID ids.ID, weight uint64) error
 
-	// AddWeight to an existing staker to the subnet.
+	// AddWeight to an existing staker to the subnets.
 	// Returns an error if:
 	// - [weight] is 0
 	// - [nodeID] is not already in the validator set
@@ -57,25 +59,25 @@ type Manager interface {
 	// However, the next TotalWeight call will return an error.
 	AddWeight(subnetID ids.ID, nodeID ids.NodeID, weight uint64) error
 
-	// GetWeight retrieves the validator weight from the subnet.
+	// GetWeight retrieves the validator weight from the subnets.
 	GetWeight(subnetID ids.ID, nodeID ids.NodeID) uint64
 
-	// GetValidator returns the validator tied to the specified ID in subnet.
+	// GetValidator returns the validator tied to the specified ID in subnets.
 	// If the validator doesn't exist, returns false.
 	GetValidator(subnetID ids.ID, nodeID ids.NodeID) (*Validator, bool)
 
-	// GetValidatorIDs returns the validator IDs in the subnet.
+	// GetValidatorIDs returns the validator IDs in the subnets.
 	GetValidatorIDs(subnetID ids.ID) []ids.NodeID
 
-	// SubsetWeight returns the sum of the weights of the validators in the subnet.
+	// SubsetWeight returns the sum of the weights of the validators in the subnets.
 	// Returns err if subset weight overflows uint64.
 	SubsetWeight(subnetID ids.ID, validatorIDs set.Set[ids.NodeID]) (uint64, error)
 
-	// RemoveWeight from a staker in the subnet. If the staker's weight becomes 0, the staker
-	// will be removed from the subnet set.
+	// RemoveWeight from a staker in the subnets. If the staker's weight becomes 0, the staker
+	// will be removed from the subnets set.
 	// Returns an error if:
 	// - [weight] is 0
-	// - [nodeID] is not already in the subnet set
+	// - [nodeID] is not already in the subnets set
 	// - the weight of the validator would become negative
 	// If an error is returned, the set will be unmodified.
 	RemoveWeight(subnetID ids.ID, nodeID ids.NodeID, weight uint64) error
@@ -83,18 +85,18 @@ type Manager interface {
 	// NumSubnets returns the number of subnets with non-zero weight.
 	NumSubnets() int
 
-	// NumValidators returns the number of validators currently in the subnet.
+	// NumValidators returns the number of validators currently in the subnets.
 	NumValidators(subnetID ids.ID) int
 
-	// TotalWeight returns the cumulative weight of all validators in the subnet.
+	// TotalWeight returns the cumulative weight of all validators in the subnets.
 	// Returns err if total weight overflows uint64.
 	TotalWeight(subnetID ids.ID) (uint64, error)
 
-	// Sample returns a collection of validatorIDs in the subnet, potentially with duplicates.
+	// Sample returns a collection of validatorIDs in the subnets, potentially with duplicates.
 	// If sampling the requested size isn't possible, an error will be returned.
 	Sample(subnetID ids.ID, size int) ([]ids.NodeID, error)
 
-	// Map of the validators in this subnet
+	// Map of the validators in this subnets
 	GetMap(subnetID ids.ID) map[ids.NodeID]*GetValidatorOutput
 
 	// When a validator is added, removed, or its weight changes, the listener
@@ -117,7 +119,7 @@ type manager struct {
 	lock sync.RWMutex
 
 	// Key: Subnet ID
-	// Value: The validators that validate the subnet
+	// Value: The validators that validate the subnets
 	subnetToVdrs      map[ids.ID]*vdrSet
 	callbackListeners []ManagerCallbackListener
 }
@@ -221,8 +223,8 @@ func (m *manager) RemoveWeight(subnetID ids.ID, nodeID ids.NodeID, weight uint64
 	if err := set.RemoveWeight(nodeID, weight); err != nil {
 		return err
 	}
-	// If this was the last validator in the subnet and no callback listeners
-	// are registered, remove the subnet
+	// If this was the last validator in the subnets and no callback listeners
+	// are registered, remove the subnets
 	if set.Len() == 0 && !set.HasCallbackRegistered() {
 		delete(m.subnetToVdrs, subnetID)
 	}

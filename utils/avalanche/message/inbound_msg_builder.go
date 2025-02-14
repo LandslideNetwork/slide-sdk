@@ -16,32 +16,32 @@ import (
 //	"github.com/ava-labs/avalanchego/proto/pb/p2p"
 //	"github.com/ava-labs/avalanchego/utils/timer/mockable"
 //)
-//
-//var _ InboundMsgBuilder = (*inMsgBuilder)(nil)
-//
-//type InboundMsgBuilder interface {
-//	// Parse reads given bytes as InboundMessage
-//	Parse(
-//		bytes []byte,
-//		nodeID ids.NodeID,
-//		onFinishedHandling func(),
-//	) (InboundMessage, error)
-//}
-//
-//type inMsgBuilder struct {
-//	builder *msgBuilder
-//}
-//
-//func newInboundBuilder(builder *msgBuilder) InboundMsgBuilder {
-//	return &inMsgBuilder{
-//		builder: builder,
-//	}
-//}
-//
-//func (b *inMsgBuilder) Parse(bytes []byte, nodeID ids.NodeID, onFinishedHandling func()) (InboundMessage, error) {
-//	return b.builder.parseInbound(bytes, nodeID, onFinishedHandling)
-//}
-//
+
+var _ InboundMsgBuilder = (*inMsgBuilder)(nil)
+
+type InboundMsgBuilder interface {
+	// Parse reads given bytes as InboundMessage
+	Parse(
+		bytes []byte,
+		nodeID ids.NodeID,
+		onFinishedHandling func(),
+	) (InboundMessage, error)
+}
+
+type inMsgBuilder struct {
+	builder *msgBuilder
+}
+
+func newInboundBuilder(builder *msgBuilder) InboundMsgBuilder {
+	return &inMsgBuilder{
+		builder: builder,
+	}
+}
+
+func (b *inMsgBuilder) Parse(bytes []byte, nodeID ids.NodeID, onFinishedHandling func()) (InboundMessage, error) {
+	return b.builder.parseInbound(bytes, nodeID, onFinishedHandling)
+}
+
 //func InboundGetStateSummaryFrontier(
 //	chainID ids.ID,
 //	requestID uint32,
@@ -321,10 +321,10 @@ func InboundAppError(
 //		expiration: mockable.MaxTime,
 //	}
 //}
-//
-//func encodeIDs(ids []ids.ID, result [][]byte) {
-//	for i, id := range ids {
-//		id := id
-//		result[i] = id[:]
-//	}
-//}
+
+func encodeIDs(ids []ids.ID, result [][]byte) {
+	for i, id := range ids {
+		id := id
+		result[i] = id[:]
+	}
+}

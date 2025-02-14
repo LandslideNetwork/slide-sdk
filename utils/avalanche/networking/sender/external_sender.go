@@ -7,6 +7,8 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/subnets"
+
 	//"github.com/ava-labs/avalanchego/subnets"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 )
@@ -18,6 +20,6 @@ type ExternalSender interface {
 		msg message.OutboundMessage,
 		config common.SendConfig,
 		subnetID ids.ID,
-		//allower subnets.Allower,
+		allower subnets.Allower,
 	) set.Set[ids.NodeID]
 }

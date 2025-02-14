@@ -254,7 +254,7 @@ type InitializeRequest struct {
 	DbServerAddr string `protobuf:"bytes,13,opt,name=db_server_addr,json=dbServerAddr,proto3" json:"db_server_addr,omitempty"`
 	// server_addr is the address of the gRPC server which serves
 	// the messenger, keystore, shared memory, blockchain alias,
-	// subnet alias, and appSender services
+	// subnets alias, and appSender services
 	ServerAddr string `protobuf:"bytes,14,opt,name=server_addr,json=serverAddr,proto3" json:"server_addr,omitempty"`
 }
 

@@ -4,6 +4,7 @@
 package message
 
 import (
+	"net/netip"
 	"time"
 
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
@@ -17,25 +18,25 @@ var _ OutboundMsgBuilder = (*outMsgBuilder)(nil)
 // with a reference count of 1. Once the reference count hits 0, the message
 // bytes should no longer be accessed.
 type OutboundMsgBuilder interface {
-	//Handshake(
-	//	networkID uint32,
-	//	myTime uint64,
-	//	ip netip.AddrPort,
-	//	client string,
-	//	major uint32,
-	//	minor uint32,
-	//	patch uint32,
-	//	ipSigningTime uint64,
-	//	ipNodeIDSig []byte,
-	//	ipBLSSig []byte,
-	//	trackedSubnets []ids.ID,
-	//	supportedACPs []uint32,
-	//	objectedACPs []uint32,
-	//	knownPeersFilter []byte,
-	//	knownPeersSalt []byte,
-	//	requestAllSubnetIPs bool,
-	//) (OutboundMessage, error)
-	//
+	Handshake(
+		networkID uint32,
+		myTime uint64,
+		ip netip.AddrPort,
+		client string,
+		major uint32,
+		minor uint32,
+		patch uint32,
+		ipSigningTime uint64,
+		ipNodeIDSig []byte,
+		ipBLSSig []byte,
+		trackedSubnets []ids.ID,
+		supportedACPs []uint32,
+		objectedACPs []uint32,
+		knownPeersFilter []byte,
+		knownPeersSalt []byte,
+		requestAllSubnetIPs bool,
+	) (OutboundMessage, error)
+
 	//GetPeerList(
 	//	knownPeersFilter []byte,
 	//	knownPeersSalt []byte,
@@ -240,62 +241,62 @@ func newOutboundBuilder(compressionType compression.Type, builder *msgBuilder) O
 //		false,
 //	)
 //}
-//
-//func (b *outMsgBuilder) Handshake(
-//	networkID uint32,
-//	myTime uint64,
-//	ip netip.AddrPort,
-//	client string,
-//	major uint32,
-//	minor uint32,
-//	patch uint32,
-//	ipSigningTime uint64,
-//	ipNodeIDSig []byte,
-//	ipBLSSig []byte,
-//	trackedSubnets []ids.ID,
-//	supportedACPs []uint32,
-//	objectedACPs []uint32,
-//	knownPeersFilter []byte,
-//	knownPeersSalt []byte,
-//	requestAllSubnetIPs bool,
-//) (OutboundMessage, error) {
-//	subnetIDBytes := make([][]byte, len(trackedSubnets))
-//	encodeIDs(trackedSubnets, subnetIDBytes)
-//	// TODO: Use .AsSlice() after v1.12.x activates.
-//	addr := ip.Addr().As16()
-//	return b.builder.createOutbound(
-//		&p2p.Message{
-//			Message: &p2p.Message_Handshake{
-//				Handshake: &p2p.Handshake{
-//					NetworkId:      networkID,
-//					MyTime:         myTime,
-//					IpAddr:         addr[:],
-//					IpPort:         uint32(ip.Port()),
-//					IpSigningTime:  ipSigningTime,
-//					IpNodeIdSig:    ipNodeIDSig,
-//					TrackedSubnets: subnetIDBytes,
-//					Client: &p2p.Client{
-//						Name:  client,
-//						Major: major,
-//						Minor: minor,
-//						Patch: patch,
-//					},
-//					SupportedAcps: supportedACPs,
-//					ObjectedAcps:  objectedACPs,
-//					KnownPeers: &p2p.BloomFilter{
-//						Filter: knownPeersFilter,
-//						Salt:   knownPeersSalt,
-//					},
-//					IpBlsSig:   ipBLSSig,
-//					AllSubnets: requestAllSubnetIPs,
-//				},
-//			},
-//		},
-//		compression.TypeNone,
-//		true,
-//	)
-//}
-//
+
+func (b *outMsgBuilder) Handshake(
+	networkID uint32,
+	myTime uint64,
+	ip netip.AddrPort,
+	client string,
+	major uint32,
+	minor uint32,
+	patch uint32,
+	ipSigningTime uint64,
+	ipNodeIDSig []byte,
+	ipBLSSig []byte,
+	trackedSubnets []ids.ID,
+	supportedACPs []uint32,
+	objectedACPs []uint32,
+	knownPeersFilter []byte,
+	knownPeersSalt []byte,
+	requestAllSubnetIPs bool,
+) (OutboundMessage, error) {
+	subnetIDBytes := make([][]byte, len(trackedSubnets))
+	encodeIDs(trackedSubnets, subnetIDBytes)
+	// TODO: Use .AsSlice() after v1.12.x activates.
+	addr := ip.Addr().As16()
+	return b.builder.createOutbound(
+		&p2p.Message{
+			Message: &p2p.Message_Handshake{
+				Handshake: &p2p.Handshake{
+					NetworkId:      networkID,
+					MyTime:         myTime,
+					IpAddr:         addr[:],
+					IpPort:         uint32(ip.Port()),
+					IpSigningTime:  ipSigningTime,
+					IpNodeIdSig:    ipNodeIDSig,
+					TrackedSubnets: subnetIDBytes,
+					Client: &p2p.Client{
+						Name:  client,
+						Major: major,
+						Minor: minor,
+						Patch: patch,
+					},
+					SupportedAcps: supportedACPs,
+					ObjectedAcps:  objectedACPs,
+					KnownPeers: &p2p.BloomFilter{
+						Filter: knownPeersFilter,
+						Salt:   knownPeersSalt,
+					},
+					IpBlsSig:   ipBLSSig,
+					AllSubnets: requestAllSubnetIPs,
+				},
+			},
+		},
+		compression.TypeNone,
+		true,
+	)
+}
+
 //func (b *outMsgBuilder) GetPeerList(
 //	knownPeersFilter []byte,
 //	knownPeersSalt []byte,

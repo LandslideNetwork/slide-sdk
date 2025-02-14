@@ -16,12 +16,12 @@ var _ Creator = (*creator)(nil)
 
 type Creator interface {
 	OutboundMsgBuilder
-	//InboundMsgBuilder
+	InboundMsgBuilder
 }
 
 type creator struct {
 	OutboundMsgBuilder
-	//InboundMsgBuilder
+	InboundMsgBuilder
 }
 
 func NewCreator(
@@ -41,6 +41,6 @@ func NewCreator(
 
 	return &creator{
 		OutboundMsgBuilder: newOutboundBuilder(compressionType, builder),
-		//InboundMsgBuilder:  newInboundBuilder(builder),
+		InboundMsgBuilder:  newInboundBuilder(builder),
 	}, nil
 }

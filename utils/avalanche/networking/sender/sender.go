@@ -147,7 +147,7 @@ func (s *P2PAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.N
 				NodeIDs: nodeIDs,
 			},
 			s.SubnetID,
-			//s.subnet,
+			//s.subnets,
 		)
 	} else {
 		s.logger.Error("failed to build message",
@@ -243,7 +243,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //	failedDueToBench *prometheus.CounterVec // op
 //
 //	engineType p2p.EngineType
-//	subnet     subnets.Subnet
+//	subnets     subnets.Subnet
 //}
 //
 //func New(
@@ -253,7 +253,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //	router router.Router,
 //	timeouts timeout.Manager,
 //	engineType p2p.EngineType,
-//	subnet subnets.Subnet,
+//	subnets subnets.Subnet,
 //	reg prometheus.Registerer,
 //) (common.Sender, error) {
 //	s := &sender{
@@ -270,7 +270,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //			opLabels,
 //		),
 //		engineType: engineType,
-//		subnet:     subnet,
+//		subnets:     subnets,
 //	}
 //	return s, reg.Register(s.failedDueToBench)
 //}
@@ -333,7 +333,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //				NodeIDs: nodeIDs,
 //			},
 //			s.ctx.SubnetID,
-//			s.subnet,
+//			s.subnets,
 //		)
 //	} else {
 //		s.ctx.Log.Error("failed to build message",
@@ -397,7 +397,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //			NodeIDs: nodeIDs,
 //		},
 //		s.ctx.SubnetID,
-//		s.subnet,
+//		s.subnets,
 //	)
 //	if sentTo.Len() == 0 {
 //		if s.ctx.Log.Enabled(logging.Verbo) {
@@ -479,7 +479,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //				NodeIDs: nodeIDs,
 //			},
 //			s.ctx.SubnetID,
-//			s.subnet,
+//			s.subnets,
 //		)
 //	} else {
 //		s.ctx.Log.Error("failed to build message",
@@ -543,7 +543,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //			NodeIDs: nodeIDs,
 //		},
 //		s.ctx.SubnetID,
-//		s.subnet,
+//		s.subnets,
 //	)
 //	if sentTo.Len() == 0 {
 //		s.ctx.Log.Debug("failed to send message",
@@ -614,7 +614,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //				NodeIDs: nodeIDs,
 //			},
 //			s.ctx.SubnetID,
-//			s.subnet,
+//			s.subnets,
 //		)
 //	} else {
 //		s.ctx.Log.Error("failed to build message",
@@ -678,7 +678,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //			NodeIDs: nodeIDs,
 //		},
 //		s.ctx.SubnetID,
-//		s.subnet,
+//		s.subnets,
 //	)
 //	if sentTo.Len() == 0 {
 //		s.ctx.Log.Debug("failed to send message",
@@ -751,7 +751,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //				NodeIDs: nodeIDs,
 //			},
 //			s.ctx.SubnetID,
-//			s.subnet,
+//			s.subnets,
 //		)
 //	} else {
 //		s.ctx.Log.Error("failed to build message",
@@ -811,7 +811,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //			NodeIDs: nodeIDs,
 //		},
 //		s.ctx.SubnetID,
-//		s.subnet,
+//		s.subnets,
 //	)
 //	if sentTo.Len() == 0 {
 //		s.ctx.Log.Debug("failed to send message",
@@ -895,7 +895,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //			NodeIDs: nodeIDs,
 //		},
 //		s.ctx.SubnetID,
-//		s.subnet,
+//		s.subnets,
 //	)
 //	if sentTo.Len() == 0 {
 //		s.ctx.Log.Debug("failed to send message",
@@ -933,7 +933,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //			NodeIDs: nodeIDs,
 //		},
 //		s.ctx.SubnetID,
-//		s.subnet,
+//		s.subnets,
 //	)
 //	if sentTo.Len() == 0 {
 //		s.ctx.Log.Debug("failed to send message",
@@ -1004,7 +1004,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //				NodeIDs: nodeIDs,
 //			},
 //			s.ctx.SubnetID,
-//			s.subnet,
+//			s.subnets,
 //		)
 //	} else {
 //		s.ctx.Log.Error("failed to build message",
@@ -1053,7 +1053,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //			NodeIDs: nodeIDs,
 //		},
 //		s.ctx.SubnetID,
-//		s.subnet,
+//		s.subnets,
 //	)
 //	if sentTo.Len() == 0 {
 //		if s.ctx.Log.Enabled(logging.Verbo) {
@@ -1166,7 +1166,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //				NodeIDs: nodeIDs,
 //			},
 //			s.ctx.SubnetID,
-//			s.subnet,
+//			s.subnets,
 //		)
 //	} else {
 //		s.ctx.Log.Error("failed to build message",
@@ -1301,7 +1301,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //				NodeIDs: nodeIDs,
 //			},
 //			s.ctx.SubnetID,
-//			s.subnet,
+//			s.subnets,
 //		)
 //	} else {
 //		s.ctx.Log.Error("failed to build message",
@@ -1387,7 +1387,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //			NodeIDs: nodeIDs,
 //		},
 //		s.ctx.SubnetID,
-//		s.subnet,
+//		s.subnets,
 //	)
 //	if sentTo.Len() == 0 {
 //		s.ctx.Log.Debug("failed to send message",
@@ -1489,7 +1489,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //				NodeIDs: nodeIDs,
 //			},
 //			s.ctx.SubnetID,
-//			s.subnet,
+//			s.subnets,
 //		)
 //	} else {
 //		s.ctx.Log.Error("failed to build message",
@@ -1574,7 +1574,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //			NodeIDs: nodeIDs,
 //		},
 //		s.ctx.SubnetID,
-//		s.subnet,
+//		s.subnets,
 //	)
 //	if sentTo.Len() == 0 {
 //		if s.ctx.Log.Enabled(logging.Verbo) {
@@ -1639,7 +1639,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //			NodeIDs: set.Of(nodeID),
 //		},
 //		s.ctx.SubnetID,
-//		s.subnet,
+//		s.subnets,
 //	)
 //	if sentTo.Len() == 0 {
 //		if s.ctx.Log.Enabled(logging.Verbo) {
@@ -1686,7 +1686,7 @@ func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConf
 //		outMsg,
 //		config,
 //		s.ctx.SubnetID,
-//		s.subnet,
+//		s.subnets,
 //	)
 //	if sentTo.Len() == 0 {
 //		if s.ctx.Log.Enabled(logging.Verbo) {

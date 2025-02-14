@@ -4,11 +4,16 @@
 package network
 
 import (
+	"context"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/sender"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	safemath "github.com/landslidenetwork/slide-sdk/utils/math"
+	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
+	"github.com/landslidenetwork/slide-sdk/utils/subnets"
+	"sync"
 )
 
 //import (
@@ -123,8 +128,8 @@ type Network interface {
 // If a higher lock (e.g. manuallyTrackedIDsLock) is held when trying to grab a
 // lower lock (e.g. peersLock) a deadlock could occur.
 type network struct {
-	//	config     *Config
-	//	peerConfig *peer.Config
+	config     *Config
+	peerConfig *peer.Config
 	//	metrics    *metrics
 	//
 	//	outboundMsgThrottler throttling.OutboundMsgThrottler
@@ -142,23 +147,23 @@ type network struct {
 	//
 	//	// ensures the close of the network only happens once.
 	//	closeOnce sync.Once
-	//	// Cancelled on close
-	//	onCloseCtx context.Context
+	// Cancelled on close
+	onCloseCtx context.Context
 	//	// Call [onCloseCtxCancel] to cancel [onCloseCtx] during close()
 	//	onCloseCtxCancel context.CancelFunc
-	//
-	//	sendFailRateCalculator safemath.Averager
+
+	sendFailRateCalculator safemath.Averager
 	//
 	//	// Tracks which peers know about which peers
-	//	ipTracker *ipTracker
-	//	peersLock sync.RWMutex
+	ipTracker *ipTracker
+	peersLock sync.RWMutex
 	//	// trackedIPs contains the set of IPs that we are currently attempting to
 	//	// connect to. An entry is added to this set when we first start attempting
 	//	// to connect to the peer. An entry is deleted from this set once we have
 	//	// finished the handshake.
 	//	trackedIPs      map[ids.NodeID]*trackedIP
 	//	connectingPeers peer.Set
-	//	connectedPeers  peer.Set
+	connectedPeers peer.Set
 	//	closing         bool
 	//
 	//	// router is notified about all peer [Connected] and [Disconnected] events
@@ -326,38 +331,37 @@ func (n *network) Send(
 	msg message.OutboundMessage,
 	config common.SendConfig,
 	subnetID ids.ID,
+	allower subnets.Allower,
 ) set.Set[ids.NodeID] {
-	//	namedPeers := n.getPeers(config.NodeIDs, subnetID, allower)
-	//	n.peerConfig.Metrics.MultipleSendsFailed(
-	//		msg.Op(),
-	//		config.NodeIDs.Len()-len(namedPeers),
-	//	)
+	namedPeers := n.getPeers(config.NodeIDs, allower)
+	//n.peerConfig.Metrics.MultipleSendsFailed(
+	//	msg.Op(),
+	//	config.NodeIDs.Len()-len(namedPeers),
+	//)
+
+	var (
+		sampledPeers = n.samplePeers(config, subnetID, allower)
+		sentTo       = set.NewSet[ids.NodeID](len(namedPeers) + len(sampledPeers))
+		now          = n.peerConfig.Clock.Time()
+	)
+
+	// send to peers and update metrics
 	//
-	//	var (
-	//		sampledPeers = n.samplePeers(config, subnetID, allower)
-	//		sentTo       = set.NewSet[ids.NodeID](len(namedPeers) + len(sampledPeers))
-	//		now          = n.peerConfig.Clock.Time()
-	//	)
-	//
-	//	// send to peers and update metrics
-	//	//
-	//	// Note: It is guaranteed that namedPeers and sampledPeers are disjoint.
-	//	for _, peers := range [][]peer.Peer{namedPeers, sampledPeers} {
-	//		for _, peer := range peers {
-	//			if peer.Send(n.onCloseCtx, msg) {
-	//				sentTo.Add(peer.ID())
-	//
-	//				// TODO: move send fail rate calculations into the peer metrics
-	//				// record metrics for success
-	//				n.sendFailRateCalculator.Observe(0, now)
-	//			} else {
-	//				// record metrics for failure
-	//				n.sendFailRateCalculator.Observe(1, now)
-	//			}
-	//		}
-	//	}
-	//	return sentTo
-	sentTo := set.Set[ids.NodeID]{}
+	// Note: It is guaranteed that namedPeers and sampledPeers are disjoint.
+	for _, peers := range [][]peer.Peer{namedPeers, sampledPeers} {
+		for _, peer := range peers {
+			if peer.Send(n.onCloseCtx, msg) {
+				sentTo.Add(peer.ID())
+
+				// TODO: move send fail rate calculations into the peer metrics
+				// record metrics for success
+				n.sendFailRateCalculator.Observe(0, now)
+			} else {
+				// record metrics for failure
+				n.sendFailRateCalculator.Observe(1, now)
+			}
+		}
+	}
 	return sentTo
 }
 
@@ -522,21 +526,21 @@ func (n *network) Send(
 //		n.disconnectedFromConnected(peer, nodeID)
 //	}
 //}
-//
-//func (n *network) KnownPeers() ([]byte, []byte) {
-//	return n.ipTracker.Bloom()
-//}
-//
+
+func (n *network) KnownPeers() ([]byte, []byte) {
+	return n.ipTracker.Bloom()
+}
+
 //// There are 3 types of responses:
 ////
-//// - Respond with subnet IPs tracked by both ourselves and the peer
+//// - Respond with subnets IPs tracked by both ourselves and the peer
 ////   - We do not consider ourself to be a primary network validator
 ////
-//// - Respond with all subnet IPs
+//// - Respond with all subnets IPs
 ////   - The peer requests all peers
 ////   - We believe ourself to be a primary network validator
 ////
-//// - Respond with subnet IPs tracked by the peer
+//// - Respond with subnets IPs tracked by the peer
 ////   - The peer does not request all peers
 ////   - We believe ourself to be a primary network validator
 ////
@@ -566,7 +570,7 @@ func (n *network) Send(
 //		// Return IPs for all subnets.
 //		return getGossipableIPs(
 //			n.ipTracker,
-//			n.ipTracker.subnet,
+//			n.ipTracker.subnets,
 //			allowedSubnets,
 //			peerID,
 //			knownPeers,
@@ -736,96 +740,97 @@ func (n *network) Send(
 //	n.dial(ip.NodeID, tracked)
 //	return nil
 //}
+
+// getPeers returns a slice of connected peers from a set of [nodeIDs].
 //
-//// getPeers returns a slice of connected peers from a set of [nodeIDs].
-////
-////   - [nodeIDs] the IDs of the peers that should be returned if they are
-////     connected.
-////   - [subnetID] the subnetID whose membership should be considered to
-////     determine if the node is a validator.
-////   - [allower] interface that determines if a node is allowed to connect to
-////     the subnet based on its validator status.
-//func (n *network) getPeers(
-//	nodeIDs set.Set[ids.NodeID],
-//	subnetID ids.ID,
-//	allower subnets.Allower,
-//) []peer.Peer {
-//	peers := make([]peer.Peer, 0, nodeIDs.Len())
-//
-//	n.peersLock.RLock()
-//	defer n.peersLock.RUnlock()
-//
-//	for nodeID := range nodeIDs {
-//		peer, ok := n.connectedPeers.GetByID(nodeID)
-//		if !ok {
-//			continue
-//		}
-//
-//		_, areTheyAValidator := n.config.Validators.GetValidator(subnetID, nodeID)
-//		// check if the peer is allowed to connect to the subnet
-//		if !allower.IsAllowed(nodeID, areTheyAValidator) {
-//			continue
-//		}
-//
-//		peers = append(peers, peer)
-//	}
-//
-//	return peers
-//}
-//
-//// samplePeers samples connected peers attempting to align with the number of
-//// requested validators, non-validators, and peers. This function will
-//// explicitly ignore nodeIDs already included in the send config.
-//func (n *network) samplePeers(
-//	config common.SendConfig,
-//	subnetID ids.ID,
-//	allower subnets.Allower,
-//) []peer.Peer {
-//	// As an optimization, if there are fewer validators than
-//	// [numValidatorsToSample], only attempt to sample [numValidatorsToSample]
-//	// validators to potentially avoid iterating over the entire peer set.
-//	numValidatorsToSample := min(config.Validators, n.config.Validators.NumValidators(subnetID))
-//
-//	n.peersLock.RLock()
-//	defer n.peersLock.RUnlock()
-//
-//	return n.connectedPeers.Sample(
-//		numValidatorsToSample+config.NonValidators+config.Peers,
-//		func(p peer.Peer) bool {
-//			// Only return peers that are tracking [subnetID]
-//			if trackedSubnets := p.TrackedSubnets(); !trackedSubnets.Contains(subnetID) {
-//				return false
-//			}
-//
-//			peerID := p.ID()
-//			// if the peer was already explicitly included, don't include in the
-//			// sample
-//			if config.NodeIDs.Contains(peerID) {
-//				return false
-//			}
-//
-//			_, areTheyAValidator := n.config.Validators.GetValidator(subnetID, peerID)
-//			// check if the peer is allowed to connect to the subnet
-//			if !allower.IsAllowed(peerID, areTheyAValidator) {
-//				return false
-//			}
-//
-//			if config.Peers > 0 {
-//				config.Peers--
-//				return true
-//			}
-//
-//			if areTheyAValidator {
-//				numValidatorsToSample--
-//				return numValidatorsToSample >= 0
-//			}
-//
-//			config.NonValidators--
-//			return config.NonValidators >= 0
-//		},
-//	)
-//}
-//
+//   - [nodeIDs] the IDs of the peers that should be returned if they are
+//     connected.
+//   - [subnetID] the subnetID whose membership should be considered to
+//     determine if the node is a validator.
+//   - [allower] interface that determines if a node is allowed to connect to
+//     the subnets based on its validator status.
+func (n *network) getPeers(
+	nodeIDs set.Set[ids.NodeID],
+	// subnetID ids.ID,
+	allower subnets.Allower,
+) []peer.Peer {
+	peers := make([]peer.Peer, 0, nodeIDs.Len())
+
+	n.peersLock.RLock()
+	defer n.peersLock.RUnlock()
+
+	for nodeID := range nodeIDs {
+		peer, ok := n.connectedPeers.GetByID(nodeID)
+		if !ok {
+			continue
+		}
+
+		_, areTheyAValidator := n.config.Validators.GetValidator(ids.Empty, nodeID)
+		// check if the peer is allowed to connect to the subnets
+		if !allower.IsAllowed(nodeID, areTheyAValidator) {
+			continue
+		}
+
+		peers = append(peers, peer)
+	}
+
+	return peers
+}
+
+// samplePeers samples connected peers attempting to align with the number of
+// requested validators, non-validators, and peers. This function will
+// explicitly ignore nodeIDs already included in the send config.
+func (n *network) samplePeers(
+	config common.SendConfig,
+	subnetID ids.ID,
+	allower subnets.Allower,
+) []peer.Peer {
+	// As an optimization, if there are fewer validators than
+	// [numValidatorsToSample], only attempt to sample [numValidatorsToSample]
+	// validators to potentially avoid iterating over the entire peer set.
+	numValidatorsToSample := min(config.Validators, n.config.Validators.NumValidators(subnetID))
+
+	n.peersLock.RLock()
+	defer n.peersLock.RUnlock()
+
+	return n.connectedPeers.Sample(
+		numValidatorsToSample+config.NonValidators+config.Peers,
+		func(p peer.Peer) bool {
+			//TODO: implement if necessary
+			//// Only return peers that are tracking [subnetID]
+			//if trackedSubnets := p.TrackedSubnets(); !trackedSubnets.Contains(subnetID) {
+			//	return false
+			//}
+
+			peerID := p.ID()
+			// if the peer was already explicitly included, don't include in the
+			// sample
+			if config.NodeIDs.Contains(peerID) {
+				return false
+			}
+
+			_, areTheyAValidator := n.config.Validators.GetValidator(subnetID, peerID)
+			// check if the peer is allowed to connect to the subnets
+			if !allower.IsAllowed(peerID, areTheyAValidator) {
+				return false
+			}
+
+			if config.Peers > 0 {
+				config.Peers--
+				return true
+			}
+
+			if areTheyAValidator {
+				numValidatorsToSample--
+				return numValidatorsToSample >= 0
+			}
+
+			config.NonValidators--
+			return config.NonValidators >= 0
+		},
+	)
+}
+
 //func (n *network) disconnectedFromConnecting(nodeID ids.NodeID) {
 //	n.peersLock.Lock()
 //	defer n.peersLock.Unlock()

@@ -19,6 +19,35 @@ var (
 
 type SecretKey = blst.SecretKey
 
+type Signer interface {
+	PublicKey() *PublicKey
+	Sign(msg []byte) *Signature
+	SignProofOfPossession(msg []byte) *Signature
+}
+
+type LocalSigner struct {
+	sk *SecretKey
+}
+
+// NewSecretKey generates a new secret key from the local source of
+// cryptographically secure randomness.
+func NewSigner() (*LocalSigner, error) {
+	var ikm [32]byte
+	_, err := rand.Read(ikm[:])
+	if err != nil {
+		return nil, err
+	}
+	sk := blst.KeyGen(ikm[:])
+	ikm = [32]byte{} // zero out the ikm
+
+	return &LocalSigner{sk: sk}, nil
+}
+
+// ToBytes returns the big-endian format of the secret key.
+func (s *LocalSigner) ToBytes() []byte {
+	return s.sk.Serialize()
+}
+
 // NewSecretKey generates a new secret key from the local source of
 // cryptographically secure randomness.
 func NewSecretKey() (*SecretKey, error) {

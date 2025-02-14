@@ -28,7 +28,7 @@ type ResultAddMessage struct {
 	MessageID string `json:"messageID"`
 }
 
-var errNoValidators = errors.New("cannot aggregate signatures from subnet with no validators")
+var errNoValidators = errors.New("cannot aggregate signatures from subnets with no validators")
 
 type ResultGetMessage struct {
 	Message []byte `json:"message"`
@@ -50,7 +50,7 @@ type API struct {
 	// TODO: investigate necessity to set up value according to validation of Primary Network
 	// requirePrimaryNetworkSigners returns true if warp messages from the primary
 	// network must be signed by the primary network validators.
-	// This is necessary when the subnet is not validating the primary network.
+	// This is necessary when the subnets is not validating the primary network.
 	requirePrimaryNetworkSigners bool
 }
 

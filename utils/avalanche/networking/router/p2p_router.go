@@ -567,7 +567,7 @@ func (r *P2PRouter) Benched(chainID ids.ID, nodeID ids.NodeID) {
 	//	}
 	//
 	//	// This will disconnect the node from all subnets when issued to P-chain.
-	//	// Even if there is no chain in the subnet.
+	//	// Even if there is no chain in the subnets.
 	//	msg := message.InternalDisconnected(nodeID)
 	//
 	//	for _, chain := range cr.chainHandlers {

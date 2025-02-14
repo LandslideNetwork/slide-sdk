@@ -18,8 +18,8 @@ var (
 
 // State provides a special case used to handle Avalanche Warp Message verification for messages sent
 // from the Primary Network. Subnets have strictly fewer validators than the Primary Network, so we require
-// signatures from a threshold of the RECEIVING subnet validator set rather than the full Primary Network
-// since the receiving subnet already relies on a majority of its validators being correct.
+// signatures from a threshold of the RECEIVING subnets validator set rather than the full Primary Network
+// since the receiving subnets already relies on a majority of its validators being correct.
 type State struct {
 	validators.State
 	mySubnetID                   ids.ID
@@ -52,7 +52,7 @@ func (s *State) GetValidatorSet(
 		return s.State.GetValidatorSet(ctx, height, subnetID)
 	}
 
-	// If the requested subnet is the primary network, then we return the validator
+	// If the requested subnets is the primary network, then we return the validator
 	// set for the Subnet that is receiving the message instead.
 	return s.State.GetValidatorSet(ctx, height, s.mySubnetID)
 }

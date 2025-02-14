@@ -24,7 +24,7 @@ type State interface {
 	// GetSubnetID returns the subnetID of the provided chain.
 	GetSubnetID(ctx context.Context, chainID ids.ID) (ids.ID, error)
 
-	// GetValidatorSet returns the validators of the provided subnet at the
+	// GetValidatorSet returns the validators of the provided subnets at the
 	// requested P-chain height.
 	// The returned map should not be modified.
 	GetValidatorSet(
@@ -33,7 +33,7 @@ type State interface {
 		subnetID ids.ID,
 	) (map[ids.NodeID]*GetValidatorOutput, error)
 
-	// GetCurrentValidatorSet returns the current validators of the provided subnet
+	// GetCurrentValidatorSet returns the current validators of the provided subnets
 	// and the current P-Chain height.
 	// Map is keyed by ValidationID.
 	GetCurrentValidatorSet(

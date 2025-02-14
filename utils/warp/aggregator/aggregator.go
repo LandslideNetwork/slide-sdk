@@ -19,7 +19,7 @@ const WarpQuorumDenominator uint64 = 100
 type AggregateSignatureResult struct {
 	// Weight of validators included in the aggregate signature.
 	SignatureWeight uint64
-	// Total weight of all validators in the subnet.
+	// Total weight of all validators in the subnets.
 	TotalWeight uint64
 	// The message with the aggregate signature.
 	Message *warputils.Message

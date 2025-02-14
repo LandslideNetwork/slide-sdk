@@ -13,8 +13,8 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/sender"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/timeout"
+	peer2 "github.com/landslidenetwork/slide-sdk/utils/evm/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/network/p2p"
-	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/aggregator"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 	"math"
@@ -163,7 +163,7 @@ type (
 		warpSigner  warputils.Signer
 		warpService *API
 
-		p2pClient peer.NetworkClient
+		p2pClient peer2.NetworkClient
 
 		clientConn    grpc.ClientConnInterface
 		optClientConn *grpc.ClientConn
@@ -573,8 +573,8 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	network := peer.NewNetwork(vm.Network, appSender, vm.logger, 100)
-	vm.p2pClient = peer.NewNetworkClient(network)
+	network := peer2.NewNetwork(vm.Network, appSender, vm.logger, 100)
+	vm.p2pClient = peer2.NewNetworkClient(network)
 	signatureGetter := aggregator.NewSignatureGetter(vm.p2pClient)
 
 	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, signatureGetter, rpcClients, requirePrimaryNetworkSigners)

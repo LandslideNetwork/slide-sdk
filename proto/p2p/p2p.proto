@@ -25,7 +25,7 @@ message Message {
     // Network messages:
     Ping ping = 11;
     Pong pong = 12;
-    //    Handshake handshake = 13;
+    Handshake handshake = 13;
     //    GetPeerList get_peer_list = 35;
     //    PeerList peer_list = 14;
     //
@@ -72,58 +72,58 @@ message Pong {
   reserved 1, 2; // Until E upgrade is activated.
 }
 
-//// Handshake is the first outbound message sent to a peer when a connection is
-//// established to start the p2p handshake.
-////
-//// Peers must respond to a Handshake message with a PeerList message to allow the
-//// peer to connect to other peers in the network.
-////
-//// Peers should drop connections to peers with incompatible versions.
-//message Handshake {
-//  reserved 5; // Until E upgrade is activated.
-//  // Network the peer is running on (e.g local, testnet, mainnet)
-//  uint32 network_id = 1;
-//  // Unix timestamp when this Handshake message was created
-//  uint64 my_time = 2;
-//  // IP address of the peer
-//  bytes ip_addr = 3;
-//  // IP port of the peer
-//  uint32 ip_port = 4;
-//  // Timestamp of the IP
-//  uint64 ip_signing_time = 6;
-//  // Signature of the peer IP port pair at a provided timestamp with the TLS
-//  // key.
-//  bytes ip_node_id_sig = 7;
-//  // Subnets the peer is tracking
-//  repeated bytes tracked_subnets = 8;
-//  Client client = 9;
-//  repeated uint32 supported_acps = 10;
-//  repeated uint32 objected_acps = 11;
-//  BloomFilter known_peers = 12;
-//  // Signature of the peer IP port pair at a provided timestamp with the BLS
-//  // key.
-//  bytes ip_bls_sig = 13;
-//  // To avoid sending IPs that the client isn't interested in tracking, the
-//  // server expects the client to confirm that it is tracking all subnets.
-//  bool all_subnets = 14;
-//}
+// Handshake is the first outbound message sent to a peer when a connection is
+// established to start the p2p handshake.
 //
-//// Metadata about a peer's P2P client used to determine compatibility
-//message Client {
-//  // Client name (e.g avalanchego)
-//  string name = 1;
-//  // Client semantic version
-//  uint32 major = 2;
-//  uint32 minor = 3;
-//  uint32 patch = 4;
-//}
+// Peers must respond to a Handshake message with a PeerList message to allow the
+// peer to connect to other peers in the network.
 //
-//// BloomFilter with a random salt to prevent consistent hash collisions
-//message BloomFilter {
-//  bytes filter = 1;
-//  bytes salt = 2;
-//}
-//
+// Peers should drop connections to peers with incompatible versions.
+message Handshake {
+  reserved 5; // Until E upgrade is activated.
+  // Network the peer is running on (e.g local, testnet, mainnet)
+  uint32 network_id = 1;
+  // Unix timestamp when this Handshake message was created
+  uint64 my_time = 2;
+  // IP address of the peer
+  bytes ip_addr = 3;
+  // IP port of the peer
+  uint32 ip_port = 4;
+  // Timestamp of the IP
+  uint64 ip_signing_time = 6;
+  // Signature of the peer IP port pair at a provided timestamp with the TLS
+  // key.
+  bytes ip_node_id_sig = 7;
+  // Subnets the peer is tracking
+  repeated bytes tracked_subnets = 8;
+  Client client = 9;
+  repeated uint32 supported_acps = 10;
+  repeated uint32 objected_acps = 11;
+  BloomFilter known_peers = 12;
+  // Signature of the peer IP port pair at a provided timestamp with the BLS
+  // key.
+  bytes ip_bls_sig = 13;
+  // To avoid sending IPs that the client isn't interested in tracking, the
+  // server expects the client to confirm that it is tracking all subnets.
+  bool all_subnets = 14;
+}
+
+// Metadata about a peer's P2P client used to determine compatibility
+message Client {
+  // Client name (e.g avalanchego)
+  string name = 1;
+  // Client semantic version
+  uint32 major = 2;
+  uint32 minor = 3;
+  uint32 patch = 4;
+}
+
+// BloomFilter with a random salt to prevent consistent hash collisions
+message BloomFilter {
+  bytes filter = 1;
+  bytes salt = 2;
+}
+
 //// ClaimedIpPort contains metadata needed to connect to a peer
 //message ClaimedIpPort {
 //  // X509 certificate of the peer
