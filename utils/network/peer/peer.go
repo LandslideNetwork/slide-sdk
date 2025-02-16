@@ -5,16 +5,17 @@ package peer
 
 import (
 	"bufio"
+	"errors"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/wrappers"
 	"io"
+	"sync"
 	"sync/atomic"
 	"time"
 
 	//"bufio"
 	"context"
-	"fmt"
 	"go.uber.org/zap"
 	"net"
 
@@ -61,7 +62,7 @@ const (
 )
 
 var (
-	//errClosed = errors.New("closed")
+	errClosed = errors.New("closed")
 
 	_ Peer = (*peer)(nil)
 
@@ -123,18 +124,18 @@ type Peer interface {
 	//// on this peer's gossip routine. It is not guaranteed that a GetPeerList
 	//// will be sent.
 	//StartSendGetPeerList()
-	//
-	//// StartClose will begin shutting down the peer. It will not block.
-	//StartClose()
-	//
+
+	// StartClose will begin shutting down the peer. It will not block.
+	StartClose()
+
 	//// Closed returns true once the peer has been fully shutdown. It is
 	//// guaranteed that no more messages will be received by this peer once this
 	//// returns true.
 	//Closed() bool
-	//
-	//// AwaitClosed will block until the peer has been fully shutdown. If the
-	//// context is cancelled, then an error will be returned.
-	//AwaitClosed(ctx context.Context) error
+
+	// AwaitClosed will block until the peer has been fully shutdown. If the
+	// context is cancelled, then an error will be returned.
+	AwaitClosed(ctx context.Context) error
 }
 
 type peer struct {
@@ -188,20 +189,20 @@ type peer struct {
 	//// * Is running a compatible version
 	//// Only modified on the connection's reader routine.
 	//finishedHandshake utils.Atomic[bool]
-	//
-	//// onFinishHandshake is closed when the peer finishes the p2p handshake.
-	//onFinishHandshake chan struct{}
+
+	// onFinishHandshake is closed when the peer finishes the p2p handshake.
+	onFinishHandshake chan struct{}
 	//
 	//// numExecuting is the number of goroutines this peer is currently using
 	//numExecuting     int64
-	//startClosingOnce sync.Once
-	//// onClosingCtx is canceled when the peer starts closing
-	//onClosingCtx context.Context
-	//// onClosingCtxCancel cancels onClosingCtx
-	//onClosingCtxCancel func()
-	//
-	//// onClosed is closed when the peer is closed
-	//onClosed chan struct{}
+	startClosingOnce sync.Once
+	// onClosingCtx is canceled when the peer starts closing
+	onClosingCtx context.Context
+	// onClosingCtxCancel cancels onClosingCtx
+	onClosingCtxCancel func()
+
+	// onClosed is closed when the peer is closed
+	onClosed chan struct{}
 
 	// Unix time of the last message sent and received respectively
 	// Must only be accessed atomically
@@ -232,14 +233,11 @@ func Start(
 		messageQueue: messageQueue,
 		//	onFinishHandshake:  make(chan struct{}),
 		//	numExecuting:       3,
-		//	onClosingCtx:       onClosingCtx,
-		//	onClosingCtxCancel: onClosingCtxCancel,
-		//	onClosed:           make(chan struct{}),
+		onClosingCtx:       onClosingCtx,
+		onClosingCtxCancel: onClosingCtxCancel,
+		onClosed:           make(chan struct{}),
 		//	getPeerListChan:    make(chan struct{}, 1),
 	}
-	//TODO: remove logging
-	fmt.Println(onClosingCtx)
-	fmt.Println(onClosingCtxCancel)
 
 	go p.readMessages()
 	go p.writeMessages()
@@ -274,18 +272,18 @@ func (p *peer) ID() ids.NodeID {
 //func (p *peer) Ready() bool {
 //	return p.finishedHandshake.Get()
 //}
-//
-//func (p *peer) AwaitReady(ctx context.Context) error {
-//	select {
-//	case <-p.onFinishHandshake:
-//		return nil
-//	case <-p.onClosed:
-//		return errClosed
-//	case <-ctx.Done():
-//		return ctx.Err()
-//	}
-//}
-//
+
+func (p *peer) AwaitReady(ctx context.Context) error {
+	select {
+	case <-p.onFinishHandshake:
+		return nil
+	case <-p.onClosed:
+		return errClosed
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
 //func (p *peer) Info() Info {
 //	primaryUptime := p.ObservedUptime()
 //
@@ -331,21 +329,21 @@ func (p *peer) Send(ctx context.Context, msg message.OutboundMessage) bool {
 //	default:
 //	}
 //}
-//
-//func (p *peer) StartClose() {
-//	p.startClosingOnce.Do(func() {
-//		if err := p.conn.Close(); err != nil {
-//			p.Log.Debug("failed to close connection",
-//				zap.Stringer("nodeID", p.id),
-//				zap.Error(err),
-//			)
-//		}
-//
-//		p.messageQueue.Close()
-//		p.onClosingCtxCancel()
-//	})
-//}
-//
+
+func (p *peer) StartClose() {
+	p.startClosingOnce.Do(func() {
+		if err := p.conn.Close(); err != nil {
+			p.Log.Debug("failed to close connection",
+				zap.Stringer("nodeID", p.id),
+				zap.Error(err),
+			)
+		}
+
+		p.messageQueue.Close()
+		p.onClosingCtxCancel()
+	})
+}
+
 //func (p *peer) Closed() bool {
 //	select {
 //	case _, ok := <-p.onClosed:
@@ -354,16 +352,16 @@ func (p *peer) Send(ctx context.Context, msg message.OutboundMessage) bool {
 //		return false
 //	}
 //}
-//
-//func (p *peer) AwaitClosed(ctx context.Context) error {
-//	select {
-//	case <-p.onClosed:
-//		return nil
-//	case <-ctx.Done():
-//		return ctx.Err()
-//	}
-//}
-//
+
+func (p *peer) AwaitClosed(ctx context.Context) error {
+	select {
+	case <-p.onClosed:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
 //// close should be called at the end of each goroutine that has been spun up.
 //// When the last goroutine is exiting, the peer will be marked as closed.
 //func (p *peer) close() {

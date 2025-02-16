@@ -11,8 +11,10 @@ import (
 	message2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/timeout"
+	"github.com/landslidenetwork/slide-sdk/utils/subnets"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
+	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
@@ -36,11 +38,12 @@ type P2PAppSender struct {
 	timeouts   timeout.Manager
 	msgCreator message.OutboundMsgBuilder
 	sender     ExternalSender // Actually does the sending over the network
+	allower    subnets.Allower
 	// Counts how many request have failed because the node was benched
 	failedDueToBench *prometheus.CounterVec // op
 }
 
-func New(chainID ids.ID, subnetID ids.ID, nodeID ids.NodeID, logger log.Logger, timeouts timeout.Manager, msgCreator message.OutboundMsgBuilder, externalSender ExternalSender, router router.Router) *P2PAppSender {
+func New(chainID ids.ID, subnetID ids.ID, nodeID ids.NodeID, logger log.Logger, timeouts timeout.Manager, msgCreator message.OutboundMsgBuilder, externalSender ExternalSender, router router.Router, allowedNodes set.Set[ids.NodeID]) *P2PAppSender {
 	return &P2PAppSender{
 		ChainID:    chainID,
 		SubnetID:   subnetID,
@@ -57,6 +60,12 @@ func New(chainID ids.ID, subnetID ids.ID, nodeID ids.NodeID, logger log.Logger, 
 			opLabels,
 		),
 		router: router,
+		allower: subnets.New(nodeID, subnets.Config{
+			AllowedNodes:                allowedNodes,
+			ValidatorOnly:               true,
+			ProposerMinBlockDelay:       time.Second,
+			ProposerNumHistoricalBlocks: 3,
+		}),
 	}
 }
 
@@ -147,6 +156,7 @@ func (s *P2PAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.N
 				NodeIDs: nodeIDs,
 			},
 			s.SubnetID,
+			s.allower,
 			//s.subnets,
 		)
 	} else {

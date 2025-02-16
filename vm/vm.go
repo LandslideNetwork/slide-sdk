@@ -15,6 +15,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/timeout"
 	peer2 "github.com/landslidenetwork/slide-sdk/utils/evm/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/network/p2p"
+	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/aggregator"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 	"math"
@@ -550,7 +551,15 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	if err != nil {
 		return nil, err
 	}
-	appSender := sender.New(chainID, subnetID, nodeID, vm.logger, timeoutManager, msgCreator, externalSender, p2pRouter)
+	allowedNodes := set.Set[ids.NodeID]{}
+	for _, nodeID := range vm.config.P2PAllowedNodes {
+		parsedNodeID, err := ids.NodeIDFromString(nodeID)
+		if err != nil {
+			return nil, err
+		}
+		allowedNodes.Add(parsedNodeID)
+	}
+	appSender := sender.New(chainID, subnetID, nodeID, vm.logger, timeoutManager, msgCreator, externalSender, p2pRouter, allowedNodes)
 
 	//// Passes messages from the avalanche engines to the network
 	//avalancheMessageSender, err := sender.New(

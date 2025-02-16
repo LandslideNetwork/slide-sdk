@@ -33,6 +33,7 @@ type (
 		MaxSubscriptionsPerClient int               `json:"max_subscriptions_per_client"`
 		BLSSecretKey              []byte            `json:"bls_secret_key"`
 		AddressBook               map[string]string `json:"address_book"`
+		P2PAllowedNodes           []string          `json:"p2p_allowed_nodes"`
 	}
 
 	// ConsensusParams contains consensus critical parameters that determine the

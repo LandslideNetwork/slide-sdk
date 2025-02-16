@@ -7,6 +7,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils/hashing"
+	"github.com/landslidenetwork/slide-sdk/utils/staking"
 
 	"github.com/landslidenetwork/slide-sdk/utils"
 )
@@ -72,6 +74,12 @@ func (id NodeID) Compare(other NodeID) int {
 func ToNodeID(bytes []byte) (NodeID, error) {
 	nodeID, err := ToShortID(bytes)
 	return NodeID(nodeID), err
+}
+
+func NodeIDFromCert(cert *staking.Certificate) NodeID {
+	return hashing.ComputeHash160Array(
+		hashing.ComputeHash256(cert.Raw),
+	)
 }
 
 // NodeIDFromString is the inverse of NodeID.String()

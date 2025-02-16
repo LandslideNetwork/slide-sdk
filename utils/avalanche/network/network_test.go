@@ -3,136 +3,106 @@
 
 package network
 
-//
-//import (
-//	"context"
-//	"crypto"
-//	"net/netip"
-//	"sync"
-//	"testing"
-//	"time"
-//
-//	"github.com/prometheus/client_golang/prometheus"
-//	"github.com/stretchr/testify/require"
-//
-//	"github.com/ava-labs/avalanchego/ids"
-//	"github.com/ava-labs/avalanchego/message"
-//	"github.com/ava-labs/avalanchego/network/dialer"
-//	"github.com/ava-labs/avalanchego/network/peer"
-//	"github.com/ava-labs/avalanchego/network/throttling"
-//	"github.com/ava-labs/avalanchego/snow/engine/common"
-//	"github.com/ava-labs/avalanchego/snow/networking/router"
-//	"github.com/ava-labs/avalanchego/snow/networking/tracker"
-//	"github.com/ava-labs/avalanchego/snow/uptime"
-//	"github.com/ava-labs/avalanchego/snow/validators"
-//	"github.com/ava-labs/avalanchego/staking"
-//	"github.com/ava-labs/avalanchego/subnets"
-//	"github.com/ava-labs/avalanchego/upgrade"
-//	"github.com/ava-labs/avalanchego/utils"
-//	"github.com/ava-labs/avalanchego/utils/bloom"
-//	"github.com/ava-labs/avalanchego/utils/constants"
-//	"github.com/ava-labs/avalanchego/utils/crypto/bls"
-//	"github.com/ava-labs/avalanchego/utils/ips"
-//	"github.com/ava-labs/avalanchego/utils/logging"
-//	"github.com/ava-labs/avalanchego/utils/math/meter"
-//	"github.com/ava-labs/avalanchego/utils/resource"
-//	"github.com/ava-labs/avalanchego/utils/set"
-//	"github.com/ava-labs/avalanchego/utils/timer/mockable"
-//	"github.com/ava-labs/avalanchego/utils/units"
-//	"github.com/ava-labs/avalanchego/version"
-//)
-//
-//var (
-//	defaultHealthConfig = HealthConfig{
-//		MinConnectedPeers:            1,
-//		MaxTimeSinceMsgReceived:      time.Minute,
-//		MaxTimeSinceMsgSent:          time.Minute,
-//		MaxPortionSendQueueBytesFull: .9,
-//		MaxSendFailRate:              .1,
-//		SendFailRateHalflife:         time.Second,
-//	}
-//	defaultPeerListGossipConfig = PeerListGossipConfig{
-//		PeerListNumValidatorIPs: 100,
-//		PeerListPullGossipFreq:  time.Second,
-//		PeerListBloomResetFreq:  constants.DefaultNetworkPeerListBloomResetFreq,
-//	}
-//	defaultTimeoutConfig = TimeoutConfig{
-//		PingPongTimeout:      30 * time.Second,
-//		ReadHandshakeTimeout: 15 * time.Second,
-//	}
-//	defaultDelayConfig = DelayConfig{
-//		MaxReconnectDelay:     time.Hour,
-//		InitialReconnectDelay: time.Second,
-//	}
-//	defaultThrottlerConfig = ThrottlerConfig{
-//		InboundConnUpgradeThrottlerConfig: throttling.InboundConnUpgradeThrottlerConfig{
-//			UpgradeCooldown:        time.Second,
-//			MaxRecentConnsUpgraded: 100,
-//		},
-//		InboundMsgThrottlerConfig: throttling.InboundMsgThrottlerConfig{
-//			MsgByteThrottlerConfig: throttling.MsgByteThrottlerConfig{
-//				VdrAllocSize:        1 * units.GiB,
-//				AtLargeAllocSize:    1 * units.GiB,
-//				NodeMaxAtLargeBytes: constants.DefaultMaxMessageSize,
-//			},
-//			BandwidthThrottlerConfig: throttling.BandwidthThrottlerConfig{
-//				RefillRate:   units.MiB,
-//				MaxBurstSize: constants.DefaultMaxMessageSize,
-//			},
-//			CPUThrottlerConfig: throttling.SystemThrottlerConfig{
-//				MaxRecheckDelay: 50 * time.Millisecond,
-//			},
-//			MaxProcessingMsgsPerNode: 100,
-//			DiskThrottlerConfig: throttling.SystemThrottlerConfig{
-//				MaxRecheckDelay: 50 * time.Millisecond,
-//			},
-//		},
-//		OutboundMsgThrottlerConfig: throttling.MsgByteThrottlerConfig{
-//			VdrAllocSize:        1 * units.GiB,
-//			AtLargeAllocSize:    1 * units.GiB,
-//			NodeMaxAtLargeBytes: constants.DefaultMaxMessageSize,
-//		},
-//		MaxInboundConnsPerSec: 100,
-//	}
-//	defaultDialerConfig = dialer.Config{
-//		ThrottleRps:       100,
-//		ConnectionTimeout: time.Second,
-//	}
-//
-//	defaultConfig = Config{
-//		HealthConfig:         defaultHealthConfig,
-//		PeerListGossipConfig: defaultPeerListGossipConfig,
-//		TimeoutConfig:        defaultTimeoutConfig,
-//		DelayConfig:          defaultDelayConfig,
-//		ThrottlerConfig:      defaultThrottlerConfig,
-//
-//		DialerConfig: defaultDialerConfig,
-//
-//		NetworkID:          49463,
-//		MaxClockDifference: time.Minute,
-//		PingFrequency:      constants.DefaultPingFrequency,
-//		AllowPrivateIPs:    true,
-//
-//		CompressionType: constants.DefaultNetworkCompressionType,
-//
-//		UptimeCalculator:  uptime.NewManager(uptime.NewTestState(), &mockable.Clock{}),
-//		UptimeMetricFreq:  30 * time.Second,
-//		UptimeRequirement: .8,
-//
-//		RequireValidatorToConnect: false,
-//
-//		MaximumInboundMessageTimeout: 30 * time.Second,
-//		ResourceTracker:              newDefaultResourceTracker(),
-//		CPUTargeter:                  nil, // Set in init
-//		DiskTargeter:                 nil, // Set in init
-//	}
-//)
-//
-//func init() {
-//	defaultConfig.CPUTargeter = newDefaultTargeter(defaultConfig.ResourceTracker.CPUTracker())
-//	defaultConfig.DiskTargeter = newDefaultTargeter(defaultConfig.ResourceTracker.DiskTracker())
-//}
-//
+import (
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/stretchr/testify/require"
+	"sync"
+	"testing"
+	"time"
+)
+
+var (
+	defaultHealthConfig = HealthConfig{
+		MinConnectedPeers:            1,
+		MaxTimeSinceMsgReceived:      time.Minute,
+		MaxTimeSinceMsgSent:          time.Minute,
+		MaxPortionSendQueueBytesFull: .9,
+		MaxSendFailRate:              .1,
+		SendFailRateHalflife:         time.Second,
+	}
+	//defaultPeerListGossipConfig = PeerListGossipConfig{
+	//	PeerListNumValidatorIPs: 100,
+	//	PeerListPullGossipFreq:  time.Second,
+	//	PeerListBloomResetFreq:  constants.DefaultNetworkPeerListBloomResetFreq,
+	//}
+	//defaultTimeoutConfig = TimeoutConfig{
+	//	PingPongTimeout:      30 * time.Second,
+	//	ReadHandshakeTimeout: 15 * time.Second,
+	//}
+	//defaultDelayConfig = DelayConfig{
+	//	MaxReconnectDelay:     time.Hour,
+	//	InitialReconnectDelay: time.Second,
+	//}
+	//defaultThrottlerConfig = ThrottlerConfig{
+	//	InboundConnUpgradeThrottlerConfig: throttling.InboundConnUpgradeThrottlerConfig{
+	//		UpgradeCooldown:        time.Second,
+	//		MaxRecentConnsUpgraded: 100,
+	//	},
+	//	InboundMsgThrottlerConfig: throttling.InboundMsgThrottlerConfig{
+	//		MsgByteThrottlerConfig: throttling.MsgByteThrottlerConfig{
+	//			VdrAllocSize:        1 * units.GiB,
+	//			AtLargeAllocSize:    1 * units.GiB,
+	//			NodeMaxAtLargeBytes: constants.DefaultMaxMessageSize,
+	//		},
+	//		BandwidthThrottlerConfig: throttling.BandwidthThrottlerConfig{
+	//			RefillRate:   units.MiB,
+	//			MaxBurstSize: constants.DefaultMaxMessageSize,
+	//		},
+	//		CPUThrottlerConfig: throttling.SystemThrottlerConfig{
+	//			MaxRecheckDelay: 50 * time.Millisecond,
+	//		},
+	//		MaxProcessingMsgsPerNode: 100,
+	//		DiskThrottlerConfig: throttling.SystemThrottlerConfig{
+	//			MaxRecheckDelay: 50 * time.Millisecond,
+	//		},
+	//	},
+	//	OutboundMsgThrottlerConfig: throttling.MsgByteThrottlerConfig{
+	//		VdrAllocSize:        1 * units.GiB,
+	//		AtLargeAllocSize:    1 * units.GiB,
+	//		NodeMaxAtLargeBytes: constants.DefaultMaxMessageSize,
+	//	},
+	//	MaxInboundConnsPerSec: 100,
+	//}
+	//defaultDialerConfig = dialer.Config{
+	//	ThrottleRps:       100,
+	//	ConnectionTimeout: time.Second,
+	//}
+
+	defaultConfig = Config{
+		HealthConfig: defaultHealthConfig,
+		//PeerListGossipConfig: defaultPeerListGossipConfig,
+		//TimeoutConfig:        defaultTimeoutConfig,
+		//DelayConfig:          defaultDelayConfig,
+		//ThrottlerConfig:      defaultThrottlerConfig,
+		//
+		//DialerConfig: defaultDialerConfig,
+		//
+		//NetworkID:          49463,
+		//MaxClockDifference: time.Minute,
+		//PingFrequency:      constants.DefaultPingFrequency,
+		//AllowPrivateIPs:    true,
+		//
+		//CompressionType: constants.DefaultNetworkCompressionType,
+		//
+		//UptimeCalculator:  uptime.NewManager(uptime.NewTestState(), &mockable.Clock{}),
+		//UptimeMetricFreq:  30 * time.Second,
+		//UptimeRequirement: .8,
+		//
+		//RequireValidatorToConnect: false,
+		//
+		//MaximumInboundMessageTimeout: 30 * time.Second,
+		//ResourceTracker:              newDefaultResourceTracker(),
+		//CPUTargeter:                  nil, // Set in init
+		//DiskTargeter:                 nil, // Set in init
+	}
+)
+
+func init() {
+	//defaultConfig.CPUTargeter = newDefaultTargeter(defaultConfig.ResourceTracker.CPUTracker())
+	//defaultConfig.DiskTargeter = newDefaultTargeter(defaultConfig.ResourceTracker.DiskTracker())
+}
+
 //func newDefaultTargeter(t tracker.Tracker) tracker.Targeter {
 //	return tracker.NewTargeter(
 //		logging.NoLog{},
@@ -158,41 +128,44 @@ package network
 //	}
 //	return tracker
 //}
-//
-//func newTestNetwork(t *testing.T, count int) (*testDialer, []*testListener, []ids.NodeID, []*Config) {
-//	var (
-//		dialer    = newTestDialer()
-//		listeners = make([]*testListener, count)
-//		nodeIDs   = make([]ids.NodeID, count)
-//		configs   = make([]*Config, count)
-//	)
-//	for i := 0; i < count; i++ {
-//		ip, listener := dialer.NewListener()
-//
-//		tlsCert, err := staking.NewTLSCert()
-//		require.NoError(t, err)
-//
-//		cert, err := staking.ParseCertificate(tlsCert.Leaf.Raw)
-//		require.NoError(t, err)
-//		nodeID := ids.NodeIDFromCert(cert)
-//
-//		blsKey, err := bls.NewSigner()
-//		require.NoError(t, err)
-//
-//		config := defaultConfig
-//		config.TLSConfig = peer.TLSConfig(*tlsCert, nil)
-//		config.MyNodeID = nodeID
-//		config.MyIPPort = utils.NewAtomic(ip)
-//		config.TLSKey = tlsCert.PrivateKey.(crypto.Signer)
-//		config.BLSKey = blsKey
-//
-//		listeners[i] = listener
-//		nodeIDs[i] = nodeID
-//		configs[i] = &config
-//	}
-//	return dialer, listeners, nodeIDs, configs
-//}
-//
+
+func newTestNetwork(t *testing.T, count int) (
+	//*testDialer, []*testListener,
+	[]ids.NodeID, []*Config) {
+	var (
+		//dialer    = newTestDialer()
+		//listeners = make([]*testListener, count)
+		nodeIDs = make([]ids.NodeID, count)
+		configs = make([]*Config, count)
+	)
+	for i := 0; i < count; i++ {
+		//ip, listener := dialer.NewListener()
+		//
+		//tlsCert, err := staking.NewTLSCert()
+		//require.NoError(t, err)
+
+		//cert, err := staking.ParseCertificate(tlsCert.Leaf.Raw)
+		//require.NoError(t, err)
+		//nodeID := ids.NodeIDFromCert(cert)
+
+		//blsKey, err := bls.NewSigner()
+		//require.NoError(t, err)
+
+		config := defaultConfig
+		//config.TLSConfig = peer.TLSConfig(*tlsCert, nil)
+		//config.MyNodeID = nodeID
+		//config.MyIPPort = utils.NewAtomic(ip)
+		//config.TLSKey = tlsCert.PrivateKey.(crypto.Signer)
+		//config.BLSKey = blsKey
+
+		//listeners[i] = listener
+		//nodeIDs[i] = nodeID
+		configs[i] = &config
+	}
+	//return dialer, listeners, nodeIDs, configs
+	return nodeIDs, configs
+}
+
 //func newMessageCreator(t *testing.T) message.Creator {
 //	t.Helper()
 //
@@ -206,109 +179,109 @@ package network
 //
 //	return mc
 //}
-//
-//func newFullyConnectedTestNetwork(t *testing.T, handlers []router.InboundHandler) ([]ids.NodeID, []*network, *sync.WaitGroup) {
-//	require := require.New(t)
-//
-//	dialer, listeners, nodeIDs, configs := newTestNetwork(t, len(handlers))
-//
-//	var (
-//		networks = make([]*network, len(configs))
-//
-//		globalLock     sync.Mutex
-//		numConnected   int
-//		allConnected   bool
-//		onAllConnected = make(chan struct{})
-//	)
-//	for i, config := range configs {
-//		msgCreator := newMessageCreator(t)
-//		registry := prometheus.NewRegistry()
-//
-//		beacons := validators.NewManager()
-//		require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
-//
-//		vdrs := validators.NewManager()
-//		for _, nodeID := range nodeIDs {
-//			require.NoError(vdrs.AddStaker(constants.PrimaryNetworkID, nodeID, nil, ids.GenerateTestID(), 1))
-//		}
-//
-//		config := config
-//
-//		config.Beacons = beacons
-//		config.Validators = vdrs
-//
-//		var connected set.Set[ids.NodeID]
-//		net, err := NewNetwork(
-//			config,
-//			upgrade.InitiallyActiveTime,
-//			msgCreator,
-//			registry,
-//			logging.NoLog{},
-//			listeners[i],
-//			dialer,
-//			&testHandler{
-//				InboundHandler: handlers[i],
-//				ConnectedF: func(nodeID ids.NodeID, _ *version.Application, _ ids.ID) {
-//					t.Logf("%s connected to %s", config.MyNodeID, nodeID)
-//
-//					globalLock.Lock()
-//					defer globalLock.Unlock()
-//
-//					require.False(connected.Contains(nodeID))
-//					connected.Add(nodeID)
-//					numConnected++
-//
-//					if !allConnected && numConnected == len(nodeIDs)*(len(nodeIDs)-1) {
-//						allConnected = true
-//						close(onAllConnected)
-//					}
-//				},
-//				DisconnectedF: func(nodeID ids.NodeID) {
-//					t.Logf("%s disconnected from %s", config.MyNodeID, nodeID)
-//
-//					globalLock.Lock()
-//					defer globalLock.Unlock()
-//
-//					require.True(connected.Contains(nodeID))
-//					connected.Remove(nodeID)
-//					numConnected--
-//				},
-//			},
-//		)
-//		require.NoError(err)
-//		networks[i] = net.(*network)
-//	}
-//
-//	wg := sync.WaitGroup{}
-//	wg.Add(len(networks))
-//	for i, net := range networks {
-//		if i != 0 {
-//			config := configs[0]
-//			net.ManuallyTrack(config.MyNodeID, config.MyIPPort.Get())
-//		}
-//
-//		go func(net Network) {
-//			defer wg.Done()
-//
-//			require.NoError(net.Dispatch())
-//		}(net)
-//	}
-//
-//	if len(networks) > 1 {
-//		<-onAllConnected
-//	}
-//
-//	return nodeIDs, networks, &wg
-//}
-//
-//func TestNewNetwork(t *testing.T) {
-//	_, networks, wg := newFullyConnectedTestNetwork(t, []router.InboundHandler{nil, nil, nil})
-//	for _, net := range networks {
-//		net.StartClose()
-//	}
-//	wg.Wait()
-//}
-//
+
+func newFullyConnectedTestNetwork(t *testing.T, handlers []router.InboundHandler) ([]ids.NodeID, []*network, *sync.WaitGroup) {
+	require := require.New(t)
+
+	dialer, listeners, nodeIDs, configs := newTestNetwork(t, len(handlers))
+
+	var (
+		networks = make([]*network, len(configs))
+
+		globalLock     sync.Mutex
+		numConnected   int
+		allConnected   bool
+		onAllConnected = make(chan struct{})
+	)
+	for i, config := range configs {
+		////msgCreator := newMessageCreator(t)
+		//registry := prometheus.NewRegistry()
+		//
+		//beacons := validators.NewManager()
+		//require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
+		//
+		//vdrs := validators.NewManager()
+		//for _, nodeID := range nodeIDs {
+		//	require.NoError(vdrs.AddStaker(constants.PrimaryNetworkID, nodeID, nil, ids.GenerateTestID(), 1))
+		//}
+
+		//config := config
+
+		//config.Beacons = beacons
+		//config.Validators = vdrs
+		//
+		//var connected set.Set[ids.NodeID]
+		net, err := NewNetwork(
+		//config,
+		//upgrade.InitiallyActiveTime,
+		//msgCreator,
+		//registry,
+		//logging.NoLog{},
+		//listeners[i],
+		//dialer,
+		//&testHandler{
+		//	InboundHandler: handlers[i],
+		//	ConnectedF: func(nodeID ids.NodeID, _ *version.Application, _ ids.ID) {
+		//		t.Logf("%s connected to %s", config.MyNodeID, nodeID)
+		//
+		//		globalLock.Lock()
+		//		defer globalLock.Unlock()
+		//
+		//		require.False(connected.Contains(nodeID))
+		//		connected.Add(nodeID)
+		//		numConnected++
+		//
+		//		if !allConnected && numConnected == len(nodeIDs)*(len(nodeIDs)-1) {
+		//			allConnected = true
+		//			close(onAllConnected)
+		//		}
+		//	},
+		//	DisconnectedF: func(nodeID ids.NodeID) {
+		//		t.Logf("%s disconnected from %s", config.MyNodeID, nodeID)
+		//
+		//		globalLock.Lock()
+		//		defer globalLock.Unlock()
+		//
+		//		require.True(connected.Contains(nodeID))
+		//		connected.Remove(nodeID)
+		//		numConnected--
+		//	},
+		//},
+		)
+		require.NoError(err)
+		networks[i] = net.(*network)
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(networks))
+	for i, net := range networks {
+		if i != 0 {
+			config := configs[0]
+			net.ManuallyTrack(config.MyNodeID, config.MyIPPort.Get())
+		}
+
+		go func(net Network) {
+			defer wg.Done()
+
+			require.NoError(net.Dispatch())
+		}(net)
+	}
+
+	if len(networks) > 1 {
+		<-onAllConnected
+	}
+
+	return nodeIDs, networks, &wg
+}
+
+func TestNewNetwork(t *testing.T) {
+	_, networks, wg := newFullyConnectedTestNetwork(t, []router.InboundHandler{nil, nil, nil})
+	for _, net := range networks {
+		net.StartClose()
+	}
+	wg.Wait()
+}
+
 //func TestSend(t *testing.T) {
 //	require := require.New(t)
 //

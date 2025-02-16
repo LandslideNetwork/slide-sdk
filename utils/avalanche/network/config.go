@@ -4,6 +4,8 @@
 package network
 
 import (
+	"crypto/tls"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 	"time"
 )
@@ -86,7 +88,7 @@ type DelayConfig struct {
 type Config struct {
 	HealthConfig `json:"healthConfig"`
 	//PeerListGossipConfig `json:"peerListGossipConfig"`
-	//TimeoutConfig        `json:"timeoutConfigs"`
+	TimeoutConfig `json:"timeoutConfigs"`
 	//DelayConfig          `json:"delayConfig"`
 	//ThrottlerConfig      ThrottlerConfig `json:"throttlerConfig"`
 	//
@@ -94,11 +96,11 @@ type Config struct {
 	//ProxyReadHeaderTimeout time.Duration `json:"proxyReadHeaderTimeout"`
 	//
 	////DialerConfig dialer.Config `json:"dialerConfig"`
-	//TLSConfig    *tls.Config   `json:"-"`
-	//
+	TLSConfig *tls.Config `json:"-"`
+
 	//TLSKeyLogFile string `json:"tlsKeyLogFile"`
-	//
-	//MyNodeID           ids.NodeID                    `json:"myNodeID"`
+
+	MyNodeID ids.NodeID `json:"myNodeID"`
 	////MyIPPort           *utils.Atomic[netip.AddrPort] `json:"myIP"`
 	////NetworkID          uint32                        `json:"networkID"`
 	////MaxClockDifference time.Duration                 `json:"maxClockDifference"`
@@ -134,12 +136,12 @@ type Config struct {
 	//// UptimeRequirement is the fraction of time a validator must be online and
 	//// responsive for us to vote that they should receive a staking reward.
 	//UptimeRequirement float64 `json:"-"`
-	//
-	//// RequireValidatorToConnect require that all connections must have at least
-	//// one validator between the 2 peers. This can be useful to enable if the
-	//// node wants to connect to the minimum number of nodes without impacting
-	//// the network negatively.
-	//RequireValidatorToConnect bool `json:"requireValidatorToConnect"`
+
+	// RequireValidatorToConnect require that all connections must have at least
+	// one validator between the 2 peers. This can be useful to enable if the
+	// node wants to connect to the minimum number of nodes without impacting
+	// the network negatively.
+	RequireValidatorToConnect bool `json:"requireValidatorToConnect"`
 	//
 	//// MaximumInboundMessageTimeout is the maximum deadline duration in a
 	//// message. Messages sent by clients setting values higher than this value

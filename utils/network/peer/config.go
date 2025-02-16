@@ -4,6 +4,7 @@
 package peer
 
 import (
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
@@ -21,8 +22,8 @@ type Config struct {
 	Clock           mockable.Clock
 	//Metrics         *Metrics
 	MessageCreator message.Creator
-	//
-	//Log                  logging.Logger
+
+	Log log.Logger
 	//InboundMsgThrottler  throttling.InboundMsgThrottler
 	Network Network
 	//Router               router.InboundHandler
@@ -34,8 +35,8 @@ type Config struct {
 	Validators validators.Manager
 	NetworkID  uint32
 	//PingFrequency      time.Duration
-	PongTimeout time.Duration
-	//MaxClockDifference time.Duration
+	PongTimeout        time.Duration
+	MaxClockDifference time.Duration
 
 	SupportedACPs []uint32
 	ObjectedACPs  []uint32
