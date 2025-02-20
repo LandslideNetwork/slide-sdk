@@ -4,9 +4,13 @@
 package network
 
 import (
+	"crypto"
 	"crypto/tls"
+	"github.com/landslidenetwork/slide-sdk/utils"
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
+	"net/netip"
 	"time"
 )
 
@@ -89,7 +93,7 @@ type Config struct {
 	HealthConfig `json:"healthConfig"`
 	//PeerListGossipConfig `json:"peerListGossipConfig"`
 	TimeoutConfig `json:"timeoutConfigs"`
-	//DelayConfig          `json:"delayConfig"`
+	DelayConfig   `json:"delayConfig"`
 	//ThrottlerConfig      ThrottlerConfig `json:"throttlerConfig"`
 	//
 	//ProxyEnabled           bool          `json:"proxyEnabled"`
@@ -100,12 +104,12 @@ type Config struct {
 
 	//TLSKeyLogFile string `json:"tlsKeyLogFile"`
 
-	MyNodeID ids.NodeID `json:"myNodeID"`
-	////MyIPPort           *utils.Atomic[netip.AddrPort] `json:"myIP"`
+	MyNodeID ids.NodeID                    `json:"myNodeID"`
+	MyIPPort *utils.Atomic[netip.AddrPort] `json:"myIP"`
 	////NetworkID          uint32                        `json:"networkID"`
 	////MaxClockDifference time.Duration                 `json:"maxClockDifference"`
 	////PingFrequency      time.Duration                 `json:"pingFrequency"`
-	////AllowPrivateIPs    bool                          `json:"allowPrivateIPs"`
+	AllowPrivateIPs bool `json:"allowPrivateIPs"`
 	////
 	////SupportedACPs set.Set[uint32] `json:"supportedACPs"`
 	////ObjectedACPs  set.Set[uint32] `json:"objectedACPs"`
@@ -114,10 +118,10 @@ type Config struct {
 	////// Assumes all peers support this compression type.
 	////CompressionType compression.Type `json:"compressionType"`
 	////
-	////// TLSKey is this node's TLS key that is used to sign IPs.
-	////TLSKey crypto.Signer `json:"-"`
-	////// BLSKey is this node's BLS key that is used to sign IPs.
-	////BLSKey bls.Signer `json:"-"`
+	// TLSKey is this node's TLS key that is used to sign IPs.
+	TLSKey crypto.Signer `json:"-"`
+	// BLSKey is this node's BLS key that is used to sign IPs.
+	BLSKey bls.Signer `json:"-"`
 	////
 	////// TrackedSubnets of the node.
 	////// It must not include the primary network ID.

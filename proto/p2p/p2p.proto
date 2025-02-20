@@ -26,8 +26,8 @@ message Message {
     Ping ping = 11;
     Pong pong = 12;
     Handshake handshake = 13;
-    //    GetPeerList get_peer_list = 35;
-    //    PeerList peer_list = 14;
+    GetPeerList get_peer_list = 35;
+    PeerList peer_list = 14;
     //
     //    // State-sync messages:
     //    GetStateSummaryFrontier get_state_summary_frontier = 15;
@@ -124,46 +124,46 @@ message BloomFilter {
   bytes salt = 2;
 }
 
-//// ClaimedIpPort contains metadata needed to connect to a peer
-//message ClaimedIpPort {
-//  // X509 certificate of the peer
-//  bytes x509_certificate = 1;
-//  // IP address of the peer
-//  bytes ip_addr = 2;
-//  // IP port of the peer
-//  uint32 ip_port = 3;
-//  // Timestamp of the IP address + port pair
-//  uint64 timestamp = 4;
-//  // Signature of the IP port pair at a provided timestamp
-//  bytes signature = 5;
-//  // P-Chain transaction that added this peer to the validator set
-//  bytes tx_id = 6;
-//}
+// ClaimedIpPort contains metadata needed to connect to a peer
+message ClaimedIpPort {
+  // X509 certificate of the peer
+  bytes x509_certificate = 1;
+  // IP address of the peer
+  bytes ip_addr = 2;
+  // IP port of the peer
+  uint32 ip_port = 3;
+  // Timestamp of the IP address + port pair
+  uint64 timestamp = 4;
+  // Signature of the IP port pair at a provided timestamp
+  bytes signature = 5;
+  // P-Chain transaction that added this peer to the validator set
+  bytes tx_id = 6;
+}
+
+// GetPeerList contains a bloom filter of the currently known validator IPs.
 //
-//// GetPeerList contains a bloom filter of the currently known validator IPs.
-////
-//// GetPeerList must not be responded to until finishing the handshake. After the
-//// handshake is completed, GetPeerlist messages should be responded to with a
-//// Peerlist message containing validators that are not present in the bloom
-//// filter.
-//message GetPeerList {
-//  BloomFilter known_peers = 1;
-//  bool all_subnets = 2;
-//}
+// GetPeerList must not be responded to until finishing the handshake. After the
+// handshake is completed, GetPeerlist messages should be responded to with a
+// Peerlist message containing validators that are not present in the bloom
+// filter.
+message GetPeerList {
+  BloomFilter known_peers = 1;
+  bool all_subnets = 2;
+}
+
+// PeerList contains network-level metadata for a set of validators.
 //
-//// PeerList contains network-level metadata for a set of validators.
-////
-//// PeerList must be sent in response to an inbound Handshake message from a
-//// remote peer a peer wants to connect to. Once a PeerList is received after
-//// a Handshake message, the p2p handshake is complete and the connection is
-//// established.
-////
-//// PeerList should be sent in response to a GetPeerlist message if the handshake
-//// has been completed.
-//message PeerList {
-//  repeated ClaimedIpPort claimed_ip_ports = 1;
-//}
+// PeerList must be sent in response to an inbound Handshake message from a
+// remote peer a peer wants to connect to. Once a PeerList is received after
+// a Handshake message, the p2p handshake is complete and the connection is
+// established.
 //
+// PeerList should be sent in response to a GetPeerlist message if the handshake
+// has been completed.
+message PeerList {
+  repeated ClaimedIpPort claimed_ip_ports = 1;
+}
+
 //// GetStateSummaryFrontier requests a peer's most recently accepted state
 //// summary
 //message GetStateSummaryFrontier {

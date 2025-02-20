@@ -4,8 +4,20 @@
 package network
 
 import (
+	"crypto"
+	"github.com/cometbft/cometbft/libs/log"
+	"github.com/landslidenetwork/slide-sdk/utils"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
+	"github.com/landslidenetwork/slide-sdk/utils/set"
+	"github.com/landslidenetwork/slide-sdk/utils/staking"
+	"github.com/landslidenetwork/slide-sdk/utils/version"
+	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 	"sync"
 	"testing"
@@ -26,14 +38,14 @@ var (
 	//	PeerListPullGossipFreq:  time.Second,
 	//	PeerListBloomResetFreq:  constants.DefaultNetworkPeerListBloomResetFreq,
 	//}
-	//defaultTimeoutConfig = TimeoutConfig{
-	//	PingPongTimeout:      30 * time.Second,
-	//	ReadHandshakeTimeout: 15 * time.Second,
-	//}
-	//defaultDelayConfig = DelayConfig{
-	//	MaxReconnectDelay:     time.Hour,
-	//	InitialReconnectDelay: time.Second,
-	//}
+	defaultTimeoutConfig = TimeoutConfig{
+		PingPongTimeout:      30 * time.Second,
+		ReadHandshakeTimeout: 15 * time.Second,
+	}
+	defaultDelayConfig = DelayConfig{
+		MaxReconnectDelay:     time.Hour,
+		InitialReconnectDelay: time.Second,
+	}
 	//defaultThrottlerConfig = ThrottlerConfig{
 	//	InboundConnUpgradeThrottlerConfig: throttling.InboundConnUpgradeThrottlerConfig{
 	//		UpgradeCooldown:        time.Second,
@@ -72,8 +84,8 @@ var (
 	defaultConfig = Config{
 		HealthConfig: defaultHealthConfig,
 		//PeerListGossipConfig: defaultPeerListGossipConfig,
-		//TimeoutConfig:        defaultTimeoutConfig,
-		//DelayConfig:          defaultDelayConfig,
+		TimeoutConfig: defaultTimeoutConfig,
+		DelayConfig:   defaultDelayConfig,
 		//ThrottlerConfig:      defaultThrottlerConfig,
 		//
 		//DialerConfig: defaultDialerConfig,
@@ -81,16 +93,16 @@ var (
 		//NetworkID:          49463,
 		//MaxClockDifference: time.Minute,
 		//PingFrequency:      constants.DefaultPingFrequency,
-		//AllowPrivateIPs:    true,
-		//
+		AllowPrivateIPs: true,
+
 		//CompressionType: constants.DefaultNetworkCompressionType,
 		//
 		//UptimeCalculator:  uptime.NewManager(uptime.NewTestState(), &mockable.Clock{}),
 		//UptimeMetricFreq:  30 * time.Second,
 		//UptimeRequirement: .8,
-		//
-		//RequireValidatorToConnect: false,
-		//
+
+		RequireValidatorToConnect: false,
+
 		//MaximumInboundMessageTimeout: 30 * time.Second,
 		//ResourceTracker:              newDefaultResourceTracker(),
 		//CPUTargeter:                  nil, // Set in init
@@ -130,60 +142,60 @@ func init() {
 //}
 
 func newTestNetwork(t *testing.T, count int) (
-	//*testDialer, []*testListener,
+	*testDialer, []*testListener,
 	[]ids.NodeID, []*Config) {
 	var (
-		//dialer    = newTestDialer()
-		//listeners = make([]*testListener, count)
-		nodeIDs = make([]ids.NodeID, count)
-		configs = make([]*Config, count)
+		dialer    = newTestDialer()
+		listeners = make([]*testListener, count)
+		nodeIDs   = make([]ids.NodeID, count)
+		configs   = make([]*Config, count)
 	)
 	for i := 0; i < count; i++ {
-		//ip, listener := dialer.NewListener()
-		//
-		//tlsCert, err := staking.NewTLSCert()
-		//require.NoError(t, err)
+		ip, listener := dialer.NewListener()
 
-		//cert, err := staking.ParseCertificate(tlsCert.Leaf.Raw)
-		//require.NoError(t, err)
-		//nodeID := ids.NodeIDFromCert(cert)
+		tlsCert, err := staking.NewTLSCert()
+		require.NoError(t, err)
 
-		//blsKey, err := bls.NewSigner()
-		//require.NoError(t, err)
+		cert, err := staking.ParseCertificate(tlsCert.Leaf.Raw)
+		require.NoError(t, err)
+		nodeID := ids.NodeIDFromCert(cert)
+
+		blsKey, err := bls.NewSigner()
+		require.NoError(t, err)
 
 		config := defaultConfig
-		//config.TLSConfig = peer.TLSConfig(*tlsCert, nil)
-		//config.MyNodeID = nodeID
-		//config.MyIPPort = utils.NewAtomic(ip)
-		//config.TLSKey = tlsCert.PrivateKey.(crypto.Signer)
-		//config.BLSKey = blsKey
+		config.TLSConfig = peer.TLSConfig(*tlsCert, nil)
+		config.MyNodeID = nodeID
+		config.MyIPPort = utils.NewAtomic(ip)
+		config.TLSKey = tlsCert.PrivateKey.(crypto.Signer)
+		config.BLSKey = blsKey
 
-		//listeners[i] = listener
-		//nodeIDs[i] = nodeID
+		listeners[i] = listener
+		nodeIDs[i] = nodeID
 		configs[i] = &config
 	}
-	//return dialer, listeners, nodeIDs, configs
-	return nodeIDs, configs
+	return dialer, listeners, nodeIDs, configs
 }
 
-//func newMessageCreator(t *testing.T) message.Creator {
-//	t.Helper()
-//
-//	mc, err := message.NewCreator(
-//		logging.NoLog{},
-//		prometheus.NewRegistry(),
-//		constants.DefaultNetworkCompressionType,
-//		10*time.Second,
-//	)
-//	require.NoError(t, err)
-//
-//	return mc
-//}
+func newMessageCreator(t *testing.T) message.Creator {
+	t.Helper()
+
+	mc, err := message.NewCreator(
+		log.NewNopLogger(),
+		prometheus.NewRegistry(),
+		constants.DefaultNetworkCompressionType,
+		10*time.Second,
+	)
+	require.NoError(t, err)
+
+	return mc
+}
 
 func newFullyConnectedTestNetwork(t *testing.T, handlers []router.InboundHandler) ([]ids.NodeID, []*network, *sync.WaitGroup) {
 	require := require.New(t)
 
 	dialer, listeners, nodeIDs, configs := newTestNetwork(t, len(handlers))
+	//_, _, nodeIDs, configs := newTestNetwork(t, len(handlers))
 
 	var (
 		networks = make([]*network, len(configs))
@@ -194,59 +206,64 @@ func newFullyConnectedTestNetwork(t *testing.T, handlers []router.InboundHandler
 		onAllConnected = make(chan struct{})
 	)
 	for i, config := range configs {
-		////msgCreator := newMessageCreator(t)
+		msgCreator := newMessageCreator(t)
 		//registry := prometheus.NewRegistry()
-		//
-		//beacons := validators.NewManager()
-		//require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
-		//
-		//vdrs := validators.NewManager()
-		//for _, nodeID := range nodeIDs {
-		//	require.NoError(vdrs.AddStaker(constants.PrimaryNetworkID, nodeID, nil, ids.GenerateTestID(), 1))
-		//}
 
-		//config := config
+		beacons := validators.NewManager()
+		require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
+
+		vdrs := validators.NewManager()
+		for _, nodeID := range nodeIDs {
+			require.NoError(vdrs.AddStaker(constants.PrimaryNetworkID, nodeID, nil, ids.GenerateTestID(), 1))
+		}
+
+		config := config
 
 		//config.Beacons = beacons
-		//config.Validators = vdrs
-		//
-		//var connected set.Set[ids.NodeID]
+		config.Validators = vdrs
+
+		var connected set.Set[ids.NodeID]
 		net, err := NewNetwork(
-		//config,
-		//upgrade.InitiallyActiveTime,
-		//msgCreator,
-		//registry,
-		//logging.NoLog{},
-		//listeners[i],
-		//dialer,
-		//&testHandler{
-		//	InboundHandler: handlers[i],
-		//	ConnectedF: func(nodeID ids.NodeID, _ *version.Application, _ ids.ID) {
-		//		t.Logf("%s connected to %s", config.MyNodeID, nodeID)
-		//
-		//		globalLock.Lock()
-		//		defer globalLock.Unlock()
-		//
-		//		require.False(connected.Contains(nodeID))
-		//		connected.Add(nodeID)
-		//		numConnected++
-		//
-		//		if !allConnected && numConnected == len(nodeIDs)*(len(nodeIDs)-1) {
-		//			allConnected = true
-		//			close(onAllConnected)
-		//		}
-		//	},
-		//	DisconnectedF: func(nodeID ids.NodeID) {
-		//		t.Logf("%s disconnected from %s", config.MyNodeID, nodeID)
-		//
-		//		globalLock.Lock()
-		//		defer globalLock.Unlock()
-		//
-		//		require.True(connected.Contains(nodeID))
-		//		connected.Remove(nodeID)
-		//		numConnected--
-		//	},
-		//},
+			config,
+			time.Now().Add(5*time.Second),
+			msgCreator,
+			log.NewNopLogger(),
+			listeners[i],
+			dialer,
+			//upgrade.InitiallyActiveTime,
+			//msgCreator,
+			//registry,
+			//logging.NoLog{},
+			//listeners[i],
+			//dialer,
+			&testHandler{
+				InboundHandler: handlers[i],
+				ConnectedF: func(nodeID ids.NodeID, _ *version.Application, _ ids.ID) {
+					t.Logf("%s connected to %s", config.MyNodeID, nodeID)
+
+					globalLock.Lock()
+					defer globalLock.Unlock()
+
+					require.False(connected.Contains(nodeID))
+					connected.Add(nodeID)
+					numConnected++
+
+					if !allConnected && numConnected == len(nodeIDs)*(len(nodeIDs)-1) {
+						allConnected = true
+						close(onAllConnected)
+					}
+				},
+				DisconnectedF: func(nodeID ids.NodeID) {
+					t.Logf("%s disconnected from %s", config.MyNodeID, nodeID)
+
+					globalLock.Lock()
+					defer globalLock.Unlock()
+
+					require.True(connected.Contains(nodeID))
+					connected.Remove(nodeID)
+					numConnected--
+				},
+			},
 		)
 		require.NoError(err)
 		networks[i] = net.(*network)

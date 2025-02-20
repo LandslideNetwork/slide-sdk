@@ -39,9 +39,9 @@ type ValidatorStateClient interface {
 	// GetSubnetID returns the subnetID of the provided chain.
 	GetSubnetID(ctx context.Context, in *GetSubnetIDRequest, opts ...grpc.CallOption) (*GetSubnetIDResponse, error)
 	// GetValidatorSet returns the weights of the nodeIDs for the provided
-	// subnets at the requested P-chain height.
+	// subnet at the requested P-chain height.
 	GetValidatorSet(ctx context.Context, in *GetValidatorSetRequest, opts ...grpc.CallOption) (*GetValidatorSetResponse, error)
-	// GetCurrentValidatorSet returns the validator set for the provided subnets at
+	// GetCurrentValidatorSet returns the validator set for the provided subnet at
 	// the current P-chain height.
 	GetCurrentValidatorSet(ctx context.Context, in *GetCurrentValidatorSetRequest, opts ...grpc.CallOption) (*GetCurrentValidatorSetResponse, error)
 }
@@ -111,9 +111,9 @@ type ValidatorStateServer interface {
 	// GetSubnetID returns the subnetID of the provided chain.
 	GetSubnetID(context.Context, *GetSubnetIDRequest) (*GetSubnetIDResponse, error)
 	// GetValidatorSet returns the weights of the nodeIDs for the provided
-	// subnets at the requested P-chain height.
+	// subnet at the requested P-chain height.
 	GetValidatorSet(context.Context, *GetValidatorSetRequest) (*GetValidatorSetResponse, error)
-	// GetCurrentValidatorSet returns the validator set for the provided subnets at
+	// GetCurrentValidatorSet returns the validator set for the provided subnet at
 	// the current P-chain height.
 	GetCurrentValidatorSet(context.Context, *GetCurrentValidatorSetRequest) (*GetCurrentValidatorSetResponse, error)
 }

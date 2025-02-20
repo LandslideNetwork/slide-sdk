@@ -6,8 +6,12 @@ package network
 import (
 	"context"
 	"fmt"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/dialer"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/sender"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/ips"
@@ -15,6 +19,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/subnets"
+	"github.com/landslidenetwork/slide-sdk/utils/version"
 	"github.com/landslidenetwork/slide-sdk/utils/wrappers"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
@@ -92,10 +97,10 @@ type Network interface {
 	//	// StartClose this network and all existing connections it has. Calling
 	//	// StartClose multiple times is handled gracefully.
 	//	StartClose()
-	//
-	//	// Should only be called once, will run until either a fatal error occurs,
-	//	// or the network is closed.
-	//	Dispatch() error
+
+	// Should only be called once, will run until either a fatal error occurs,
+	// or the network is closed.
+	Dispatch() error
 	//
 	//	// Attempt to connect to this IP. The network will never stop attempting to
 	//	// connect to this ID.
@@ -147,12 +152,12 @@ type network struct {
 	//	inboundConnUpgradeThrottler throttling.InboundConnUpgradeThrottler
 	// Listens for and accepts new inbound connections
 	listener net.Listener
-	//	// Makes new outbound connections
-	//	dialer dialer.Dialer
+	// Makes new outbound connections
+	dialer dialer.Dialer
 	// Does TLS handshakes for inbound connections
 	serverUpgrader peer.Upgrader
-	//	// Does TLS handshakes for outbound connections
-	//	clientUpgrader peer.Upgrader
+	// Does TLS handshakes for outbound connections
+	clientUpgrader peer.Upgrader
 	//
 	// ensures the close of the network only happens once.
 	closeOnce sync.Once
@@ -174,33 +179,33 @@ type network struct {
 	connectingPeers peer.Set
 	connectedPeers  peer.Set
 	closing         bool
+
+	// router is notified about all peer [Connected] and [Disconnected] events
+	// as well as all non-handshake peer messages.
 	//
-	//	// router is notified about all peer [Connected] and [Disconnected] events
-	//	// as well as all non-handshake peer messages.
-	//	//
-	//	// It is ensured that [Connected] and [Disconnected] are called in
-	//	// consistent ways. Specifically, the a peer starts in the disconnected
-	//	// state and the network can change the peer's state from disconnected to
-	//	// connected and back.
-	//	//
-	//	// It is ensured that [HandleInbound] is only called with a message from a
-	//	// peer that is in the connected state.
-	//	//
-	//	// It is expected that the implementation of this interface can handle
-	//	// concurrent calls to [Connected], [Disconnected], and [HandleInbound].
-	//	router router.ExternalHandler
+	// It is ensured that [Connected] and [Disconnected] are called in
+	// consistent ways. Specifically, the a peer starts in the disconnected
+	// state and the network can change the peer's state from disconnected to
+	// connected and back.
+	//
+	// It is ensured that [HandleInbound] is only called with a message from a
+	// peer that is in the connected state.
+	//
+	// It is expected that the implementation of this interface can handle
+	// concurrent calls to [Connected], [Disconnected], and [HandleInbound].
+	router router.ExternalHandler
 }
 
 // NewNetwork returns a new Network implementation with the provided parameters.
 func NewNetwork(
 	config *Config,
-	// minCompatibleTime time.Time,
-	// msgCreator message.Creator,
+	minCompatibleTime time.Time,
+	msgCreator message.Creator,
 	// metricsRegisterer prometheus.Registerer,
-	// log logging.Logger,
-	// listener net.Listener,
-	// dialer dialer.Dialer,
-	// router router.ExternalHandler,
+	log log.Logger,
+	listener net.Listener,
+	dialer dialer.Dialer,
+	router router.ExternalHandler,
 ) (Network, error) {
 	//	if config.ProxyEnabled {
 	//		// Wrap the listener to process the proxy header.
@@ -280,29 +285,29 @@ func NewNetwork(
 	//	}
 	//
 	peerConfig := &peer.Config{
-		//		ReadBufferSize:  config.PeerReadBufferSize,
-		//		WriteBufferSize: config.PeerWriteBufferSize,
-		//		Metrics:         peerMetrics,
-		//		MessageCreator:  msgCreator,
-		//
-		//		Log:                  log,
+		//ReadBufferSize:  config.PeerReadBufferSize,
+		//WriteBufferSize: config.PeerWriteBufferSize,
+		//Metrics:         peerMetrics,
+		MessageCreator: msgCreator,
+
+		Log: log,
 		//		InboundMsgThrottler:  inboundMsgThrottler,
-		//		Network:              nil, // This is set below.
-		//		Router:               router,
-		//		VersionCompatibility: version.GetCompatibility(minCompatibleTime),
-		//		MyNodeID:             config.MyNodeID,
-		//		MySubnets:            config.TrackedSubnets,
-		//		Beacons:              config.Beacons,
-		//		Validators:           config.Validators,
-		//		NetworkID:            config.NetworkID,
-		//		PingFrequency:        config.PingFrequency,
-		//		PongTimeout:          config.PingPongTimeout,
-		//		MaxClockDifference:   config.MaxClockDifference,
-		//		SupportedACPs:        config.SupportedACPs.List(),
-		//		ObjectedACPs:         config.ObjectedACPs.List(),
-		//		ResourceTracker:      config.ResourceTracker,
-		//		UptimeCalculator:     config.UptimeCalculator,
-		//		IPSigner:             peer.NewIPSigner(config.MyIPPort, config.TLSKey, config.BLSKey),
+		Network: nil, // This is set below.
+		//Router:               router,
+		VersionCompatibility: version.GetCompatibility(minCompatibleTime),
+		MyNodeID:             config.MyNodeID,
+		//MySubnets:            config.TrackedSubnets,
+		//Beacons:              config.Beacons,
+		Validators: config.Validators,
+		//NetworkID:  config.NetworkID,
+		//PingFrequency:        config.PingFrequency,
+		PongTimeout: config.PingPongTimeout,
+		//MaxClockDifference: config.MaxClockDifference,
+		//SupportedACPs:      config.SupportedACPs.List(),
+		//ObjectedACPs:       config.ObjectedACPs.List(),
+		//ResourceTracker:      config.ResourceTracker,
+		//UptimeCalculator:     config.UptimeCalculator,
+		IPSigner: peer.NewIPSigner(config.MyIPPort, config.TLSKey, config.BLSKey),
 	}
 
 	onCloseCtx, cancel := context.WithCancel(context.Background())
@@ -315,10 +320,10 @@ func NewNetwork(
 		//		outboundMsgThrottler: outboundMsgThrottler,
 		//
 		//		inboundConnUpgradeThrottler: throttling.NewInboundConnUpgradeThrottler(log, config.ThrottlerConfig.InboundConnUpgradeThrottlerConfig),
-		//		listener:                    listener,
-		//		dialer:                      dialer,
+		listener:       listener,
+		dialer:         dialer,
 		serverUpgrader: peer.NewTLSServerUpgrader(config.TLSConfig, tlsConnRejected),
-		//clientUpgrader: peer.NewTLSClientUpgrader(config.TLSConfig, metrics.tlsConnRejected),
+		clientUpgrader: peer.NewTLSClientUpgrader(config.TLSConfig, tlsConnRejected),
 		//
 		onCloseCtx:       onCloseCtx,
 		onCloseCtxCancel: cancel,
@@ -333,9 +338,9 @@ func NewNetwork(
 		ipTracker:       ipTracker,
 		connectingPeers: peer.NewSet(),
 		connectedPeers:  peer.NewSet(),
-		//		router:          router,
+		router:          router,
 	}
-	//	n.peerConfig.Network = n
+	n.peerConfig.Network = n
 	return n, nil
 }
 
@@ -454,49 +459,49 @@ func (n *network) Send(
 //	}
 //	return details, fmt.Errorf("network layer is unhealthy reason: %s", strings.Join(errorReasons, ", "))
 //}
-//
-//// Connected is called after the peer finishes the handshake.
-//// Will not be called after [Disconnected] is called with this peer.
-//func (n *network) Connected(nodeID ids.NodeID) {
-//	n.peersLock.Lock()
-//	peer, ok := n.connectingPeers.GetByID(nodeID)
-//	if !ok {
-//		n.peerConfig.Log.Error(
-//			"unexpectedly connected to peer when not marked as attempting to connect",
-//			zap.Stringer("nodeID", nodeID),
-//		)
-//		n.peersLock.Unlock()
-//		return
-//	}
-//
-//	if tracked, ok := n.trackedIPs[nodeID]; ok {
-//		tracked.stopTracking()
-//		delete(n.trackedIPs, nodeID)
-//	}
-//	n.connectingPeers.Remove(nodeID)
-//	n.connectedPeers.Add(peer)
-//	n.peersLock.Unlock()
-//
-//	peerIP := peer.IP()
-//	newIP := ips.NewClaimedIPPort(
-//		peer.Cert(),
-//		peerIP.AddrPort,
-//		peerIP.Timestamp,
-//		peerIP.TLSSignature,
-//	)
-//	trackedSubnets := peer.TrackedSubnets()
-//	n.ipTracker.Connected(newIP, trackedSubnets)
-//
-//	n.metrics.markConnected(peer)
-//
-//	peerVersion := peer.Version()
-//	n.router.Connected(nodeID, peerVersion, constants.PrimaryNetworkID)
-//	for subnetID := range n.peerConfig.MySubnets {
-//		if trackedSubnets.Contains(subnetID) {
-//			n.router.Connected(nodeID, peerVersion, subnetID)
-//		}
-//	}
-//}
+
+// Connected is called after the peer finishes the handshake.
+// Will not be called after [Disconnected] is called with this peer.
+func (n *network) Connected(nodeID ids.NodeID) {
+	n.peersLock.Lock()
+	peer, ok := n.connectingPeers.GetByID(nodeID)
+	if !ok {
+		n.peerConfig.Log.Error(
+			"unexpectedly connected to peer when not marked as attempting to connect",
+			zap.Stringer("nodeID", nodeID),
+		)
+		n.peersLock.Unlock()
+		return
+	}
+
+	if tracked, ok := n.trackedIPs[nodeID]; ok {
+		tracked.stopTracking()
+		delete(n.trackedIPs, nodeID)
+	}
+	n.connectingPeers.Remove(nodeID)
+	n.connectedPeers.Add(peer)
+	n.peersLock.Unlock()
+
+	peerIP := peer.IP()
+	newIP := ips.NewClaimedIPPort(
+		peer.Cert(),
+		peerIP.AddrPort,
+		peerIP.Timestamp,
+		peerIP.TLSSignature,
+	)
+	//trackedSubnets := peer.TrackedSubnets()
+	n.ipTracker.Connected(newIP)
+
+	//n.metrics.markConnected(peer)
+
+	peerVersion := peer.Version()
+	n.router.Connected(nodeID, peerVersion, constants.PrimaryNetworkID)
+	//for subnetID := range n.peerConfig.MySubnets {
+	//	if trackedSubnets.Contains(subnetID) {
+	//		n.router.Connected(nodeID, peerVersion, subnetID)
+	//	}
+	//}
+}
 
 // AllowConnection returns true if this node should have a connection to the
 // provided nodeID. If the node is attempting to connect to the minimum number
@@ -510,34 +515,34 @@ func (n *network) AllowConnection(nodeID ids.NodeID) bool {
 	return areWeAPrimaryNetworkAValidator || n.ipTracker.WantsConnection(nodeID)
 }
 
-//func (n *network) Track(claimedIPPorts []*ips.ClaimedIPPort) error {
-//	_, areWeAPrimaryNetworkAValidator := n.config.Validators.GetValidator(constants.PrimaryNetworkID, n.config.MyNodeID)
-//	for _, ip := range claimedIPPorts {
-//		if err := n.track(ip, areWeAPrimaryNetworkAValidator); err != nil {
-//			return err
-//		}
-//	}
-//	return nil
-//}
-//
-//// Disconnected is called after the peer's handling has been shutdown.
-//// It is not guaranteed that [Connected] was previously called with [nodeID].
-//// It is guaranteed that [Connected] will not be called with [nodeID] after this
-//// call. Note that this is from the perspective of a single peer object, because
-//// a peer with the same ID can reconnect to this network instance.
-//func (n *network) Disconnected(nodeID ids.NodeID) {
-//	n.peersLock.RLock()
-//	_, connecting := n.connectingPeers.GetByID(nodeID)
-//	peer, connected := n.connectedPeers.GetByID(nodeID)
-//	n.peersLock.RUnlock()
-//
-//	if connecting {
-//		n.disconnectedFromConnecting(nodeID)
-//	}
-//	if connected {
-//		n.disconnectedFromConnected(peer, nodeID)
-//	}
-//}
+func (n *network) Track(claimedIPPorts []*ips.ClaimedIPPort) error {
+	_, areWeAPrimaryNetworkAValidator := n.config.Validators.GetValidator(constants.PrimaryNetworkID, n.config.MyNodeID)
+	for _, ip := range claimedIPPorts {
+		if err := n.track(ip, areWeAPrimaryNetworkAValidator); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Disconnected is called after the peer's handling has been shutdown.
+// It is not guaranteed that [Connected] was previously called with [nodeID].
+// It is guaranteed that [Connected] will not be called with [nodeID] after this
+// call. Note that this is from the perspective of a single peer object, because
+// a peer with the same ID can reconnect to this network instance.
+func (n *network) Disconnected(nodeID ids.NodeID) {
+	n.peersLock.RLock()
+	_, connecting := n.connectingPeers.GetByID(nodeID)
+	peer, connected := n.connectedPeers.GetByID(nodeID)
+	n.peersLock.RUnlock()
+
+	if connecting {
+		n.disconnectedFromConnecting(nodeID)
+	}
+	if connected {
+		n.disconnectedFromConnected(peer, nodeID)
+	}
+}
 
 func (n *network) KnownPeers() ([]byte, []byte) {
 	return n.ipTracker.Bloom()
@@ -843,46 +848,46 @@ func (n *network) samplePeers(
 	)
 }
 
-//func (n *network) disconnectedFromConnecting(nodeID ids.NodeID) {
-//	n.peersLock.Lock()
-//	defer n.peersLock.Unlock()
-//
-//	n.connectingPeers.Remove(nodeID)
-//
-//	// The peer that is disconnecting from us didn't finish the handshake
-//	tracked, ok := n.trackedIPs[nodeID]
-//	if ok {
-//		if n.ipTracker.WantsConnection(nodeID) {
-//			tracked := tracked.trackNewIP(tracked.ip)
-//			n.trackedIPs[nodeID] = tracked
-//			n.dial(nodeID, tracked)
-//		} else {
-//			tracked.stopTracking()
-//			delete(n.trackedIPs, nodeID)
-//		}
-//	}
-//
-//	n.metrics.disconnected.Inc()
-//}
-//
-//func (n *network) disconnectedFromConnected(peer peer.Peer, nodeID ids.NodeID) {
-//	n.ipTracker.Disconnected(nodeID)
-//	n.router.Disconnected(nodeID)
-//
-//	n.peersLock.Lock()
-//	defer n.peersLock.Unlock()
-//
-//	n.connectedPeers.Remove(nodeID)
-//
-//	// The peer that is disconnecting from us finished the handshake
-//	if ip, wantsConnection := n.ipTracker.GetIP(nodeID); wantsConnection {
-//		tracked := newTrackedIP(ip.AddrPort)
-//		n.trackedIPs[nodeID] = tracked
-//		n.dial(nodeID, tracked)
-//	}
-//
-//	n.metrics.markDisconnected(peer)
-//}
+func (n *network) disconnectedFromConnecting(nodeID ids.NodeID) {
+	n.peersLock.Lock()
+	defer n.peersLock.Unlock()
+
+	n.connectingPeers.Remove(nodeID)
+
+	// The peer that is disconnecting from us didn't finish the handshake
+	tracked, ok := n.trackedIPs[nodeID]
+	if ok {
+		if n.ipTracker.WantsConnection(nodeID) {
+			tracked := tracked.trackNewIP(tracked.ip)
+			n.trackedIPs[nodeID] = tracked
+			n.dial(nodeID, tracked)
+		} else {
+			tracked.stopTracking()
+			delete(n.trackedIPs, nodeID)
+		}
+	}
+
+	//n.metrics.disconnected.Inc()
+}
+
+func (n *network) disconnectedFromConnected(peer peer.Peer, nodeID ids.NodeID) {
+	//n.ipTracker.Disconnected(nodeID)
+	//n.router.Disconnected(nodeID)
+
+	n.peersLock.Lock()
+	defer n.peersLock.Unlock()
+
+	n.connectedPeers.Remove(nodeID)
+
+	// The peer that is disconnecting from us finished the handshake
+	if ip, wantsConnection := n.ipTracker.GetIP(nodeID); wantsConnection {
+		tracked := newTrackedIP(ip.AddrPort)
+		n.trackedIPs[nodeID] = tracked
+		n.dial(nodeID, tracked)
+	}
+
+	//n.metrics.markDisconnected(peer)
+}
 
 // dial will spin up a new goroutine and attempt to establish a connection with
 // [nodeID] at [ip].
@@ -904,118 +909,118 @@ func (n *network) samplePeers(
 // there is a randomized exponential backoff to avoid spamming connection
 // attempts.
 func (n *network) dial(nodeID ids.NodeID, ip *trackedIP) {
-	//	n.peerConfig.Log.Verbo("attempting to dial node",
-	//		zap.Stringer("nodeID", nodeID),
-	//		zap.Stringer("ip", ip.ip),
-	//	)
-	//	go func() {
-	//		n.metrics.numTracked.Inc()
-	//		defer n.metrics.numTracked.Dec()
-	//
-	//		for {
-	//			timer := time.NewTimer(ip.getDelay())
-	//
-	//			select {
-	//			case <-n.onCloseCtx.Done():
-	//				timer.Stop()
-	//				return
-	//			case <-ip.onStopTracking:
-	//				timer.Stop()
-	//				return
-	//			case <-timer.C:
-	//			}
-	//
-	//			n.peersLock.Lock()
-	//			// If we no longer desire a connect to nodeID, we should cleanup
-	//			// trackedIPs and this goroutine. This prevents a memory leak when
-	//			// the tracked nodeID leaves the validator set and is never able to
-	//			// be connected to.
-	//			if !n.ipTracker.WantsConnection(nodeID) {
-	//				// Typically [n.trackedIPs[nodeID]] will already equal [ip], but
-	//				// the reference to [ip] is refreshed to avoid any potential
-	//				// race conditions before removing the entry.
-	//				if ip, exists := n.trackedIPs[nodeID]; exists {
-	//					ip.stopTracking()
-	//					delete(n.trackedIPs, nodeID)
-	//				}
-	//				n.peersLock.Unlock()
-	//				return
-	//			}
-	//			_, connecting := n.connectingPeers.GetByID(nodeID)
-	//			_, connected := n.connectedPeers.GetByID(nodeID)
-	//			n.peersLock.Unlock()
-	//
-	//			// While it may not be strictly needed to stop attempting to connect
-	//			// to an already connected peer here. It does prevent unnecessary
-	//			// outbound connections. Additionally, because the peer would
-	//			// immediately drop a duplicated connection, this prevents any
-	//			// "connection reset by peer" errors from interfering with the
-	//			// later duplicated connection check.
-	//			if connecting || connected {
-	//				n.peerConfig.Log.Verbo(
-	//					"exiting attempt to dial peer",
-	//					zap.String("reason", "already connected"),
-	//					zap.Stringer("nodeID", nodeID),
-	//				)
-	//				return
-	//			}
-	//
-	//			// Increase the delay that we will use for a future connection
-	//			// attempt.
-	//			ip.increaseDelay(
-	//				n.config.InitialReconnectDelay,
-	//				n.config.MaxReconnectDelay,
-	//			)
-	//
-	//			// If the network is configured to disallow private IPs and the
-	//			// provided IP is private, we skip all attempts to initiate a
-	//			// connection.
-	//			//
-	//			// Invariant: We perform this check inside of the looping goroutine
-	//			// because this goroutine must clean up the trackedIPs entry if
-	//			// nodeID leaves the validator set. This is why we continue the loop
-	//			// rather than returning even though we will never initiate an
-	//			// outbound connection with this IP.
-	//			if !n.config.AllowPrivateIPs && !ips.IsPublic(ip.ip.Addr()) {
-	//				n.peerConfig.Log.Verbo("skipping connection dial",
-	//					zap.String("reason", "outbound connections to private IPs are prohibited"),
-	//					zap.Stringer("nodeID", nodeID),
-	//					zap.Stringer("peerIP", ip.ip),
-	//					zap.Duration("delay", ip.delay),
-	//				)
-	//				continue
-	//			}
-	//
-	//			conn, err := n.dialer.Dial(n.onCloseCtx, ip.ip)
-	//			if err != nil {
-	//				n.peerConfig.Log.Verbo(
-	//					"failed to reach peer, attempting again",
-	//					zap.Stringer("nodeID", nodeID),
-	//					zap.Stringer("peerIP", ip.ip),
-	//					zap.Duration("delay", ip.delay),
-	//				)
-	//				continue
-	//			}
-	//
-	//			n.peerConfig.Log.Verbo("starting to upgrade connection",
-	//				zap.String("direction", "outbound"),
-	//				zap.Stringer("nodeID", nodeID),
-	//				zap.Stringer("peerIP", ip.ip),
-	//			)
-	//
-	//			err = n.upgrade(conn, n.clientUpgrader)
-	//			if err != nil {
-	//				n.peerConfig.Log.Verbo(
-	//					"failed to upgrade, attempting again",
-	//					zap.Stringer("nodeID", nodeID),
-	//					zap.Stringer("peerIP", ip.ip),
-	//					zap.Duration("delay", ip.delay),
-	//				)
-	//				continue
-	//			}
-	//			return
-	//		}
-	//	}()
+	n.peerConfig.Log.Info("attempting to dial node",
+		zap.Stringer("nodeID", nodeID),
+		zap.Stringer("ip", ip.ip),
+	)
+	go func() {
+		//		n.metrics.numTracked.Inc()
+		//		defer n.metrics.numTracked.Dec()
+
+		for {
+			timer := time.NewTimer(ip.getDelay())
+
+			select {
+			case <-n.onCloseCtx.Done():
+				timer.Stop()
+				return
+			case <-ip.onStopTracking:
+				timer.Stop()
+				return
+			case <-timer.C:
+			}
+
+			n.peersLock.Lock()
+			// If we no longer desire a connect to nodeID, we should cleanup
+			// trackedIPs and this goroutine. This prevents a memory leak when
+			// the tracked nodeID leaves the validator set and is never able to
+			// be connected to.
+			if !n.ipTracker.WantsConnection(nodeID) {
+				// Typically [n.trackedIPs[nodeID]] will already equal [ip], but
+				// the reference to [ip] is refreshed to avoid any potential
+				// race conditions before removing the entry.
+				if ip, exists := n.trackedIPs[nodeID]; exists {
+					ip.stopTracking()
+					delete(n.trackedIPs, nodeID)
+				}
+				n.peersLock.Unlock()
+				return
+			}
+			_, connecting := n.connectingPeers.GetByID(nodeID)
+			_, connected := n.connectedPeers.GetByID(nodeID)
+			n.peersLock.Unlock()
+
+			// While it may not be strictly needed to stop attempting to connect
+			// to an already connected peer here. It does prevent unnecessary
+			// outbound connections. Additionally, because the peer would
+			// immediately drop a duplicated connection, this prevents any
+			// "connection reset by peer" errors from interfering with the
+			// later duplicated connection check.
+			if connecting || connected {
+				n.peerConfig.Log.Info(
+					"exiting attempt to dial peer",
+					zap.String("reason", "already connected"),
+					zap.Stringer("nodeID", nodeID),
+				)
+				return
+			}
+
+			// Increase the delay that we will use for a future connection
+			// attempt.
+			ip.increaseDelay(
+				n.config.InitialReconnectDelay,
+				n.config.MaxReconnectDelay,
+			)
+
+			// If the network is configured to disallow private IPs and the
+			// provided IP is private, we skip all attempts to initiate a
+			// connection.
+			//
+			// Invariant: We perform this check inside of the looping goroutine
+			// because this goroutine must clean up the trackedIPs entry if
+			// nodeID leaves the validator set. This is why we continue the loop
+			// rather than returning even though we will never initiate an
+			// outbound connection with this IP.
+			if !n.config.AllowPrivateIPs && !ips.IsPublic(ip.ip.Addr()) {
+				n.peerConfig.Log.Info("skipping connection dial",
+					zap.String("reason", "outbound connections to private IPs are prohibited"),
+					zap.Stringer("nodeID", nodeID),
+					zap.Stringer("peerIP", ip.ip),
+					zap.Duration("delay", ip.delay),
+				)
+				continue
+			}
+
+			conn, err := n.dialer.Dial(n.onCloseCtx, ip.ip)
+			if err != nil {
+				n.peerConfig.Log.Info(
+					"failed to reach peer, attempting again",
+					zap.Stringer("nodeID", nodeID),
+					zap.Stringer("peerIP", ip.ip),
+					zap.Duration("delay", ip.delay),
+				)
+				continue
+			}
+
+			n.peerConfig.Log.Info("starting to upgrade connection",
+				zap.String("direction", "outbound"),
+				zap.Stringer("nodeID", nodeID),
+				zap.Stringer("peerIP", ip.ip),
+			)
+
+			err = n.upgrade(conn, n.clientUpgrader)
+			if err != nil {
+				n.peerConfig.Log.Info(
+					"failed to upgrade, attempting again",
+					zap.Stringer("nodeID", nodeID),
+					zap.Stringer("peerIP", ip.ip),
+					zap.Duration("delay", ip.delay),
+				)
+				continue
+			}
+			return
+		}
+	}()
 }
 
 // upgrade the provided connection, which may be an inbound connection or an
@@ -1036,7 +1041,7 @@ func (n *network) upgrade(conn net.Conn, upgrader peer.Upgrader) error {
 		return err
 	}
 
-	nodeID, tlsConn, _, err := upgrader.Upgrade(conn)
+	nodeID, tlsConn, cert, err := upgrader.Upgrade(conn)
 	if err != nil {
 		_ = conn.Close()
 		n.peerConfig.Log.Info("failed to upgrade connection",
@@ -1115,7 +1120,6 @@ func (n *network) upgrade(conn net.Conn, upgrader peer.Upgrader) error {
 	msgQueueBufferSize := 1024
 	var onFailure peer.SendFailedFunc
 
-	// Реализуем обработчик ошибки отправки
 	onFailure = func(msg message.OutboundMessage) {
 		n.peerConfig.Log.Error("Failed to send message:", msg)
 	}
@@ -1125,7 +1129,7 @@ func (n *network) upgrade(conn net.Conn, upgrader peer.Upgrader) error {
 	peer := peer.Start(
 		n.peerConfig,
 		tlsConn,
-		//cert,
+		cert,
 		nodeID,
 		//peer.NewThrottledMessageQueue(
 		//	n.peerConfig.Metrics,

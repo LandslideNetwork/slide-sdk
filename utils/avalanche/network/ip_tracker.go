@@ -4,6 +4,7 @@
 package network
 
 import (
+	"crypto/rand"
 	//"github.com/ava-labs/avalanchego/snow/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/bloom"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
@@ -69,8 +70,7 @@ func newIPTracker(
 	//if err != nil {
 	//	return nil, err
 	//}
-	//return tracker, tracker.resetBloom()
-	return tracker, nil
+	return tracker, tracker.resetBloom()
 }
 
 // A node is tracked if any of the following conditions are met:
@@ -210,12 +210,12 @@ type ipTracker struct {
 	// The bloom filter contains the most recent tracked IPs to avoid
 	// unnecessary IP gossip.
 	bloom *bloom.Filter
-	//	// To prevent validators from causing the bloom filter to have too many
-	//	// false positives, we limit each validator to maxIPEntriesPerValidator in
-	//	// the bloom filter.
-	//	bloomAdditions map[ids.NodeID]int // Number of IPs added to the bloom
-	bloomSalt []byte
-	//	maxBloomCount  int
+	// To prevent validators from causing the bloom filter to have too many
+	// false positives, we limit each validator to maxIPEntriesPerValidator in
+	// the bloom filter.
+	bloomAdditions map[ids.NodeID]int // Number of IPs added to the bloom
+	bloomSalt      []byte
+	maxBloomCount  int
 
 	// Connected tracks the information of currently connected peers, including
 	// tracked and untracked nodes.
@@ -318,38 +318,43 @@ func (i *ipTracker) AddIP(ip *ips.ClaimedIPPort) bool {
 	return trackedNode.wantsConnection()
 }
 
-//// GetIP returns the most recent IP of the provided nodeID. Returns true if all
-//// of the following conditions are met:
-////  1. There is currently an IP for the provided nodeID.
-////  2. The provided IP is from a node whose connection is desired on a tracked
-////     subnets.
-//func (i *ipTracker) GetIP(nodeID ids.NodeID) (*ips.ClaimedIPPort, bool) {
-//	i.lock.RLock()
-//	defer i.lock.RUnlock()
-//
-//	node, ok := i.tracked[nodeID]
-//	if !ok || node.ip == nil {
-//		return nil, false
-//	}
-//	return node.ip, node.wantsConnection()
-//}
-//
-//// Connected is called when a connection is established. The peer should have
-//// provided [ip] during the handshake.
-//func (i *ipTracker) Connected(ip *ips.ClaimedIPPort, trackedSubnets set.Set[ids.ID]) {
-//	i.lock.Lock()
-//	defer i.lock.Unlock()
-//
-//	i.connected[ip.NodeID] = &connectedNode{
-//		trackedSubnets: trackedSubnets,
-//		ip:             ip,
-//	}
-//
-//	timestampComparison, trackedNode := i.addIP(ip)
-//	if timestampComparison != untrackedTimestamp {
-//		i.setGossipableIP(trackedNode.ip, trackedSubnets)
-//	}
-//}
+// GetIP returns the most recent IP of the provided nodeID. Returns true if all
+// of the following conditions are met:
+//  1. There is currently an IP for the provided nodeID.
+//  2. The provided IP is from a node whose connection is desired on a tracked
+//     subnets.
+func (i *ipTracker) GetIP(nodeID ids.NodeID) (*ips.ClaimedIPPort, bool) {
+	i.lock.RLock()
+	defer i.lock.RUnlock()
+
+	node, ok := i.tracked[nodeID]
+	if !ok || node.ip == nil {
+		return nil, false
+	}
+	return node.ip, node.wantsConnection()
+}
+
+// Connected is called when a connection is established. The peer should have
+// provided [ip] during the handshake.
+func (i *ipTracker) Connected(
+	ip *ips.ClaimedIPPort,
+	// trackedSubnets set.Set[ids.ID]
+) {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	i.connected[ip.NodeID] = &connectedNode{
+		//trackedSubnets: trackedSubnets,
+		ip: ip,
+	}
+
+	//timestampComparison, trackedNode := i.addIP(ip)
+	i.addIP(ip)
+
+	//if timestampComparison != untrackedTimestamp {
+	//	i.setGossipableIP(trackedNode.ip, trackedSubnets)
+	//}
+}
 
 func (i *ipTracker) addIP(ip *ips.ClaimedIPPort) (int, *trackedNode) {
 	node, ok := i.tracked[ip.NodeID]
@@ -567,44 +572,43 @@ func (i *ipTracker) Bloom() ([]byte, []byte) {
 	return i.bloom.Marshal(), i.bloomSalt
 }
 
-//
-//// resetBloom creates a new bloom filter with a reasonable size for the current
-//// validator set size. This function additionally populates the new bloom filter
-//// with the current most recently known IPs of validators.
-//func (i *ipTracker) resetBloom() error {
-//	newSalt := make([]byte, saltSize)
-//	_, err := rand.Reader.Read(newSalt)
-//	if err != nil {
-//		return err
-//	}
-//
-//	count := max(maxIPEntriesPerNode*len(i.tracked), minCountEstimate)
-//	numHashes, numEntries := bloom.OptimalParameters(
-//		count,
-//		targetFalsePositiveProbability,
-//	)
-//	newFilter, err := bloom.New(numHashes, numEntries)
-//	if err != nil {
-//		return err
-//	}
-//
-//	i.bloom = newFilter
-//	clear(i.bloomAdditions)
-//	i.bloomSalt = newSalt
-//	i.maxBloomCount = bloom.EstimateCount(numHashes, numEntries, maxFalsePositiveProbability)
-//
-//	for nodeID, trackedNode := range i.tracked {
-//		if trackedNode.ip == nil {
-//			continue
-//		}
-//
-//		bloom.Add(newFilter, trackedNode.ip.GossipID[:], newSalt)
-//		i.bloomAdditions[nodeID] = 1
-//	}
-//	i.bloomMetrics.Reset(newFilter, i.maxBloomCount)
-//	return nil
-//}
-//
+// resetBloom creates a new bloom filter with a reasonable size for the current
+// validator set size. This function additionally populates the new bloom filter
+// with the current most recently known IPs of validators.
+func (i *ipTracker) resetBloom() error {
+	newSalt := make([]byte, saltSize)
+	_, err := rand.Reader.Read(newSalt)
+	if err != nil {
+		return err
+	}
+
+	count := max(maxIPEntriesPerNode*len(i.tracked), minCountEstimate)
+	numHashes, numEntries := bloom.OptimalParameters(
+		count,
+		targetFalsePositiveProbability,
+	)
+	newFilter, err := bloom.New(numHashes, numEntries)
+	if err != nil {
+		return err
+	}
+
+	i.bloom = newFilter
+	clear(i.bloomAdditions)
+	i.bloomSalt = newSalt
+	i.maxBloomCount = bloom.EstimateCount(numHashes, numEntries, maxFalsePositiveProbability)
+
+	for nodeID, trackedNode := range i.tracked {
+		if trackedNode.ip == nil {
+			continue
+		}
+
+		bloom.Add(newFilter, trackedNode.ip.GossipID[:], newSalt)
+		i.bloomAdditions[nodeID] = 1
+	}
+	//i.bloomMetrics.Reset(newFilter, i.maxBloomCount)
+	return nil
+}
+
 //func getGossipableIPs[T any](
 //	i *ipTracker,
 //	iter map[ids.ID]T, // The values in this map aren't actually used.

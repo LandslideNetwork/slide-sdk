@@ -5,6 +5,8 @@ package router
 
 import (
 	"context"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/version"
 
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 )
@@ -29,6 +31,6 @@ func (f InboundHandlerFunc) HandleInbound(ctx context.Context, msg message.Inbou
 type ExternalHandler interface {
 	InboundHandler
 
-	//Connected(nodeID ids.NodeID, nodeVersion *version.Application, subnetID ids.ID)
-	//Disconnected(nodeID ids.NodeID)
+	Connected(nodeID ids.NodeID, nodeVersion *version.Application, subnetID ids.ID)
+	Disconnected(nodeID ids.NodeID)
 }

@@ -5,6 +5,7 @@ package peer
 
 import (
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/ips"
 	//"github.com/landslidenetwork/slide-sdk/utils/bloom"
 	//"github.com/ava-labs/avalanchego/utils/ips"
 	//"github.com/landslidenetwork/slide-sdk/utils/set"
@@ -20,9 +21,9 @@ type Network interface {
 	// connection is no longer desired and should be terminated.
 	AllowConnection(peerID ids.NodeID) bool
 
-	//// Track allows the peer to notify the network of potential new peers to
-	//// connect to.
-	//Track(ips []*ips.ClaimedIPPort) error
+	// Track allows the peer to notify the network of potential new peers to
+	// connect to.
+	Track(ips []*ips.ClaimedIPPort) error
 
 	// Disconnected is called when the peer finishes shutting down. It is not
 	// guaranteed that [Connected] was called for the provided peer. However, it

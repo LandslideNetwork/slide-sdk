@@ -15,6 +15,7 @@ const SecretKeyLen = blst.BLST_SCALAR_BYTES
 
 var (
 	errFailedSecretKeyDeserialize = errors.New("couldn't deserialize secret key")
+	ciphersuiteProofOfPossession  = []byte("BLS_POP_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_")
 )
 
 type SecretKey = blst.SecretKey
@@ -46,6 +47,22 @@ func NewSigner() (*LocalSigner, error) {
 // ToBytes returns the big-endian format of the secret key.
 func (s *LocalSigner) ToBytes() []byte {
 	return s.sk.Serialize()
+}
+
+// PublicKey returns the public key that corresponds to this secret
+// key.
+func (s *LocalSigner) PublicKey() *PublicKey {
+	return new(PublicKey).From(s.sk)
+}
+
+// Sign [msg] to authorize this message
+func (s *LocalSigner) Sign(msg []byte) *Signature {
+	return new(Signature).Sign(s.sk, msg, ciphersuiteSignature)
+}
+
+// Sign [msg] to prove the ownership
+func (s *LocalSigner) SignProofOfPossession(msg []byte) *Signature {
+	return new(Signature).Sign(s.sk, msg, ciphersuiteProofOfPossession)
 }
 
 // NewSecretKey generates a new secret key from the local source of
