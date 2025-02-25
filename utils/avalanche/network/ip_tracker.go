@@ -5,6 +5,12 @@ package network
 
 import (
 	"crypto/rand"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
+	"github.com/landslidenetwork/slide-sdk/utils/sampler"
+	"github.com/prometheus/client_golang/prometheus"
+	//"github.com/landslidenetwork/slide-sdk/utils/sampler"
+
 	//"github.com/ava-labs/avalanchego/snow/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/bloom"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
@@ -32,25 +38,25 @@ const (
 //var _ validators.ManagerCallbackListener = (*ipTracker)(nil)
 
 func newIPTracker(
-// trackedSubnets set.Set[ids.ID],
-// log log.Logger,
-// registerer prometheus.Registerer,
+	trackedSubnets set.Set[ids.ID],
+	// log log.Logger,
+	// registerer prometheus.Registerer,
 ) (*ipTracker, error) {
 	//bloomMetrics, err := bloom.NewMetrics("ip_bloom", registerer)
 	//if err != nil {
 	//	return nil, err
 	//}
 	tracker := &ipTracker{
-		//trackedSubnets: trackedSubnets,
+		trackedSubnets: trackedSubnets,
 		//log:            log,
 		//numTrackedPeers: prometheus.NewGauge(prometheus.GaugeOpts{
 		//	Name: "tracked_peers",
 		//	Help: "number of peers this node is monitoring",
 		//}),
-		//numGossipableIPs: prometheus.NewGauge(prometheus.GaugeOpts{
-		//	Name: "gossipable_ips",
-		//	Help: "number of IPs this node considers able to be gossiped",
-		//}),
+		numGossipableIPs: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "gossipable_ips",
+			Help: "number of IPs this node considers able to be gossiped",
+		}),
 		//numTrackedSubnets: prometheus.NewGauge(prometheus.GaugeOpts{
 		//	Name: "tracked_subnets",
 		//	Help: "number of subnets this node is monitoring",
@@ -60,7 +66,7 @@ func newIPTracker(
 		tracked: make(map[ids.NodeID]*trackedNode),
 		//bloomAdditions: make(map[ids.NodeID]int),
 		connected: make(map[ids.NodeID]*connectedNode),
-		//subnets:         make(map[ids.ID]*gossipableSubnet),
+		subnets:   make(map[ids.ID]*gossipableSubnet),
 	}
 	//err = errors.Join(
 	//	registerer.Register(tracker.numTrackedPeers),
@@ -106,101 +112,101 @@ type connectedNode struct {
 	ip *ips.ClaimedIPPort
 }
 
-//type gossipableSubnet struct {
-//	numGossipableIPs prometheus.Gauge
-//
-//	// manuallyGossipable contains the nodeIDs of all nodes whose IP was
-//	// manually configured to be gossiped for this subnets.
-//	manuallyGossipable set.Set[ids.NodeID]
-//
-//	// gossipableIDs contains the nodeIDs of all nodes whose IP could be
-//	// gossiped. This is a superset of manuallyGossipable.
-//	gossipableIDs set.Set[ids.NodeID]
-//
-//	// An IP is marked as gossipable if all of the following conditions are met:
-//	// - The node is a validator or was manually requested to be gossiped
-//	// - The node is connected
-//	// - The node reported that they are syncing this subnets
-//	// - The IP the node connected with is its latest IP
-//	gossipableIndices map[ids.NodeID]int
-//	gossipableIPs     []*ips.ClaimedIPPort
-//}
-//
-//func (s *gossipableSubnet) setGossipableIP(ip *ips.ClaimedIPPort) {
-//	if index, ok := s.gossipableIndices[ip.NodeID]; ok {
-//		s.gossipableIPs[index] = ip
-//		return
-//	}
-//
-//	s.numGossipableIPs.Inc()
-//	s.gossipableIndices[ip.NodeID] = len(s.gossipableIPs)
-//	s.gossipableIPs = append(s.gossipableIPs, ip)
-//}
-//
-//func (s *gossipableSubnet) removeGossipableIP(nodeID ids.NodeID) {
-//	indexToRemove, wasGossipable := s.gossipableIndices[nodeID]
-//	if !wasGossipable {
-//		return
-//	}
-//
-//	// If we aren't removing the last IP, we need to swap the last IP with the
-//	// IP we are removing so that the slice is contiguous.
-//	newNumGossipable := len(s.gossipableIPs) - 1
-//	if newNumGossipable != indexToRemove {
-//		replacementIP := s.gossipableIPs[newNumGossipable]
-//		s.gossipableIndices[replacementIP.NodeID] = indexToRemove
-//		s.gossipableIPs[indexToRemove] = replacementIP
-//	}
-//
-//	s.numGossipableIPs.Dec()
-//	delete(s.gossipableIndices, nodeID)
-//	s.gossipableIPs[newNumGossipable] = nil
-//	s.gossipableIPs = s.gossipableIPs[:newNumGossipable]
-//}
-//
-//// [maxNumIPs] applies to the total number of IPs returned, including the IPs
-//// initially provided in [ips].
-//// [ips] and [nodeIDs] are extended and returned with the additional IPs added.
-//func (s *gossipableSubnet) getGossipableIPs(
-//	exceptNodeID ids.NodeID,
-//	exceptIPs *bloom.ReadFilter,
-//	salt []byte,
-//	maxNumIPs int,
-//	ips []*ips.ClaimedIPPort,
-//	nodeIDs set.Set[ids.NodeID],
-//) ([]*ips.ClaimedIPPort, set.Set[ids.NodeID]) {
-//	uniform := sampler.NewUniform()
-//	uniform.Initialize(uint64(len(s.gossipableIPs)))
-//
-//	for len(ips) < maxNumIPs {
-//		index, hasNext := uniform.Next()
-//		if !hasNext {
-//			return ips, nodeIDs
-//		}
-//
-//		ip := s.gossipableIPs[index]
-//		if ip.NodeID == exceptNodeID ||
-//			nodeIDs.Contains(ip.NodeID) ||
-//			bloom.Contains(exceptIPs, ip.GossipID[:], salt) {
-//			continue
-//		}
-//
-//		ips = append(ips, ip)
-//		nodeIDs.Add(ip.NodeID)
-//	}
-//	return ips, nodeIDs
-//}
-//
-//func (s *gossipableSubnet) canDelete() bool {
-//	return s.gossipableIDs.Len() == 0
-//}
+type gossipableSubnet struct {
+	numGossipableIPs prometheus.Gauge
+
+	// manuallyGossipable contains the nodeIDs of all nodes whose IP was
+	// manually configured to be gossiped for this subnets.
+	manuallyGossipable set.Set[ids.NodeID]
+
+	// gossipableIDs contains the nodeIDs of all nodes whose IP could be
+	// gossiped. This is a superset of manuallyGossipable.
+	gossipableIDs set.Set[ids.NodeID]
+
+	// An IP is marked as gossipable if all of the following conditions are met:
+	// - The node is a validator or was manually requested to be gossiped
+	// - The node is connected
+	// - The node reported that they are syncing this subnets
+	// - The IP the node connected with is its latest IP
+	gossipableIndices map[ids.NodeID]int
+	gossipableIPs     []*ips.ClaimedIPPort
+}
+
+func (s *gossipableSubnet) setGossipableIP(ip *ips.ClaimedIPPort) {
+	if index, ok := s.gossipableIndices[ip.NodeID]; ok {
+		s.gossipableIPs[index] = ip
+		return
+	}
+
+	s.numGossipableIPs.Inc()
+	s.gossipableIndices[ip.NodeID] = len(s.gossipableIPs)
+	s.gossipableIPs = append(s.gossipableIPs, ip)
+}
+
+func (s *gossipableSubnet) removeGossipableIP(nodeID ids.NodeID) {
+	indexToRemove, wasGossipable := s.gossipableIndices[nodeID]
+	if !wasGossipable {
+		return
+	}
+
+	// If we aren't removing the last IP, we need to swap the last IP with the
+	// IP we are removing so that the slice is contiguous.
+	newNumGossipable := len(s.gossipableIPs) - 1
+	if newNumGossipable != indexToRemove {
+		replacementIP := s.gossipableIPs[newNumGossipable]
+		s.gossipableIndices[replacementIP.NodeID] = indexToRemove
+		s.gossipableIPs[indexToRemove] = replacementIP
+	}
+
+	s.numGossipableIPs.Dec()
+	delete(s.gossipableIndices, nodeID)
+	s.gossipableIPs[newNumGossipable] = nil
+	s.gossipableIPs = s.gossipableIPs[:newNumGossipable]
+}
+
+// [maxNumIPs] applies to the total number of IPs returned, including the IPs
+// initially provided in [ips].
+// [ips] and [nodeIDs] are extended and returned with the additional IPs added.
+func (s *gossipableSubnet) getGossipableIPs(
+	exceptNodeID ids.NodeID,
+	exceptIPs *bloom.ReadFilter,
+	salt []byte,
+	maxNumIPs int,
+	ips []*ips.ClaimedIPPort,
+	nodeIDs set.Set[ids.NodeID],
+) ([]*ips.ClaimedIPPort, set.Set[ids.NodeID]) {
+	uniform := sampler.NewUniform()
+	uniform.Initialize(uint64(len(s.gossipableIPs)))
+
+	for len(ips) < maxNumIPs {
+		index, hasNext := uniform.Next()
+		if !hasNext {
+			return ips, nodeIDs
+		}
+
+		ip := s.gossipableIPs[index]
+		if ip.NodeID == exceptNodeID ||
+			nodeIDs.Contains(ip.NodeID) ||
+			bloom.Contains(exceptIPs, ip.GossipID[:], salt) {
+			continue
+		}
+
+		ips = append(ips, ip)
+		nodeIDs.Add(ip.NodeID)
+	}
+	return ips, nodeIDs
+}
+
+func (s *gossipableSubnet) canDelete() bool {
+	return s.gossipableIDs.Len() == 0
+}
 
 type ipTracker struct {
-	//	// trackedSubnets does not include the primary network.
-	//	trackedSubnets    set.Set[ids.ID]
+	// trackedSubnets does not include the primary network.
+	trackedSubnets set.Set[ids.ID]
 	//	log               logging.Logger
 	//	numTrackedPeers   prometheus.Gauge
-	//	numGossipableIPs  prometheus.Gauge // IPs are not deduplicated across subnets
+	numGossipableIPs prometheus.Gauge // IPs are not deduplicated across subnets
 	//	numTrackedSubnets prometheus.Gauge
 	//	bloomMetrics      *bloom.Metrics
 	//
@@ -220,8 +226,8 @@ type ipTracker struct {
 	// Connected tracks the information of currently connected peers, including
 	// tracked and untracked nodes.
 	connected map[ids.NodeID]*connectedNode
-	//	// subnets tracks all the subnets that have at least one gossipable ID.
-	//	subnets map[ids.ID]*gossipableSubnet
+	// subnets tracks all the subnets that have at least one gossipable ID.
+	subnets map[ids.ID]*gossipableSubnet
 }
 
 // ManuallyTrack marks the provided nodeID as being desirable to connect to.
@@ -238,22 +244,22 @@ func (i *ipTracker) ManuallyTrack(nodeID ids.NodeID) {
 	i.addTrackableID(nodeID, nil)
 }
 
-//// ManuallyGossip marks the provided nodeID as being desirable to connect to and
-//// marks the IPs that this node provides as being valid to gossip.
-////
-//// In order to avoid persistent network gossip, it's important for nodes in the
-//// network to agree upon manually gossiped nodeIDs.
-//func (i *ipTracker) ManuallyGossip(subnetID ids.ID, nodeID ids.NodeID) {
-//	i.lock.Lock()
-//	defer i.lock.Unlock()
+// ManuallyGossip marks the provided nodeID as being desirable to connect to and
+// marks the IPs that this node provides as being valid to gossip.
 //
-//	if subnetID == constants.PrimaryNetworkID || i.trackedSubnets.Contains(subnetID) {
-//		i.addTrackableID(nodeID, nil)
-//	}
-//
-//	i.addTrackableID(nodeID, &subnetID)
-//	i.addGossipableID(nodeID, subnetID, true)
-//}
+// In order to avoid persistent network gossip, it's important for nodes in the
+// network to agree upon manually gossiped nodeIDs.
+func (i *ipTracker) ManuallyGossip(subnetID ids.ID, nodeID ids.NodeID) {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	if subnetID == constants.PrimaryNetworkID || i.trackedSubnets.Contains(subnetID) {
+		i.addTrackableID(nodeID, nil)
+	}
+
+	i.addTrackableID(nodeID, &subnetID)
+	i.addGossipableID(nodeID, subnetID, true)
+}
 
 // WantsConnection returns true if any of the following conditions are met:
 //  1. The node has been manually tracked.
@@ -311,10 +317,9 @@ func (i *ipTracker) AddIP(ip *ips.ClaimedIPPort) bool {
 		return false
 	}
 
-	//TODO: implement if necessary
-	//if connectedNode, ok := i.connected[ip.NodeID]; ok {
-	//	i.setGossipableIP(trackedNode.ip, connectedNode.trackedSubnets)
-	//}
+	if connectedNode, ok := i.connected[ip.NodeID]; ok {
+		i.setGossipableIP(trackedNode.ip, connectedNode.trackedSubnets)
+	}
 	return trackedNode.wantsConnection()
 }
 
@@ -338,22 +343,22 @@ func (i *ipTracker) GetIP(nodeID ids.NodeID) (*ips.ClaimedIPPort, bool) {
 // provided [ip] during the handshake.
 func (i *ipTracker) Connected(
 	ip *ips.ClaimedIPPort,
-	// trackedSubnets set.Set[ids.ID]
+	trackedSubnets set.Set[ids.ID],
 ) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
 	i.connected[ip.NodeID] = &connectedNode{
-		//trackedSubnets: trackedSubnets,
-		ip: ip,
+		trackedSubnets: trackedSubnets,
+		ip:             ip,
 	}
 
-	//timestampComparison, trackedNode := i.addIP(ip)
+	timestampComparison, trackedNode := i.addIP(ip)
 	i.addIP(ip)
 
-	//if timestampComparison != untrackedTimestamp {
-	//	i.setGossipableIP(trackedNode.ip, trackedSubnets)
-	//}
+	if timestampComparison != untrackedTimestamp {
+		i.setGossipableIP(trackedNode.ip, trackedSubnets)
+	}
 }
 
 func (i *ipTracker) addIP(ip *ips.ClaimedIPPort) (int, *trackedNode) {
@@ -381,14 +386,14 @@ func (i *ipTracker) addIP(ip *ips.ClaimedIPPort) (int, *trackedNode) {
 	return newerTimestamp, node
 }
 
-//func (i *ipTracker) setGossipableIP(ip *ips.ClaimedIPPort, trackedSubnets set.Set[ids.ID]) {
-//	for subnetID := range trackedSubnets {
-//		if subnets, ok := i.subnets[subnetID]; ok && subnets.gossipableIDs.Contains(ip.NodeID) {
-//			subnets.setGossipableIP(ip)
-//		}
-//	}
-//}
-//
+func (i *ipTracker) setGossipableIP(ip *ips.ClaimedIPPort, trackedSubnets set.Set[ids.ID]) {
+	for subnetID := range trackedSubnets {
+		if subnets, ok := i.subnets[subnetID]; ok && subnets.gossipableIDs.Contains(ip.NodeID) {
+			subnets.setGossipableIP(ip)
+		}
+	}
+}
+
 //// Disconnected is called when a connection to the peer is closed.
 //func (i *ipTracker) Disconnected(nodeID ids.NodeID) {
 //	i.lock.Lock()
@@ -406,121 +411,120 @@ func (i *ipTracker) addIP(ip *ips.ClaimedIPPort) (int, *trackedNode) {
 //		}
 //	}
 //}
-//
-//func (i *ipTracker) OnValidatorAdded(subnetID ids.ID, nodeID ids.NodeID, _ *bls.PublicKey, _ ids.ID, _ uint64) {
-//	i.lock.Lock()
-//	defer i.lock.Unlock()
-//
-//	i.addTrackableID(nodeID, &subnetID)
-//	i.addGossipableID(nodeID, subnetID, false)
-//}
+
+func (i *ipTracker) OnValidatorAdded(subnetID ids.ID, nodeID ids.NodeID, _ *bls.PublicKey, _ ids.ID, _ uint64) {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	i.addTrackableID(nodeID, &subnetID)
+	i.addGossipableID(nodeID, subnetID, false)
+}
 
 // If [subnetID] is nil, the nodeID is being manually tracked.
 func (i *ipTracker) addTrackableID(nodeID ids.NodeID, subnetID *ids.ID) {
-	//TODO: implement
-	//nodeTracker, previouslyTracked := i.tracked[nodeID]
-	//if !previouslyTracked {
-	//	i.numTrackedPeers.Inc()
-	//	nodeTracker = &trackedNode{}
-	//	i.tracked[nodeID] = nodeTracker
-	//}
-	//
-	//if subnetID == nil {
-	//	nodeTracker.manuallyTracked = true
-	//} else {
-	//	nodeTracker.validatedSubnets.Add(*subnetID)
-	//	if *subnetID == constants.PrimaryNetworkID || i.trackedSubnets.Contains(*subnetID) {
-	//		nodeTracker.trackedSubnets.Add(*subnetID)
-	//	}
-	//}
-	//
-	//if previouslyTracked {
-	//	return
-	//}
-	//
-	//node, connected := i.connected[nodeID]
-	//if !connected {
-	//	return
-	//}
-	//
-	//// Because we previously weren't tracking this nodeID, the IP from the
-	//// connection is guaranteed to be the most up-to-date IP that we know.
-	//i.updateMostRecentTrackedIP(nodeTracker, node.ip)
+	nodeTracker, previouslyTracked := i.tracked[nodeID]
+	if !previouslyTracked {
+		//i.numTrackedPeers.Inc()
+		nodeTracker = &trackedNode{}
+		i.tracked[nodeID] = nodeTracker
+	}
+
+	if subnetID == nil {
+		nodeTracker.manuallyTracked = true
+	} else {
+		nodeTracker.validatedSubnets.Add(*subnetID)
+		if *subnetID == constants.PrimaryNetworkID || i.trackedSubnets.Contains(*subnetID) {
+			nodeTracker.trackedSubnets.Add(*subnetID)
+		}
+	}
+
+	if previouslyTracked {
+		return
+	}
+
+	node, connected := i.connected[nodeID]
+	if !connected {
+		return
+	}
+
+	// Because we previously weren't tracking this nodeID, the IP from the
+	// connection is guaranteed to be the most up-to-date IP that we know.
+	i.updateMostRecentTrackedIP(nodeTracker, node.ip)
 }
 
-//func (i *ipTracker) addGossipableID(nodeID ids.NodeID, subnetID ids.ID, manuallyGossiped bool) {
-//	subnets, ok := i.subnets[subnetID]
-//	if !ok {
-//		i.numTrackedSubnets.Inc()
-//		subnets = &gossipableSubnet{
-//			numGossipableIPs:  i.numGossipableIPs,
-//			gossipableIndices: make(map[ids.NodeID]int),
-//		}
-//		i.subnets[subnetID] = subnets
-//	}
-//
-//	if manuallyGossiped {
-//		subnets.manuallyGossipable.Add(nodeID)
-//	}
-//	if subnets.gossipableIDs.Contains(nodeID) {
-//		return
-//	}
-//
-//	subnets.gossipableIDs.Add(nodeID)
-//	node, connected := i.connected[nodeID]
-//	if !connected || !node.trackedSubnets.Contains(subnetID) {
-//		return
-//	}
-//
-//	if trackedNode, ok := i.tracked[nodeID]; ok {
-//		subnets.setGossipableIP(trackedNode.ip)
-//	}
-//}
-//
-//func (*ipTracker) OnValidatorWeightChanged(ids.ID, ids.NodeID, uint64, uint64) {}
-//
-//func (i *ipTracker) OnValidatorRemoved(subnetID ids.ID, nodeID ids.NodeID, _ uint64) {
-//	i.lock.Lock()
-//	defer i.lock.Unlock()
-//
-//	subnets, ok := i.subnets[subnetID]
-//	if !ok {
-//		i.log.Error("attempted removal of validator from untracked subnets",
-//			zap.Stringer("subnetID", subnetID),
-//			zap.Stringer("nodeID", nodeID),
-//		)
-//		return
-//	}
-//
-//	if subnets.manuallyGossipable.Contains(nodeID) {
-//		return
-//	}
-//
-//	subnets.gossipableIDs.Remove(nodeID)
-//	subnets.removeGossipableIP(nodeID)
-//
-//	if subnets.canDelete() {
-//		i.numTrackedSubnets.Dec()
-//		delete(i.subnets, subnetID)
-//	}
-//
-//	trackedNode, ok := i.tracked[nodeID]
-//	if !ok {
-//		i.log.Error("attempted removal of untracked validator",
-//			zap.Stringer("subnetID", subnetID),
-//			zap.Stringer("nodeID", nodeID),
-//		)
-//		return
-//	}
-//
-//	trackedNode.validatedSubnets.Remove(subnetID)
-//	trackedNode.trackedSubnets.Remove(subnetID)
-//
-//	if trackedNode.canDelete() {
-//		i.numTrackedPeers.Dec()
-//		delete(i.tracked, nodeID)
-//	}
-//}
+func (i *ipTracker) addGossipableID(nodeID ids.NodeID, subnetID ids.ID, manuallyGossiped bool) {
+	subnets, ok := i.subnets[subnetID]
+	if !ok {
+		//i.numTrackedSubnets.Inc()
+		subnets = &gossipableSubnet{
+			numGossipableIPs:  i.numGossipableIPs,
+			gossipableIndices: make(map[ids.NodeID]int),
+		}
+		i.subnets[subnetID] = subnets
+	}
+
+	if manuallyGossiped {
+		subnets.manuallyGossipable.Add(nodeID)
+	}
+	if subnets.gossipableIDs.Contains(nodeID) {
+		return
+	}
+
+	subnets.gossipableIDs.Add(nodeID)
+	node, connected := i.connected[nodeID]
+	if !connected || !node.trackedSubnets.Contains(subnetID) {
+		return
+	}
+
+	if trackedNode, ok := i.tracked[nodeID]; ok {
+		subnets.setGossipableIP(trackedNode.ip)
+	}
+}
+
+func (*ipTracker) OnValidatorWeightChanged(ids.ID, ids.NodeID, uint64, uint64) {}
+
+func (i *ipTracker) OnValidatorRemoved(subnetID ids.ID, nodeID ids.NodeID, _ uint64) {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	subnets, ok := i.subnets[subnetID]
+	if !ok {
+		//i.Log.Error("attempted removal of validator from untracked subnets",
+		//	zap.Stringer("subnetID", subnetID),
+		//	zap.Stringer("nodeID", nodeID),
+		//)
+		return
+	}
+
+	if subnets.manuallyGossipable.Contains(nodeID) {
+		return
+	}
+
+	subnets.gossipableIDs.Remove(nodeID)
+	subnets.removeGossipableIP(nodeID)
+
+	if subnets.canDelete() {
+		//i.numTrackedSubnets.Dec()
+		delete(i.subnets, subnetID)
+	}
+
+	trackedNode, ok := i.tracked[nodeID]
+	if !ok {
+		//i.log.Error("attempted removal of untracked validator",
+		//	zap.Stringer("subnetID", subnetID),
+		//	zap.Stringer("nodeID", nodeID),
+		//)
+		return
+	}
+
+	trackedNode.validatedSubnets.Remove(subnetID)
+	trackedNode.trackedSubnets.Remove(subnetID)
+
+	//if trackedNode.canDelete() {
+	//	i.numTrackedPeers.Dec()
+	//	delete(i.tracked, nodeID)
+	//}
+}
 
 func (i *ipTracker) updateMostRecentTrackedIP(node *trackedNode, ip *ips.ClaimedIPPort) {
 	node.ip = ip
@@ -553,15 +557,15 @@ func (i *ipTracker) updateMostRecentTrackedIP(node *trackedNode, ip *ips.Claimed
 	//i.bloomMetrics.Count.Inc()
 }
 
-//// ResetBloom prunes the current bloom filter. This must be called periodically
-//// to ensure that validators that change their IPs are updated correctly and
-//// that validators that left the validator set are removed.
-//func (i *ipTracker) ResetBloom() error {
-//	i.lock.Lock()
-//	defer i.lock.Unlock()
-//
-//	return i.resetBloom()
-//}
+// ResetBloom prunes the current bloom filter. This must be called periodically
+// to ensure that validators that change their IPs are updated correctly and
+// that validators that left the validator set are removed.
+func (i *ipTracker) ResetBloom() error {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	return i.resetBloom()
+}
 
 // Bloom returns the binary representation of the bloom filter along with the
 // random salt.
@@ -609,44 +613,44 @@ func (i *ipTracker) resetBloom() error {
 	return nil
 }
 
-//func getGossipableIPs[T any](
-//	i *ipTracker,
-//	iter map[ids.ID]T, // The values in this map aren't actually used.
-//	allowed func(ids.ID) bool,
-//	exceptNodeID ids.NodeID,
-//	exceptIPs *bloom.ReadFilter,
-//	salt []byte,
-//	maxNumIPs int,
-//) []*ips.ClaimedIPPort {
-//	var (
-//		ips     = make([]*ips.ClaimedIPPort, 0, maxNumIPs)
-//		nodeIDs = set.NewSet[ids.NodeID](maxNumIPs)
-//	)
-//
-//	i.lock.RLock()
-//	defer i.lock.RUnlock()
-//
-//	for subnetID := range iter {
-//		if !allowed(subnetID) {
-//			continue
-//		}
-//
-//		subnets, ok := i.subnets[subnetID]
-//		if !ok {
-//			continue
-//		}
-//
-//		ips, nodeIDs = subnets.getGossipableIPs(
-//			exceptNodeID,
-//			exceptIPs,
-//			salt,
-//			maxNumIPs,
-//			ips,
-//			nodeIDs,
-//		)
-//		if len(ips) >= maxNumIPs {
-//			break
-//		}
-//	}
-//	return ips
-//}
+func getGossipableIPs[T any](
+	i *ipTracker,
+	iter map[ids.ID]T, // The values in this map aren't actually used.
+	allowed func(ids.ID) bool,
+	exceptNodeID ids.NodeID,
+	exceptIPs *bloom.ReadFilter,
+	salt []byte,
+	maxNumIPs int,
+) []*ips.ClaimedIPPort {
+	var (
+		ips     = make([]*ips.ClaimedIPPort, 0, maxNumIPs)
+		nodeIDs = set.NewSet[ids.NodeID](maxNumIPs)
+	)
+
+	i.lock.RLock()
+	defer i.lock.RUnlock()
+
+	for subnetID := range iter {
+		if !allowed(subnetID) {
+			continue
+		}
+
+		subnets, ok := i.subnets[subnetID]
+		if !ok {
+			continue
+		}
+
+		ips, nodeIDs = subnets.getGossipableIPs(
+			exceptNodeID,
+			exceptIPs,
+			salt,
+			maxNumIPs,
+			ips,
+			nodeIDs,
+		)
+		if len(ips) >= maxNumIPs {
+			break
+		}
+	}
+	return ips
+}

@@ -7,8 +7,10 @@ import (
 	"crypto"
 	"crypto/tls"
 	"github.com/landslidenetwork/slide-sdk/utils"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 	"net/netip"
 	"time"
@@ -90,10 +92,10 @@ type DelayConfig struct {
 //}
 
 type Config struct {
-	HealthConfig `json:"healthConfig"`
-	//PeerListGossipConfig `json:"peerListGossipConfig"`
-	TimeoutConfig `json:"timeoutConfigs"`
-	DelayConfig   `json:"delayConfig"`
+	HealthConfig         `json:"healthConfig"`
+	PeerListGossipConfig `json:"peerListGossipConfig"`
+	TimeoutConfig        `json:"timeoutConfigs"`
+	DelayConfig          `json:"delayConfig"`
 	//ThrottlerConfig      ThrottlerConfig `json:"throttlerConfig"`
 	//
 	//ProxyEnabled           bool          `json:"proxyEnabled"`
@@ -107,9 +109,9 @@ type Config struct {
 	MyNodeID ids.NodeID                    `json:"myNodeID"`
 	MyIPPort *utils.Atomic[netip.AddrPort] `json:"myIP"`
 	////NetworkID          uint32                        `json:"networkID"`
-	////MaxClockDifference time.Duration                 `json:"maxClockDifference"`
-	////PingFrequency      time.Duration                 `json:"pingFrequency"`
-	AllowPrivateIPs bool `json:"allowPrivateIPs"`
+	MaxClockDifference time.Duration `json:"maxClockDifference"`
+	PingFrequency      time.Duration `json:"pingFrequency"`
+	AllowPrivateIPs    bool          `json:"allowPrivateIPs"`
 	////
 	////SupportedACPs set.Set[uint32] `json:"supportedACPs"`
 	////ObjectedACPs  set.Set[uint32] `json:"objectedACPs"`
@@ -122,24 +124,24 @@ type Config struct {
 	TLSKey crypto.Signer `json:"-"`
 	// BLSKey is this node's BLS key that is used to sign IPs.
 	BLSKey bls.Signer `json:"-"`
-	////
-	////// TrackedSubnets of the node.
-	////// It must not include the primary network ID.
-	////TrackedSubnets set.Set[ids.ID]    `json:"-"`
+
+	// TrackedSubnets of the node.
+	// It must not include the primary network ID.
+	TrackedSubnets set.Set[ids.ID] `json:"-"`
 	////Beacons        validators.Manager `json:"-"`
 	////
 	// Validators are the current validators in the Avalanche network
 	Validators validators.Manager `json:"-"`
 
-	////UptimeCalculator uptime.Calculator `json:"-"`
-	//
-	//// UptimeMetricFreq marks how frequently this node will recalculate the
-	//// observed average uptime metrics.
-	//UptimeMetricFreq time.Duration `json:"uptimeMetricFreq"`
-	//
-	//// UptimeRequirement is the fraction of time a validator must be online and
-	//// responsive for us to vote that they should receive a staking reward.
-	//UptimeRequirement float64 `json:"-"`
+	UptimeCalculator uptime.Calculator `json:"-"`
+
+	// UptimeMetricFreq marks how frequently this node will recalculate the
+	// observed average uptime metrics.
+	UptimeMetricFreq time.Duration `json:"uptimeMetricFreq"`
+
+	// UptimeRequirement is the fraction of time a validator must be online and
+	// responsive for us to vote that they should receive a staking reward.
+	UptimeRequirement float64 `json:"-"`
 
 	// RequireValidatorToConnect require that all connections must have at least
 	// one validator between the 2 peers. This can be useful to enable if the

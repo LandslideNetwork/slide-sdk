@@ -10,6 +10,8 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
@@ -24,6 +26,10 @@ import (
 	"time"
 )
 
+const (
+	DefaultNetworkPeerListBloomResetFreq = time.Minute
+)
+
 var (
 	defaultHealthConfig = HealthConfig{
 		MinConnectedPeers:            1,
@@ -33,11 +39,12 @@ var (
 		MaxSendFailRate:              .1,
 		SendFailRateHalflife:         time.Second,
 	}
-	//defaultPeerListGossipConfig = PeerListGossipConfig{
-	//	PeerListNumValidatorIPs: 100,
-	//	PeerListPullGossipFreq:  time.Second,
-	//	PeerListBloomResetFreq:  constants.DefaultNetworkPeerListBloomResetFreq,
-	//}
+	DefaultPingFrequency        = time.Second
+	defaultPeerListGossipConfig = PeerListGossipConfig{
+		PeerListNumValidatorIPs: 100,
+		PeerListPullGossipFreq:  time.Second,
+		PeerListBloomResetFreq:  DefaultNetworkPeerListBloomResetFreq,
+	}
 	defaultTimeoutConfig = TimeoutConfig{
 		PingPongTimeout:      30 * time.Second,
 		ReadHandshakeTimeout: 15 * time.Second,
@@ -82,24 +89,24 @@ var (
 	//}
 
 	defaultConfig = Config{
-		HealthConfig: defaultHealthConfig,
-		//PeerListGossipConfig: defaultPeerListGossipConfig,
-		TimeoutConfig: defaultTimeoutConfig,
-		DelayConfig:   defaultDelayConfig,
+		HealthConfig:         defaultHealthConfig,
+		PeerListGossipConfig: defaultPeerListGossipConfig,
+		TimeoutConfig:        defaultTimeoutConfig,
+		DelayConfig:          defaultDelayConfig,
 		//ThrottlerConfig:      defaultThrottlerConfig,
 		//
 		//DialerConfig: defaultDialerConfig,
 		//
 		//NetworkID:          49463,
-		//MaxClockDifference: time.Minute,
-		//PingFrequency:      constants.DefaultPingFrequency,
-		AllowPrivateIPs: true,
+		MaxClockDifference: time.Minute,
+		PingFrequency:      DefaultPingFrequency,
+		AllowPrivateIPs:    true,
 
 		//CompressionType: constants.DefaultNetworkCompressionType,
-		//
-		//UptimeCalculator:  uptime.NewManager(uptime.NewTestState(), &mockable.Clock{}),
-		//UptimeMetricFreq:  30 * time.Second,
-		//UptimeRequirement: .8,
+
+		UptimeCalculator:  uptime.NewManager(uptime.NewTestState(), &mockable.Clock{}),
+		UptimeMetricFreq:  30 * time.Second,
+		UptimeRequirement: .8,
 
 		RequireValidatorToConnect: false,
 
@@ -195,7 +202,6 @@ func newFullyConnectedTestNetwork(t *testing.T, handlers []router.InboundHandler
 	require := require.New(t)
 
 	dialer, listeners, nodeIDs, configs := newTestNetwork(t, len(handlers))
-	//_, _, nodeIDs, configs := newTestNetwork(t, len(handlers))
 
 	var (
 		networks = make([]*network, len(configs))

@@ -4,8 +4,10 @@
 package peer
 
 import (
+	"github.com/landslidenetwork/slide-sdk/utils/bloom"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/ips"
+	"github.com/landslidenetwork/slide-sdk/utils/set"
 	//"github.com/landslidenetwork/slide-sdk/utils/bloom"
 	//"github.com/ava-labs/avalanchego/utils/ips"
 	//"github.com/landslidenetwork/slide-sdk/utils/set"
@@ -34,12 +36,12 @@ type Network interface {
 	// KnownPeers returns the bloom filter of the known peers.
 	KnownPeers() (bloomFilter []byte, salt []byte)
 
-	//// Peers returns peers that are not known.
-	//Peers(
-	//	peerID ids.NodeID,
-	//	trackedSubnets set.Set[ids.ID],
-	//	requestAllPeers bool,
-	//	knownPeers *bloom.ReadFilter,
-	//	peerSalt []byte,
-	//) []*ips.ClaimedIPPort
+	// Peers returns peers that are not known.
+	Peers(
+		peerID ids.NodeID,
+		trackedSubnets set.Set[ids.ID],
+		requestAllPeers bool,
+		knownPeers *bloom.ReadFilter,
+		peerSalt []byte,
+	) []*ips.ClaimedIPPort
 }

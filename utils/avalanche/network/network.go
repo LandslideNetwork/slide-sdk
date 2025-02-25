@@ -5,6 +5,7 @@ package network
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
@@ -13,6 +14,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/dialer"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/sender"
+	"github.com/landslidenetwork/slide-sdk/utils/bloom"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/ips"
 	safemath "github.com/landslidenetwork/slide-sdk/utils/math"
@@ -23,6 +25,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/wrappers"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
+	"math"
 	"net"
 	"net/netip"
 	"sync"
@@ -73,15 +76,15 @@ import (
 //	TimeSinceLastMsgSentKey     = "timeSinceLastMsgSent"
 //	SendFailRateKey             = "sendFailRate"
 //)
-//
-//var (
-//	_ Network = (*network)(nil)
-//
-//	errNotValidator           = errors.New("node is not a validator")
-//	errExpectedProxy          = errors.New("expected proxy")
-//	errExpectedTCPProtocol    = errors.New("expected TCP protocol")
-//	errTrackingPrimaryNetwork = errors.New("cannot track primary network")
-//)
+
+var (
+	//	_ Network = (*network)(nil)
+
+	errNotValidator = errors.New("node is not a validator")
+	//	errExpectedProxy          = errors.New("expected proxy")
+	//	errExpectedTCPProtocol    = errors.New("expected TCP protocol")
+	//	errTrackingPrimaryNetwork = errors.New("cannot track primary network")
+)
 
 // Network defines the functionality of the networking library.
 type Network interface {
@@ -110,26 +113,26 @@ type Network interface {
 	//	// info about all peers that have finished the handshake. Otherwise, returns
 	//	// info about the peers in [nodeIDs] that have finished the handshake.
 	//	PeerInfo(nodeIDs []ids.NodeID) []peer.Info
-	//
-	//	// NodeUptime returns given node's primary network UptimeResults in the view of
-	//	// this node's peer validators.
-	//	NodeUptime() (UptimeResult, error)
-	//}
-	//
-	//type UptimeResult struct {
-	//	// RewardingStakePercentage shows what percent of network stake thinks we're
-	//	// above the uptime requirement.
-	//	RewardingStakePercentage float64
-	//
-	//	// WeightedAveragePercentage is the average perceived uptime of this node,
-	//	// weighted by stake.
-	//	// Note that this is different from RewardingStakePercentage, which shows
-	//	// the percent of the network stake that thinks this node is above the
-	//	// uptime requirement. WeightedAveragePercentage is weighted by uptime.
-	//	// i.e If uptime requirement is 85 and a peer reports 40 percent it will be
-	//	// counted (40*weight) in WeightedAveragePercentage but not in
-	//	// RewardingStakePercentage since 40 < 85
-	//	WeightedAveragePercentage float64
+
+	// NodeUptime returns given node's primary network UptimeResults in the view of
+	// this node's peer validators.
+	NodeUptime() (UptimeResult, error)
+}
+
+type UptimeResult struct {
+	// RewardingStakePercentage shows what percent of network stake thinks we're
+	// above the uptime requirement.
+	RewardingStakePercentage float64
+
+	// WeightedAveragePercentage is the average perceived uptime of this node,
+	// weighted by stake.
+	// Note that this is different from RewardingStakePercentage, which shows
+	// the percent of the network stake that thinks this node is above the
+	// uptime requirement. WeightedAveragePercentage is weighted by uptime.
+	// i.e If uptime requirement is 85 and a peer reports 40 percent it will be
+	// counted (40*weight) in WeightedAveragePercentage but not in
+	// RewardingStakePercentage since 40 < 85
+	WeightedAveragePercentage float64
 }
 
 // To avoid potential deadlocks, we maintain that locks must be grabbed in the
@@ -267,12 +270,11 @@ func NewNetwork(
 	//	}
 
 	//ipTracker, err := newIPTracker(config.TrackedSubnets, log, metricsRegisterer)
-	ipTracker, err := newIPTracker()
+	ipTracker, err := newIPTracker(config.TrackedSubnets)
 	if err != nil {
 		return nil, fmt.Errorf("initializing ip tracker failed with: %w", err)
 	}
-	//	config.Validators.RegisterCallbackListener(ipTracker)
-	//
+	config.Validators.RegisterCallbackListener(ipTracker)
 	//	// Track all default bootstrappers to ensure their current IPs are gossiped
 	//	// like validator IPs.
 	//	for _, bootstrapper := range genesis.GetBootstrappers(config.NetworkID) {
@@ -300,14 +302,14 @@ func NewNetwork(
 		//Beacons:              config.Beacons,
 		Validators: config.Validators,
 		//NetworkID:  config.NetworkID,
-		//PingFrequency:        config.PingFrequency,
-		PongTimeout: config.PingPongTimeout,
-		//MaxClockDifference: config.MaxClockDifference,
+		PingFrequency:      config.PingFrequency,
+		PongTimeout:        config.PingPongTimeout,
+		MaxClockDifference: config.MaxClockDifference,
 		//SupportedACPs:      config.SupportedACPs.List(),
 		//ObjectedACPs:       config.ObjectedACPs.List(),
 		//ResourceTracker:      config.ResourceTracker,
-		//UptimeCalculator:     config.UptimeCalculator,
-		IPSigner: peer.NewIPSigner(config.MyIPPort, config.TLSKey, config.BLSKey),
+		UptimeCalculator: config.UptimeCalculator,
+		IPSigner:         peer.NewIPSigner(config.MyIPPort, config.TLSKey, config.BLSKey),
 	}
 
 	onCloseCtx, cancel := context.WithCancel(context.Background())
@@ -489,18 +491,18 @@ func (n *network) Connected(nodeID ids.NodeID) {
 		peerIP.Timestamp,
 		peerIP.TLSSignature,
 	)
-	//trackedSubnets := peer.TrackedSubnets()
-	n.ipTracker.Connected(newIP)
+	trackedSubnets := peer.TrackedSubnets()
+	n.ipTracker.Connected(newIP, trackedSubnets)
 
 	//n.metrics.markConnected(peer)
 
 	peerVersion := peer.Version()
 	n.router.Connected(nodeID, peerVersion, constants.PrimaryNetworkID)
-	//for subnetID := range n.peerConfig.MySubnets {
-	//	if trackedSubnets.Contains(subnetID) {
-	//		n.router.Connected(nodeID, peerVersion, subnetID)
-	//	}
-	//}
+	for subnetID := range n.peerConfig.MySubnets {
+		if trackedSubnets.Contains(subnetID) {
+			n.router.Connected(nodeID, peerVersion, subnetID)
+		}
+	}
 }
 
 // AllowConnection returns true if this node should have a connection to the
@@ -548,68 +550,68 @@ func (n *network) KnownPeers() ([]byte, []byte) {
 	return n.ipTracker.Bloom()
 }
 
-//// There are 3 types of responses:
-////
-//// - Respond with subnets IPs tracked by both ourselves and the peer
-////   - We do not consider ourself to be a primary network validator
-////
-//// - Respond with all subnets IPs
-////   - The peer requests all peers
-////   - We believe ourself to be a primary network validator
-////
-//// - Respond with subnets IPs tracked by the peer
-////   - The peer does not request all peers
-////   - We believe ourself to be a primary network validator
-////
-//// The reason we allow the peer to request all peers is so that we can avoid
-//// sending unnecessary data in the case that we consider them a primary network
-//// validator but they do not consider themselves one.
-//func (n *network) Peers(
-//	peerID ids.NodeID,
-//	trackedSubnets set.Set[ids.ID],
-//	requestAllPeers bool,
-//	knownPeers *bloom.ReadFilter,
-//	salt []byte,
-//) []*ips.ClaimedIPPort {
-//	_, areWeAPrimaryNetworkValidator := n.config.Validators.GetValidator(constants.PrimaryNetworkID, n.config.MyNodeID)
+// There are 3 types of responses:
 //
-//	// Only return IPs for subnets that we are tracking.
-//	var allowedSubnets func(ids.ID) bool
-//	if areWeAPrimaryNetworkValidator {
-//		allowedSubnets = func(ids.ID) bool { return true }
-//	} else {
-//		allowedSubnets = func(subnetID ids.ID) bool {
-//			return subnetID == constants.PrimaryNetworkID || n.ipTracker.trackedSubnets.Contains(subnetID)
-//		}
-//	}
+// - Respond with subnets IPs tracked by both ourselves and the peer
+//   - We do not consider ourself to be a primary network validator
 //
-//	if areWeAPrimaryNetworkValidator && requestAllPeers {
-//		// Return IPs for all subnets.
-//		return getGossipableIPs(
-//			n.ipTracker,
-//			n.ipTracker.subnets,
-//			allowedSubnets,
-//			peerID,
-//			knownPeers,
-//			salt,
-//			int(n.config.PeerListNumValidatorIPs),
-//		)
-//	}
-//	return getGossipableIPs(
-//		n.ipTracker,
-//		trackedSubnets,
-//		allowedSubnets,
-//		peerID,
-//		knownPeers,
-//		salt,
-//		int(n.config.PeerListNumValidatorIPs),
-//	)
-//}
+// - Respond with all subnets IPs
+//   - The peer requests all peers
+//   - We believe ourself to be a primary network validator
+//
+// - Respond with subnets IPs tracked by the peer
+//   - The peer does not request all peers
+//   - We believe ourself to be a primary network validator
+//
+// The reason we allow the peer to request all peers is so that we can avoid
+// sending unnecessary data in the case that we consider them a primary network
+// validator but they do not consider themselves one.
+func (n *network) Peers(
+	peerID ids.NodeID,
+	trackedSubnets set.Set[ids.ID],
+	requestAllPeers bool,
+	knownPeers *bloom.ReadFilter,
+	salt []byte,
+) []*ips.ClaimedIPPort {
+	_, areWeAPrimaryNetworkValidator := n.config.Validators.GetValidator(constants.PrimaryNetworkID, n.config.MyNodeID)
+
+	// Only return IPs for subnets that we are tracking.
+	var allowedSubnets func(ids.ID) bool
+	if areWeAPrimaryNetworkValidator {
+		allowedSubnets = func(ids.ID) bool { return true }
+	} else {
+		allowedSubnets = func(subnetID ids.ID) bool {
+			return subnetID == constants.PrimaryNetworkID || n.ipTracker.trackedSubnets.Contains(subnetID)
+		}
+	}
+
+	if areWeAPrimaryNetworkValidator && requestAllPeers {
+		// Return IPs for all subnets.
+		return getGossipableIPs(
+			n.ipTracker,
+			n.ipTracker.subnets,
+			allowedSubnets,
+			peerID,
+			knownPeers,
+			salt,
+			int(n.config.PeerListNumValidatorIPs),
+		)
+	}
+	return getGossipableIPs(
+		n.ipTracker,
+		trackedSubnets,
+		allowedSubnets,
+		peerID,
+		knownPeers,
+		salt,
+		int(n.config.PeerListNumValidatorIPs),
+	)
+}
 
 // Dispatch starts accepting connections from other nodes attempting to connect
 // to this node.
 func (n *network) Dispatch() error {
-	//go n.runTimers() // Periodically perform operations
+	go n.runTimers() // Periodically perform operations
 	//go n.inboundConnUpgradeThrottler.Dispatch()
 	for { // Continuously accept new connections
 		if n.onCloseCtx.Err() != nil {
@@ -813,11 +815,10 @@ func (n *network) samplePeers(
 	return n.connectedPeers.Sample(
 		numValidatorsToSample+config.NonValidators+config.Peers,
 		func(p peer.Peer) bool {
-			//TODO: implement if necessary
-			//// Only return peers that are tracking [subnetID]
-			//if trackedSubnets := p.TrackedSubnets(); !trackedSubnets.Contains(subnetID) {
-			//	return false
-			//}
+			// Only return peers that are tracking [subnetID]
+			if trackedSubnets := p.TrackedSubnets(); !trackedSubnets.Contains(subnetID) {
+				return false
+			}
 
 			peerID := p.ID()
 			// if the peer was already explicitly included, don't include in the
@@ -872,7 +873,7 @@ func (n *network) disconnectedFromConnecting(nodeID ids.NodeID) {
 
 func (n *network) disconnectedFromConnected(peer peer.Peer, nodeID ids.NodeID) {
 	//n.ipTracker.Disconnected(nodeID)
-	//n.router.Disconnected(nodeID)
+	n.router.Disconnected(nodeID)
 
 	n.peersLock.Lock()
 	defer n.peersLock.Unlock()
@@ -1174,10 +1175,10 @@ func (n *network) StartClose() {
 		n.closing = true
 		n.onCloseCtxCancel()
 
-		//for nodeID, tracked := range n.trackedIPs {
-		//	tracked.stopTracking()
-		//	delete(n.trackedIPs, nodeID)
-		//}
+		for nodeID, tracked := range n.trackedIPs {
+			tracked.stopTracking()
+			delete(n.trackedIPs, nodeID)
+		}
 
 		for i := 0; i < n.connectingPeers.Len(); i++ {
 			peer, _ := n.connectingPeers.GetByIndex(i)
@@ -1191,104 +1192,105 @@ func (n *network) StartClose() {
 	})
 }
 
-//func (n *network) NodeUptime() (UptimeResult, error) {
-//	myStake := n.config.Validators.GetWeight(constants.PrimaryNetworkID, n.config.MyNodeID)
-//	if myStake == 0 {
-//		return UptimeResult{}, errNotValidator
-//	}
-//
-//	totalWeightInt, err := n.config.Validators.TotalWeight(constants.PrimaryNetworkID)
-//	if err != nil {
-//		return UptimeResult{}, fmt.Errorf("error while fetching weight for primary network %w", err)
-//	}
-//
-//	var (
-//		totalWeight          = float64(totalWeightInt)
-//		totalWeightedPercent = 100 * float64(myStake)
-//		rewardingStake       = float64(myStake)
-//	)
-//
-//	n.peersLock.RLock()
-//	defer n.peersLock.RUnlock()
-//
-//	for i := 0; i < n.connectedPeers.Len(); i++ {
-//		peer, _ := n.connectedPeers.GetByIndex(i)
-//
-//		nodeID := peer.ID()
-//		weight := n.config.Validators.GetWeight(constants.PrimaryNetworkID, nodeID)
-//		if weight == 0 {
-//			// this is not a validator skip it.
-//			continue
-//		}
-//
-//		observedUptime := peer.ObservedUptime()
-//		percent := float64(observedUptime)
-//		weightFloat := float64(weight)
-//		totalWeightedPercent += percent * weightFloat
-//
-//		// if this peer thinks we're above requirement add the weight
-//		if percent/100 >= n.config.UptimeRequirement {
-//			rewardingStake += weightFloat
-//		}
-//	}
-//
-//	return UptimeResult{
-//		WeightedAveragePercentage: math.Abs(totalWeightedPercent / totalWeight),
-//		RewardingStakePercentage:  math.Abs(100 * rewardingStake / totalWeight),
-//	}, nil
-//}
-//
-//func (n *network) runTimers() {
-//	pullGossipPeerlists := time.NewTicker(n.config.PeerListPullGossipFreq)
-//	resetPeerListBloom := time.NewTicker(n.config.PeerListBloomResetFreq)
-//	updateUptimes := time.NewTicker(n.config.UptimeMetricFreq)
-//	defer func() {
-//		resetPeerListBloom.Stop()
-//		updateUptimes.Stop()
-//	}()
-//
-//	for {
-//		select {
-//		case <-n.onCloseCtx.Done():
-//			return
-//		case <-pullGossipPeerlists.C:
-//			n.pullGossipPeerLists()
-//		case <-resetPeerListBloom.C:
-//			if err := n.ipTracker.ResetBloom(); err != nil {
-//				n.peerConfig.Log.Error("failed to reset ip tracker bloom filter",
-//					zap.Error(err),
-//				)
-//			} else {
-//				n.peerConfig.Log.Debug("reset ip tracker bloom filter")
-//			}
-//		case <-updateUptimes.C:
-//			primaryUptime, err := n.NodeUptime()
-//			if err != nil {
-//				n.peerConfig.Log.Debug("failed to get primary network uptime",
-//					zap.Error(err),
-//				)
-//			}
-//			n.metrics.nodeUptimeWeightedAverage.Set(primaryUptime.WeightedAveragePercentage)
-//			n.metrics.nodeUptimeRewardingStake.Set(primaryUptime.RewardingStakePercentage)
-//		}
-//	}
-//}
-//
-//// pullGossipPeerLists requests validators from peers in the network
-//func (n *network) pullGossipPeerLists() {
-//	peers := n.samplePeers(
-//		common.SendConfig{
-//			Validators: 1,
-//		},
-//		constants.PrimaryNetworkID,
-//		subnets.NoOpAllower,
-//	)
-//
-//	for _, p := range peers {
-//		p.StartSendGetPeerList()
-//	}
-//}
-//
+func (n *network) NodeUptime() (UptimeResult, error) {
+	myStake := n.config.Validators.GetWeight(constants.PrimaryNetworkID, n.config.MyNodeID)
+	if myStake == 0 {
+		return UptimeResult{}, errNotValidator
+	}
+
+	totalWeightInt, err := n.config.Validators.TotalWeight(constants.PrimaryNetworkID)
+	if err != nil {
+		return UptimeResult{}, fmt.Errorf("error while fetching weight for primary network %w", err)
+	}
+
+	var (
+		totalWeight          = float64(totalWeightInt)
+		totalWeightedPercent = 100 * float64(myStake)
+		rewardingStake       = float64(myStake)
+	)
+
+	n.peersLock.RLock()
+	defer n.peersLock.RUnlock()
+
+	for i := 0; i < n.connectedPeers.Len(); i++ {
+		peer, _ := n.connectedPeers.GetByIndex(i)
+
+		nodeID := peer.ID()
+		weight := n.config.Validators.GetWeight(constants.PrimaryNetworkID, nodeID)
+		if weight == 0 {
+			// this is not a validator skip it.
+			continue
+		}
+
+		observedUptime := peer.ObservedUptime()
+		percent := float64(observedUptime)
+		weightFloat := float64(weight)
+		totalWeightedPercent += percent * weightFloat
+
+		// if this peer thinks we're above requirement add the weight
+		if percent/100 >= n.config.UptimeRequirement {
+			rewardingStake += weightFloat
+		}
+	}
+
+	return UptimeResult{
+		WeightedAveragePercentage: math.Abs(totalWeightedPercent / totalWeight),
+		RewardingStakePercentage:  math.Abs(100 * rewardingStake / totalWeight),
+	}, nil
+}
+
+func (n *network) runTimers() {
+	pullGossipPeerlists := time.NewTicker(n.config.PeerListPullGossipFreq)
+	resetPeerListBloom := time.NewTicker(n.config.PeerListBloomResetFreq)
+	updateUptimes := time.NewTicker(n.config.UptimeMetricFreq)
+	defer func() {
+		resetPeerListBloom.Stop()
+		updateUptimes.Stop()
+	}()
+
+	for {
+		select {
+		case <-n.onCloseCtx.Done():
+			return
+		case <-pullGossipPeerlists.C:
+			n.pullGossipPeerLists()
+		case <-resetPeerListBloom.C:
+			if err := n.ipTracker.ResetBloom(); err != nil {
+				n.peerConfig.Log.Error("failed to reset ip tracker bloom filter",
+					zap.Error(err),
+				)
+			} else {
+				n.peerConfig.Log.Debug("reset ip tracker bloom filter")
+			}
+		case <-updateUptimes.C:
+			primaryUptime, err := n.NodeUptime()
+			if err != nil {
+				n.peerConfig.Log.Debug("failed to get primary network uptime",
+					zap.Error(err),
+				)
+			}
+			n.peerConfig.Log.Debug("primary uptime", primaryUptime)
+			//n.metrics.nodeUptimeWeightedAverage.Set(primaryUptime.WeightedAveragePercentage)
+			//n.metrics.nodeUptimeRewardingStake.Set(primaryUptime.RewardingStakePercentage)
+		}
+	}
+}
+
+// pullGossipPeerLists requests validators from peers in the network
+func (n *network) pullGossipPeerLists() {
+	peers := n.samplePeers(
+		common.SendConfig{
+			Validators: 1,
+		},
+		constants.PrimaryNetworkID,
+		subnets.NoOpAllower,
+	)
+
+	for _, p := range peers {
+		p.StartSendGetPeerList()
+	}
+}
+
 //func (n *network) getLastReceived() (time.Time, bool) {
 //	lastReceived := atomic.LoadInt64(&n.peerConfig.LastReceived)
 //	if lastReceived == 0 {

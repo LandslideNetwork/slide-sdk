@@ -7,6 +7,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/version"
@@ -32,9 +33,9 @@ type Config struct {
 	// MySubnets does not include the primary network ID
 	MySubnets set.Set[ids.ID]
 	//Beacons            validators.Manager
-	Validators validators.Manager
-	NetworkID  uint32
-	//PingFrequency      time.Duration
+	Validators         validators.Manager
+	NetworkID          uint32
+	PingFrequency      time.Duration
 	PongTimeout        time.Duration
 	MaxClockDifference time.Duration
 
@@ -47,9 +48,9 @@ type Config struct {
 
 	//// Tracks CPU/disk usage caused by each peer.
 	//ResourceTracker tracker.ResourceTracker
-	//
-	//// Calculates uptime of peers
-	//UptimeCalculator uptime.Calculator
+
+	// Calculates uptime of peers
+	UptimeCalculator uptime.Calculator
 
 	// Signs my IP so I can send my signed IP address in the Handshake message
 	IPSigner *IPSigner
