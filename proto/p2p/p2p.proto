@@ -44,7 +44,7 @@ message Message {
     //    Ancestors ancestors = 24;
     //
     //    // Consensus messages:
-    //    Get get = 25;
+//        Get get = 25;
     //    Put put = 26;
     //    PushQuery push_query = 27;
     //    PullQuery pull_query = 28;

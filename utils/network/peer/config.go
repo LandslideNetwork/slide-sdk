@@ -6,6 +6,7 @@ package peer
 import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
@@ -26,8 +27,8 @@ type Config struct {
 
 	Log log.Logger
 	//InboundMsgThrottler  throttling.InboundMsgThrottler
-	Network Network
-	//Router               router.InboundHandler
+	Network              Network
+	Router               router.InboundHandler
 	VersionCompatibility version.Compatibility
 	MyNodeID             ids.NodeID
 	// MySubnets does not include the primary network ID

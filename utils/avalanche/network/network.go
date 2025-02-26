@@ -294,8 +294,8 @@ func NewNetwork(
 
 		Log: log,
 		//		InboundMsgThrottler:  inboundMsgThrottler,
-		Network: nil, // This is set below.
-		//Router:               router,
+		Network:              nil, // This is set below.
+		Router:               router,
 		VersionCompatibility: version.GetCompatibility(minCompatibleTime),
 		MyNodeID:             config.MyNodeID,
 		//MySubnets:            config.TrackedSubnets,
@@ -329,12 +329,12 @@ func NewNetwork(
 		//
 		onCloseCtx:       onCloseCtx,
 		onCloseCtxCancel: cancel,
-		//
-		//		sendFailRateCalculator: safemath.NewSyncAverager(safemath.NewAverager(
-		//			0,
-		//			config.SendFailRateHalflife,
-		//			time.Now(),
-		//		)),
+
+		sendFailRateCalculator: safemath.NewSyncAverager(safemath.NewAverager(
+			0,
+			config.SendFailRateHalflife,
+			time.Now(),
+		)),
 
 		trackedIPs:      make(map[ids.NodeID]*trackedIP),
 		ipTracker:       ipTracker,

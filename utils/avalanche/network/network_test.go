@@ -4,9 +4,11 @@
 package network
 
 import (
+	"context"
 	"crypto"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
@@ -17,6 +19,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/staking"
+	"github.com/landslidenetwork/slide-sdk/utils/subnets"
 	"github.com/landslidenetwork/slide-sdk/utils/version"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 	"github.com/prometheus/client_golang/prometheus"
@@ -305,51 +308,51 @@ func TestNewNetwork(t *testing.T) {
 	wg.Wait()
 }
 
-//func TestSend(t *testing.T) {
-//	require := require.New(t)
-//
-//	received := make(chan message.InboundMessage)
-//	nodeIDs, networks, wg := newFullyConnectedTestNetwork(
-//		t,
-//		[]router.InboundHandler{
-//			router.InboundHandlerFunc(func(context.Context, message.InboundMessage) {
-//				require.FailNow("unexpected message received")
-//			}),
-//			router.InboundHandlerFunc(func(_ context.Context, msg message.InboundMessage) {
-//				received <- msg
-//			}),
-//			router.InboundHandlerFunc(func(context.Context, message.InboundMessage) {
-//				require.FailNow("unexpected message received")
-//			}),
-//		},
-//	)
-//
-//	net0 := networks[0]
-//
-//	mc := newMessageCreator(t)
-//	outboundGetMsg, err := mc.Get(ids.Empty, 1, time.Second, ids.Empty)
-//	require.NoError(err)
-//
-//	toSend := set.Of(nodeIDs[1])
-//	sentTo := net0.Send(
-//		outboundGetMsg,
-//		common.SendConfig{
-//			NodeIDs: toSend,
-//		},
-//		constants.PrimaryNetworkID,
-//		subnets.NoOpAllower,
-//	)
-//	require.Equal(toSend, sentTo)
-//
-//	inboundGetMsg := <-received
-//	require.Equal(message.GetOp, inboundGetMsg.Op())
-//
-//	for _, net := range networks {
-//		net.StartClose()
-//	}
-//	wg.Wait()
-//}
-//
+func TestSend(t *testing.T) {
+	require := require.New(t)
+
+	received := make(chan message.InboundMessage)
+	nodeIDs, networks, wg := newFullyConnectedTestNetwork(
+		t,
+		[]router.InboundHandler{
+			router.InboundHandlerFunc(func(context.Context, message.InboundMessage) {
+				require.FailNow("unexpected message received")
+			}),
+			router.InboundHandlerFunc(func(_ context.Context, msg message.InboundMessage) {
+				received <- msg
+			}),
+			router.InboundHandlerFunc(func(context.Context, message.InboundMessage) {
+				require.FailNow("unexpected message received")
+			}),
+		},
+	)
+
+	net0 := networks[0]
+
+	mc := newMessageCreator(t)
+	outboundGetMsg, err := mc.AppRequest(ids.Empty, 1, time.Second, []byte("content"))
+	require.NoError(err)
+
+	toSend := set.Of(nodeIDs[1])
+	sentTo := net0.Send(
+		outboundGetMsg,
+		common.SendConfig{
+			NodeIDs: toSend,
+		},
+		constants.PrimaryNetworkID,
+		subnets.NoOpAllower,
+	)
+	require.Equal(toSend, sentTo)
+
+	inboundAppRequestMsg := <-received
+	require.Equal(message.AppRequestOp, inboundAppRequestMsg.Op())
+
+	for _, net := range networks {
+		net.StartClose()
+	}
+	wg.Wait()
+}
+
 //func TestSendWithFilter(t *testing.T) {
 //	require := require.New(t)
 //

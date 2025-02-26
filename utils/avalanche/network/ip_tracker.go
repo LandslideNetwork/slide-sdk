@@ -63,10 +63,10 @@ func newIPTracker(
 		//}),
 		//TODO: implement bloomMetrics
 		//bloomMetrics:   bloomMetrics,
-		tracked: make(map[ids.NodeID]*trackedNode),
-		//bloomAdditions: make(map[ids.NodeID]int),
-		connected: make(map[ids.NodeID]*connectedNode),
-		subnets:   make(map[ids.ID]*gossipableSubnet),
+		tracked:        make(map[ids.NodeID]*trackedNode),
+		bloomAdditions: make(map[ids.NodeID]int),
+		connected:      make(map[ids.NodeID]*connectedNode),
+		subnets:        make(map[ids.ID]*gossipableSubnet),
 	}
 	//err = errors.Join(
 	//	registerer.Register(tracker.numTrackedPeers),

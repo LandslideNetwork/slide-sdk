@@ -6,6 +6,7 @@ package peer
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
@@ -606,6 +607,9 @@ func (p *peer) writeMessage(writer io.Writer, msg message.OutboundMessage) {
 		zap.Stringer("nodeID", p.id),
 		zap.Binary("messageBytes", msgBytes),
 	)
+	if msg.Op() == message.AppRequestOp {
+		fmt.Println("write message", msg.Op())
+	}
 
 	if err := p.conn.SetWriteDeadline(p.nextTimeout()); err != nil {
 		p.Log.Error(failedToSetDeadlineLog,
@@ -785,8 +789,8 @@ func (p *peer) handle(msg message.InboundMessage) {
 	}
 
 	//TODO: implement app-level processing
-	//// Consensus and app-level messages
-	//p.Router.HandleInbound(context.Background(), msg)
+	// Consensus and app-level messages
+	p.Router.HandleInbound(context.Background(), msg)
 }
 
 func (p *peer) handlePing(msg *p2p.Ping) {
