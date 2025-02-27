@@ -39,8 +39,8 @@ const (
 
 func newIPTracker(
 	trackedSubnets set.Set[ids.ID],
-	// log log.Logger,
-	// registerer prometheus.Registerer,
+// log log.Logger,
+// registerer prometheus.Registerer,
 ) (*ipTracker, error) {
 	//bloomMetrics, err := bloom.NewMetrics("ip_bloom", registerer)
 	//if err != nil {
@@ -269,10 +269,8 @@ func (i *ipTracker) WantsConnection(nodeID ids.NodeID) bool {
 	i.lock.RLock()
 	defer i.lock.RUnlock()
 
-	//TODO: implement
-	//node, ok := i.tracked[nodeID]
-	//return ok && node.wantsConnection()
-	return true
+	node, ok := i.tracked[nodeID]
+	return ok && node.wantsConnection()
 }
 
 //// ShouldVerifyIP is used as an optimization to avoid unnecessary IP

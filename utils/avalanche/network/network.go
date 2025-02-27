@@ -95,24 +95,24 @@ type Network interface {
 	//	// Has a health check
 	//	health.Checker
 	//
-	//	peer.Network
-	//
-	//	// StartClose this network and all existing connections it has. Calling
-	//	// StartClose multiple times is handled gracefully.
-	//	StartClose()
+	peer.Network
+
+	// StartClose this network and all existing connections it has. Calling
+	// StartClose multiple times is handled gracefully.
+	StartClose()
 
 	// Should only be called once, will run until either a fatal error occurs,
 	// or the network is closed.
 	Dispatch() error
+
+	// Attempt to connect to this IP. The network will never stop attempting to
+	// connect to this ID.
+	ManuallyTrack(nodeID ids.NodeID, ip netip.AddrPort)
 	//
-	//	// Attempt to connect to this IP. The network will never stop attempting to
-	//	// connect to this ID.
-	//	ManuallyTrack(nodeID ids.NodeID, ip netip.AddrPort)
-	//
-	//	// PeerInfo returns information about peers. If [nodeIDs] is empty, returns
-	//	// info about all peers that have finished the handshake. Otherwise, returns
-	//	// info about the peers in [nodeIDs] that have finished the handshake.
-	//	PeerInfo(nodeIDs []ids.NodeID) []peer.Info
+	//// PeerInfo returns information about peers. If [nodeIDs] is empty, returns
+	//// info about all peers that have finished the handshake. Otherwise, returns
+	//// info about the peers in [nodeIDs] that have finished the handshake.
+	//PeerInfo(nodeIDs []ids.NodeID) []peer.Info
 
 	// NodeUptime returns given node's primary network UptimeResults in the view of
 	// this node's peer validators.

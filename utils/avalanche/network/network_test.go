@@ -16,6 +16,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/ips"
 	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/staking"
@@ -24,6 +25,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
+	"net/netip"
 	"sync"
 	"testing"
 	"time"
@@ -34,6 +36,7 @@ const (
 )
 
 var (
+	InitiallyActiveTime = time.Date(2020, time.December, 5, 5, 0, 0, 0, time.UTC)
 	defaultHealthConfig = HealthConfig{
 		MinConnectedPeers:            1,
 		MaxTimeSinceMsgReceived:      time.Minute,
@@ -400,227 +403,227 @@ func TestSendWithFilter(t *testing.T) {
 	wg.Wait()
 }
 
-//func TestTrackVerifiesSignatures(t *testing.T) {
-//	require := require.New(t)
-//
-//	_, networks, wg := newFullyConnectedTestNetwork(t, []router.InboundHandler{nil})
-//
-//	network := networks[0]
-//
-//	tlsCert, err := staking.NewTLSCert()
-//	require.NoError(err)
-//
-//	cert, err := staking.ParseCertificate(tlsCert.Leaf.Raw)
-//	require.NoError(err)
-//	nodeID := ids.NodeIDFromCert(cert)
-//
-//	require.NoError(network.config.Validators.AddStaker(constants.PrimaryNetworkID, nodeID, nil, ids.Empty, 1))
-//
-//	stakingCert, err := staking.ParseCertificate(tlsCert.Leaf.Raw)
-//	require.NoError(err)
-//
-//	err = network.Track([]*ips.ClaimedIPPort{
-//		ips.NewClaimedIPPort(
-//			stakingCert,
-//			netip.AddrPortFrom(
-//				netip.AddrFrom4([4]byte{123, 132, 123, 123}),
-//				10000,
-//			),
-//			1000, // timestamp
-//			nil,  // signature
-//		),
-//	})
-//	// The signature is wrong so this peer tracking info isn't useful.
-//	require.ErrorIs(err, staking.ErrECDSAVerificationFailure)
-//
-//	network.peersLock.RLock()
-//	require.Empty(network.trackedIPs)
-//	network.peersLock.RUnlock()
-//
-//	for _, net := range networks {
-//		net.StartClose()
-//	}
-//	wg.Wait()
-//}
-//
-//func TestTrackDoesNotDialPrivateIPs(t *testing.T) {
-//	require := require.New(t)
-//
-//	dialer, listeners, nodeIDs, configs := newTestNetwork(t, 2)
-//
-//	networks := make([]Network, len(configs))
-//	for i, config := range configs {
-//		msgCreator := newMessageCreator(t)
-//		registry := prometheus.NewRegistry()
-//
-//		beacons := validators.NewManager()
-//		require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
-//
-//		vdrs := validators.NewManager()
-//		for _, nodeID := range nodeIDs {
-//			require.NoError(vdrs.AddStaker(constants.PrimaryNetworkID, nodeID, nil, ids.GenerateTestID(), 1))
-//		}
-//
-//		config := config
-//
-//		config.Beacons = beacons
-//		config.Validators = vdrs
-//		config.AllowPrivateIPs = false
-//
-//		net, err := NewNetwork(
-//			config,
-//			upgrade.InitiallyActiveTime,
-//			msgCreator,
-//			registry,
-//			logging.NoLog{},
-//			listeners[i],
-//			dialer,
-//			&testHandler{
-//				InboundHandler: nil,
-//				ConnectedF: func(ids.NodeID, *version.Application, ids.ID) {
-//					require.FailNow("unexpectedly connected to a peer")
-//				},
-//				DisconnectedF: nil,
-//			},
-//		)
-//		require.NoError(err)
-//		networks[i] = net
-//	}
-//
-//	wg := sync.WaitGroup{}
-//	wg.Add(len(networks))
-//	for i, net := range networks {
-//		if i != 0 {
-//			config := configs[0]
-//			net.ManuallyTrack(config.MyNodeID, config.MyIPPort.Get())
-//		}
-//
-//		go func(net Network) {
-//			defer wg.Done()
-//
-//			require.NoError(net.Dispatch())
-//		}(net)
-//	}
-//
-//	network := networks[1].(*network)
-//	require.Eventually(
-//		func() bool {
-//			network.peersLock.RLock()
-//			defer network.peersLock.RUnlock()
-//
-//			nodeID := nodeIDs[0]
-//			require.Contains(network.trackedIPs, nodeID)
-//			ip := network.trackedIPs[nodeID]
-//			return ip.getDelay() != 0
-//		},
-//		10*time.Second,
-//		50*time.Millisecond,
-//	)
-//
-//	for _, net := range networks {
-//		net.StartClose()
-//	}
-//	wg.Wait()
-//}
-//
-//func TestDialDeletesNonValidators(t *testing.T) {
-//	require := require.New(t)
-//
-//	dialer, listeners, nodeIDs, configs := newTestNetwork(t, 2)
-//
-//	vdrs := validators.NewManager()
-//	for _, nodeID := range nodeIDs {
-//		require.NoError(vdrs.AddStaker(constants.PrimaryNetworkID, nodeID, nil, ids.GenerateTestID(), 1))
-//	}
-//
-//	networks := make([]Network, len(configs))
-//	for i, config := range configs {
-//		msgCreator := newMessageCreator(t)
-//		registry := prometheus.NewRegistry()
-//
-//		beacons := validators.NewManager()
-//		require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
-//
-//		config := config
-//
-//		config.Beacons = beacons
-//		config.Validators = vdrs
-//		config.AllowPrivateIPs = false
-//
-//		net, err := NewNetwork(
-//			config,
-//			upgrade.InitiallyActiveTime,
-//			msgCreator,
-//			registry,
-//			logging.NoLog{},
-//			listeners[i],
-//			dialer,
-//			&testHandler{
-//				InboundHandler: nil,
-//				ConnectedF: func(ids.NodeID, *version.Application, ids.ID) {
-//					require.FailNow("unexpectedly connected to a peer")
-//				},
-//				DisconnectedF: nil,
-//			},
-//		)
-//		require.NoError(err)
-//		networks[i] = net
-//	}
-//
-//	config := configs[0]
-//	signer := peer.NewIPSigner(config.MyIPPort, config.TLSKey, config.BLSKey)
-//	ip, err := signer.GetSignedIP()
-//	require.NoError(err)
-//
-//	wg := sync.WaitGroup{}
-//	wg.Add(len(networks))
-//	for i, net := range networks {
-//		if i != 0 {
-//			stakingCert, err := staking.ParseCertificate(config.TLSConfig.Certificates[0].Leaf.Raw)
-//			require.NoError(err)
-//
-//			require.NoError(net.Track([]*ips.ClaimedIPPort{
-//				ips.NewClaimedIPPort(
-//					stakingCert,
-//					ip.AddrPort,
-//					ip.Timestamp,
-//					ip.TLSSignature,
-//				),
-//			}))
-//		}
-//
-//		go func(net Network) {
-//			defer wg.Done()
-//
-//			require.NoError(net.Dispatch())
-//		}(net)
-//	}
-//
-//	// Give the dialer time to run one iteration. This is racy, but should ony
-//	// be possible to flake as a false negative (test passes when it shouldn't).
-//	time.Sleep(50 * time.Millisecond)
-//
-//	network := networks[1].(*network)
-//	require.NoError(vdrs.RemoveWeight(constants.PrimaryNetworkID, nodeIDs[0], 1))
-//	require.Eventually(
-//		func() bool {
-//			network.peersLock.RLock()
-//			defer network.peersLock.RUnlock()
-//
-//			nodeID := nodeIDs[0]
-//			_, ok := network.trackedIPs[nodeID]
-//			return !ok
-//		},
-//		10*time.Second,
-//		50*time.Millisecond,
-//	)
-//
-//	for _, net := range networks {
-//		net.StartClose()
-//	}
-//	wg.Wait()
-//}
-//
+func TestTrackVerifiesSignatures(t *testing.T) {
+	require := require.New(t)
+
+	_, networks, wg := newFullyConnectedTestNetwork(t, []router.InboundHandler{nil})
+
+	network := networks[0]
+
+	tlsCert, err := staking.NewTLSCert()
+	require.NoError(err)
+
+	cert, err := staking.ParseCertificate(tlsCert.Leaf.Raw)
+	require.NoError(err)
+	nodeID := ids.NodeIDFromCert(cert)
+
+	require.NoError(network.config.Validators.AddStaker(constants.PrimaryNetworkID, nodeID, nil, ids.Empty, 1))
+
+	stakingCert, err := staking.ParseCertificate(tlsCert.Leaf.Raw)
+	require.NoError(err)
+
+	err = network.Track([]*ips.ClaimedIPPort{
+		ips.NewClaimedIPPort(
+			stakingCert,
+			netip.AddrPortFrom(
+				netip.AddrFrom4([4]byte{123, 132, 123, 123}),
+				10000,
+			),
+			1000, // timestamp
+			nil,  // signature
+		),
+	})
+	// The signature is wrong so this peer tracking info isn't useful.
+	require.ErrorIs(err, staking.ErrECDSAVerificationFailure)
+
+	network.peersLock.RLock()
+	require.Empty(network.trackedIPs)
+	network.peersLock.RUnlock()
+
+	for _, net := range networks {
+		net.StartClose()
+	}
+	wg.Wait()
+}
+
+func TestTrackDoesNotDialPrivateIPs(t *testing.T) {
+	require := require.New(t)
+
+	dialer, listeners, nodeIDs, configs := newTestNetwork(t, 2)
+
+	networks := make([]Network, len(configs))
+	for i, config := range configs {
+		msgCreator := newMessageCreator(t)
+		//registry := prometheus.NewRegistry()
+
+		beacons := validators.NewManager()
+		require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
+
+		vdrs := validators.NewManager()
+		for _, nodeID := range nodeIDs {
+			require.NoError(vdrs.AddStaker(constants.PrimaryNetworkID, nodeID, nil, ids.GenerateTestID(), 1))
+		}
+
+		config := config
+
+		//config.Beacons = beacons
+		config.Validators = vdrs
+		config.AllowPrivateIPs = false
+
+		net, err := NewNetwork(
+			config,
+			InitiallyActiveTime,
+			msgCreator,
+			//registry,
+			log.NewNopLogger(),
+			listeners[i],
+			dialer,
+			&testHandler{
+				InboundHandler: nil,
+				ConnectedF: func(ids.NodeID, *version.Application, ids.ID) {
+					require.FailNow("unexpectedly connected to a peer")
+				},
+				DisconnectedF: nil,
+			},
+		)
+		require.NoError(err)
+		networks[i] = net
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(networks))
+	for i, net := range networks {
+		if i != 0 {
+			config := configs[0]
+			net.ManuallyTrack(config.MyNodeID, config.MyIPPort.Get())
+		}
+
+		go func(net Network) {
+			defer wg.Done()
+
+			require.NoError(net.Dispatch())
+		}(net)
+	}
+
+	network := networks[1].(*network)
+	require.Eventually(
+		func() bool {
+			network.peersLock.RLock()
+			defer network.peersLock.RUnlock()
+
+			nodeID := nodeIDs[0]
+			require.Contains(network.trackedIPs, nodeID)
+			ip := network.trackedIPs[nodeID]
+			return ip.getDelay() != 0
+		},
+		10*time.Second,
+		50*time.Millisecond,
+	)
+
+	for _, net := range networks {
+		net.StartClose()
+	}
+	wg.Wait()
+}
+
+func TestDialDeletesNonValidators(t *testing.T) {
+	require := require.New(t)
+
+	dialer, listeners, nodeIDs, configs := newTestNetwork(t, 2)
+
+	vdrs := validators.NewManager()
+	for _, nodeID := range nodeIDs {
+		require.NoError(vdrs.AddStaker(constants.PrimaryNetworkID, nodeID, nil, ids.GenerateTestID(), 1))
+	}
+
+	networks := make([]Network, len(configs))
+	for i, config := range configs {
+		msgCreator := newMessageCreator(t)
+		//registry := prometheus.NewRegistry()
+
+		beacons := validators.NewManager()
+		require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
+
+		config := config
+
+		//config.Beacons = beacons
+		config.Validators = vdrs
+		config.AllowPrivateIPs = false
+
+		net, err := NewNetwork(
+			config,
+			InitiallyActiveTime,
+			msgCreator,
+			//registry,
+			log.NewNopLogger(),
+			listeners[i],
+			dialer,
+			&testHandler{
+				InboundHandler: nil,
+				ConnectedF: func(ids.NodeID, *version.Application, ids.ID) {
+					require.FailNow("unexpectedly connected to a peer")
+				},
+				DisconnectedF: nil,
+			},
+		)
+		require.NoError(err)
+		networks[i] = net
+	}
+
+	config := configs[0]
+	signer := peer.NewIPSigner(config.MyIPPort, config.TLSKey, config.BLSKey)
+	ip, err := signer.GetSignedIP()
+	require.NoError(err)
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(networks))
+	for i, net := range networks {
+		if i != 0 {
+			stakingCert, err := staking.ParseCertificate(config.TLSConfig.Certificates[0].Leaf.Raw)
+			require.NoError(err)
+
+			require.NoError(net.Track([]*ips.ClaimedIPPort{
+				ips.NewClaimedIPPort(
+					stakingCert,
+					ip.AddrPort,
+					ip.Timestamp,
+					ip.TLSSignature,
+				),
+			}))
+		}
+
+		go func(net Network) {
+			defer wg.Done()
+
+			require.NoError(net.Dispatch())
+		}(net)
+	}
+
+	// Give the dialer time to run one iteration. This is racy, but should ony
+	// be possible to flake as a false negative (test passes when it shouldn't).
+	time.Sleep(50 * time.Millisecond)
+
+	network := networks[1].(*network)
+	require.NoError(vdrs.RemoveWeight(constants.PrimaryNetworkID, nodeIDs[0], 1))
+	require.Eventually(
+		func() bool {
+			network.peersLock.RLock()
+			defer network.peersLock.RUnlock()
+
+			nodeID := nodeIDs[0]
+			_, ok := network.trackedIPs[nodeID]
+			return !ok
+		},
+		10*time.Second,
+		50*time.Millisecond,
+	)
+
+	for _, net := range networks {
+		net.StartClose()
+	}
+	wg.Wait()
+}
+
 //// Test that cancelling the context passed into dial
 //// causes dial to return immediately.
 //func TestDialContext(t *testing.T) {
