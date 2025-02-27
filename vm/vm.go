@@ -6,19 +6,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/compression"
 	message "github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	network2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/network"
+	dialer2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/network/dialer"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/benchlist"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/sender"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/timeout"
 	peer2 "github.com/landslidenetwork/slide-sdk/utils/evm/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/network/p2p"
+	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
+	"github.com/landslidenetwork/slide-sdk/utils/staking"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/aggregator"
 	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 	"math"
+	"net"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -547,7 +552,37 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		return nil, err
 	}
 	// Passes messages from the snowman engines to the network
-	externalSender, err := network2.NewNetwork()
+
+	var (
+		dialer    = dialer2.NewDialer("network", dialer2.Config{}, vm.logger)
+		p2pConfig = &network2.Config{}
+	)
+	listener := net.NewListener(addrPort)
+
+	tlsCert, err := staking.NewTLSCert()
+	if err != nil {
+		return nil, err
+	}
+
+	cert, err := staking.ParseCertificate(tlsCert.Leaf.Raw)
+	if err != nil {
+		return nil, err
+	}
+	nodeID := ids.NodeIDFromCert(cert)
+
+	blsKey, err := bls.NewSigner()
+	if err != nil {
+		return nil, err
+	}
+
+	p2pConfig = defaultConfig
+	p2pConfig.TLSConfig = peer.TLSConfig(*tlsCert, nil)
+	p2pConfig.MyNodeID = nodeID
+	p2pConfig.MyIPPort = utils.NewAtomic(ip)
+	p2pConfig.TLSKey = tlsCert.PrivateKey.(crypto.Signer)
+	p2pConfig.BLSKey = blsKey
+
+	externalSender, err := network2.NewNetwork(&network2.Config{}, P2PMinCompatibleTime, msgCreator, vm.logger, listener, dialer)
 	if err != nil {
 		return nil, err
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"
+	"github.com/landslidenetwork/slide-sdk/utils/bloom"
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/ips"
@@ -624,210 +625,210 @@ func TestDialDeletesNonValidators(t *testing.T) {
 	wg.Wait()
 }
 
-//// Test that cancelling the context passed into dial
-//// causes dial to return immediately.
-//func TestDialContext(t *testing.T) {
-//	_, networks, wg := newFullyConnectedTestNetwork(t, []router.InboundHandler{nil})
-//
-//	dialer := newTestDialer()
-//	network := networks[0]
-//	network.dialer = dialer
-//
-//	var (
-//		neverDialedNodeID = ids.GenerateTestNodeID()
-//		dialedNodeID      = ids.GenerateTestNodeID()
-//
-//		neverDialedIP, neverDialedListener = dialer.NewListener()
-//		dialedIP, dialedListener           = dialer.NewListener()
-//
-//		neverDialedTrackedIP = &trackedIP{
-//			ip: neverDialedIP,
-//		}
-//		dialedTrackedIP = &trackedIP{
-//			ip: dialedIP,
-//		}
-//	)
-//
-//	network.ManuallyTrack(neverDialedNodeID, neverDialedIP)
-//	network.ManuallyTrack(dialedNodeID, dialedIP)
-//
-//	// Sanity check that when a non-cancelled context is given,
-//	// we actually dial the peer.
-//	network.dial(dialedNodeID, dialedTrackedIP)
-//
-//	gotDialedIPConn := make(chan struct{})
-//	go func() {
-//		_, _ = dialedListener.Accept()
-//		close(gotDialedIPConn)
-//	}()
-//	<-gotDialedIPConn
-//
-//	// Asset that when [n.onCloseCtx] is cancelled, dial returns immediately.
-//	// That is, [neverDialedListener] doesn't accept a connection.
-//	network.onCloseCtxCancel()
-//	network.dial(neverDialedNodeID, neverDialedTrackedIP)
-//
-//	gotNeverDialedIPConn := make(chan struct{})
-//	go func() {
-//		_, _ = neverDialedListener.Accept()
-//		close(gotNeverDialedIPConn)
-//	}()
-//
-//	select {
-//	case <-gotNeverDialedIPConn:
-//		require.FailNow(t, "unexpectedly connected to peer")
-//	default:
-//	}
-//
-//	network.StartClose()
-//	wg.Wait()
-//}
-//
-//func TestAllowConnectionAsAValidator(t *testing.T) {
-//	require := require.New(t)
-//
-//	dialer, listeners, nodeIDs, configs := newTestNetwork(t, 2)
-//
-//	networks := make([]Network, len(configs))
-//	for i, config := range configs {
-//		msgCreator := newMessageCreator(t)
-//		registry := prometheus.NewRegistry()
-//
-//		beacons := validators.NewManager()
-//		require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
-//
-//		vdrs := validators.NewManager()
-//		require.NoError(vdrs.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
-//
-//		config := config
-//
-//		config.Beacons = beacons
-//		config.Validators = vdrs
-//		config.RequireValidatorToConnect = true
-//
-//		net, err := NewNetwork(
-//			config,
-//			upgrade.InitiallyActiveTime,
-//			msgCreator,
-//			registry,
-//			logging.NoLog{},
-//			listeners[i],
-//			dialer,
-//			&testHandler{
-//				InboundHandler: nil,
-//				ConnectedF:     nil,
-//				DisconnectedF:  nil,
-//			},
-//		)
-//		require.NoError(err)
-//		networks[i] = net
-//	}
-//
-//	wg := sync.WaitGroup{}
-//	wg.Add(len(networks))
-//	for i, net := range networks {
-//		if i != 0 {
-//			config := configs[0]
-//			net.ManuallyTrack(config.MyNodeID, config.MyIPPort.Get())
-//		}
-//
-//		go func(net Network) {
-//			defer wg.Done()
-//
-//			require.NoError(net.Dispatch())
-//		}(net)
-//	}
-//
-//	network := networks[1].(*network)
-//	require.Eventually(
-//		func() bool {
-//			network.peersLock.RLock()
-//			defer network.peersLock.RUnlock()
-//
-//			nodeID := nodeIDs[0]
-//			_, contains := network.connectedPeers.GetByID(nodeID)
-//			return contains
-//		},
-//		10*time.Second,
-//		50*time.Millisecond,
-//	)
-//
-//	for _, net := range networks {
-//		net.StartClose()
-//	}
-//	wg.Wait()
-//}
-//
-//func TestGetAllPeers(t *testing.T) {
-//	require := require.New(t)
-//
-//	// Create a non-validator peer
-//	dialer, listeners, nonVdrNodeIDs, configs := newTestNetwork(t, 1)
-//
-//	configs[0].Beacons = validators.NewManager()
-//	configs[0].Validators = validators.NewManager()
-//	nonValidatorNetwork, err := NewNetwork(
-//		configs[0],
-//		upgrade.InitiallyActiveTime,
-//		newMessageCreator(t),
-//		prometheus.NewRegistry(),
-//		logging.NoLog{},
-//		listeners[0],
-//		dialer,
-//		&testHandler{
-//			InboundHandler: nil,
-//			ConnectedF:     nil,
-//			DisconnectedF:  nil,
-//		},
-//	)
-//	require.NoError(err)
-//
-//	// Create a network of validators
-//	nodeIDs, networks, wg := newFullyConnectedTestNetwork(
-//		t,
-//		[]router.InboundHandler{
-//			nil, nil, nil,
-//		},
-//	)
-//
-//	// Connect the non-validator peer to the validator network
-//	wg.Add(1)
-//	nonValidatorNetwork.ManuallyTrack(networks[0].config.MyNodeID, networks[0].config.MyIPPort.Get())
-//	go func() {
-//		defer wg.Done()
-//
-//		require.NoError(nonValidatorNetwork.Dispatch())
-//	}()
-//
-//	{
-//		// The non-validator peer should be able to get all the peers in the network
-//		peersListFromNonVdr := networks[0].Peers(nonVdrNodeIDs[0], nil, true, bloom.EmptyFilter, []byte{})
-//		require.Len(peersListFromNonVdr, len(nodeIDs)-1)
-//		peerNodes := set.NewSet[ids.NodeID](len(peersListFromNonVdr))
-//		for _, peer := range peersListFromNonVdr {
-//			peerNodes.Add(peer.NodeID)
-//		}
-//		for _, nodeID := range nodeIDs[1:] {
-//			require.True(peerNodes.Contains(nodeID))
-//		}
-//	}
-//
-//	{
-//		// A validator peer should be able to get all the peers in the network
-//		peersListFromVdr := networks[0].Peers(nodeIDs[1], nil, true, bloom.EmptyFilter, []byte{})
-//		require.Len(peersListFromVdr, len(nodeIDs)-2) // GetPeerList doesn't return the peer that requested it
-//		peerNodes := set.NewSet[ids.NodeID](len(peersListFromVdr))
-//		for _, peer := range peersListFromVdr {
-//			peerNodes.Add(peer.NodeID)
-//		}
-//		for _, nodeID := range nodeIDs[2:] {
-//			require.True(peerNodes.Contains(nodeID))
-//		}
-//	}
-//
-//	nonValidatorNetwork.StartClose()
-//	for _, net := range networks {
-//		net.StartClose()
-//	}
-//	wg.Wait()
-//}
+// Test that cancelling the context passed into dial
+// causes dial to return immediately.
+func TestDialContext(t *testing.T) {
+	_, networks, wg := newFullyConnectedTestNetwork(t, []router.InboundHandler{nil})
+
+	dialer := newTestDialer()
+	network := networks[0]
+	network.dialer = dialer
+
+	var (
+		neverDialedNodeID = ids.GenerateTestNodeID()
+		dialedNodeID      = ids.GenerateTestNodeID()
+
+		neverDialedIP, neverDialedListener = dialer.NewListener()
+		dialedIP, dialedListener           = dialer.NewListener()
+
+		neverDialedTrackedIP = &trackedIP{
+			ip: neverDialedIP,
+		}
+		dialedTrackedIP = &trackedIP{
+			ip: dialedIP,
+		}
+	)
+
+	network.ManuallyTrack(neverDialedNodeID, neverDialedIP)
+	network.ManuallyTrack(dialedNodeID, dialedIP)
+
+	// Sanity check that when a non-cancelled context is given,
+	// we actually dial the peer.
+	network.dial(dialedNodeID, dialedTrackedIP)
+
+	gotDialedIPConn := make(chan struct{})
+	go func() {
+		_, _ = dialedListener.Accept()
+		close(gotDialedIPConn)
+	}()
+	<-gotDialedIPConn
+
+	// Asset that when [n.onCloseCtx] is cancelled, dial returns immediately.
+	// That is, [neverDialedListener] doesn't accept a connection.
+	network.onCloseCtxCancel()
+	network.dial(neverDialedNodeID, neverDialedTrackedIP)
+
+	gotNeverDialedIPConn := make(chan struct{})
+	go func() {
+		_, _ = neverDialedListener.Accept()
+		close(gotNeverDialedIPConn)
+	}()
+
+	select {
+	case <-gotNeverDialedIPConn:
+		require.FailNow(t, "unexpectedly connected to peer")
+	default:
+	}
+
+	network.StartClose()
+	wg.Wait()
+}
+
+func TestAllowConnectionAsAValidator(t *testing.T) {
+	require := require.New(t)
+
+	dialer, listeners, nodeIDs, configs := newTestNetwork(t, 2)
+
+	networks := make([]Network, len(configs))
+	for i, config := range configs {
+		msgCreator := newMessageCreator(t)
+		//registry := prometheus.NewRegistry()
+
+		beacons := validators.NewManager()
+		require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
+
+		vdrs := validators.NewManager()
+		require.NoError(vdrs.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
+
+		config := config
+
+		//config.Beacons = beacons
+		config.Validators = vdrs
+		config.RequireValidatorToConnect = true
+
+		net, err := NewNetwork(
+			config,
+			InitiallyActiveTime,
+			msgCreator,
+			//registry,
+			log.NewNopLogger(),
+			listeners[i],
+			dialer,
+			&testHandler{
+				InboundHandler: nil,
+				ConnectedF:     nil,
+				DisconnectedF:  nil,
+			},
+		)
+		require.NoError(err)
+		networks[i] = net
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(networks))
+	for i, net := range networks {
+		if i != 0 {
+			config := configs[0]
+			net.ManuallyTrack(config.MyNodeID, config.MyIPPort.Get())
+		}
+
+		go func(net Network) {
+			defer wg.Done()
+
+			require.NoError(net.Dispatch())
+		}(net)
+	}
+
+	network := networks[1].(*network)
+	require.Eventually(
+		func() bool {
+			network.peersLock.RLock()
+			defer network.peersLock.RUnlock()
+
+			nodeID := nodeIDs[0]
+			_, contains := network.connectedPeers.GetByID(nodeID)
+			return contains
+		},
+		10*time.Second,
+		50*time.Millisecond,
+	)
+
+	for _, net := range networks {
+		net.StartClose()
+	}
+	wg.Wait()
+}
+
+func TestGetAllPeers(t *testing.T) {
+	require := require.New(t)
+
+	// Create a non-validator peer
+	dialer, listeners, nonVdrNodeIDs, configs := newTestNetwork(t, 1)
+
+	//configs[0].Beacons = validators.NewManager()
+	configs[0].Validators = validators.NewManager()
+	nonValidatorNetwork, err := NewNetwork(
+		configs[0],
+		InitiallyActiveTime,
+		newMessageCreator(t),
+		//prometheus.NewRegistry(),
+		log.NewNopLogger(),
+		listeners[0],
+		dialer,
+		&testHandler{
+			InboundHandler: nil,
+			ConnectedF:     nil,
+			DisconnectedF:  nil,
+		},
+	)
+	require.NoError(err)
+
+	// Create a network of validators
+	nodeIDs, networks, wg := newFullyConnectedTestNetwork(
+		t,
+		[]router.InboundHandler{
+			nil, nil, nil,
+		},
+	)
+
+	// Connect the non-validator peer to the validator network
+	wg.Add(1)
+	nonValidatorNetwork.ManuallyTrack(networks[0].config.MyNodeID, networks[0].config.MyIPPort.Get())
+	go func() {
+		defer wg.Done()
+
+		require.NoError(nonValidatorNetwork.Dispatch())
+	}()
+
+	{
+		// The non-validator peer should be able to get all the peers in the network
+		peersListFromNonVdr := networks[0].Peers(nonVdrNodeIDs[0], nil, true, bloom.EmptyFilter, []byte{})
+		require.Len(peersListFromNonVdr, len(nodeIDs)-1)
+		peerNodes := set.NewSet[ids.NodeID](len(peersListFromNonVdr))
+		for _, peer := range peersListFromNonVdr {
+			peerNodes.Add(peer.NodeID)
+		}
+		for _, nodeID := range nodeIDs[1:] {
+			require.True(peerNodes.Contains(nodeID))
+		}
+	}
+
+	{
+		// A validator peer should be able to get all the peers in the network
+		peersListFromVdr := networks[0].Peers(nodeIDs[1], nil, true, bloom.EmptyFilter, []byte{})
+		require.Len(peersListFromVdr, len(nodeIDs)-2) // GetPeerList doesn't return the peer that requested it
+		peerNodes := set.NewSet[ids.NodeID](len(peersListFromVdr))
+		for _, peer := range peersListFromVdr {
+			peerNodes.Add(peer.NodeID)
+		}
+		for _, nodeID := range nodeIDs[2:] {
+			require.True(peerNodes.Contains(nodeID))
+		}
+	}
+
+	nonValidatorNetwork.StartClose()
+	for _, net := range networks {
+		net.StartClose()
+	}
+	wg.Wait()
+}
