@@ -4,14 +4,13 @@
 package network
 
 import (
-	"errors"
 	"net"
 	"net/netip"
 )
 
 var (
-	_         net.Listener = (*testListener)(nil)
-	errClosed              = errors.New("closed")
+	_ net.Listener = (*testListener)(nil)
+	//errClosed              = errors.New("closed")
 )
 
 type testListener struct {

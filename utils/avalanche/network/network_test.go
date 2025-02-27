@@ -330,12 +330,12 @@ func TestSend(t *testing.T) {
 	net0 := networks[0]
 
 	mc := newMessageCreator(t)
-	outboundGetMsg, err := mc.AppRequest(ids.Empty, 1, time.Second, []byte("content"))
+	outboundAppRequestMsg, err := mc.AppRequest(ids.Empty, 1, time.Second, []byte("content"))
 	require.NoError(err)
 
 	toSend := set.Of(nodeIDs[1])
 	sentTo := net0.Send(
-		outboundGetMsg,
+		outboundAppRequestMsg,
 		common.SendConfig{
 			NodeIDs: toSend,
 		},
@@ -353,53 +353,53 @@ func TestSend(t *testing.T) {
 	wg.Wait()
 }
 
-//func TestSendWithFilter(t *testing.T) {
-//	require := require.New(t)
-//
-//	received := make(chan message.InboundMessage)
-//	nodeIDs, networks, wg := newFullyConnectedTestNetwork(
-//		t,
-//		[]router.InboundHandler{
-//			router.InboundHandlerFunc(func(context.Context, message.InboundMessage) {
-//				require.FailNow("unexpected message received")
-//			}),
-//			router.InboundHandlerFunc(func(_ context.Context, msg message.InboundMessage) {
-//				received <- msg
-//			}),
-//			router.InboundHandlerFunc(func(context.Context, message.InboundMessage) {
-//				require.FailNow("unexpected message received")
-//			}),
-//		},
-//	)
-//
-//	net0 := networks[0]
-//
-//	mc := newMessageCreator(t)
-//	outboundGetMsg, err := mc.Get(ids.Empty, 1, time.Second, ids.Empty)
-//	require.NoError(err)
-//
-//	toSend := set.Of(nodeIDs...)
-//	validNodeID := nodeIDs[1]
-//	sentTo := net0.Send(
-//		outboundGetMsg,
-//		common.SendConfig{
-//			NodeIDs: toSend,
-//		},
-//		constants.PrimaryNetworkID,
-//		newNodeIDConnector(validNodeID),
-//	)
-//	require.Len(sentTo, 1)
-//	require.Contains(sentTo, validNodeID)
-//
-//	inboundGetMsg := <-received
-//	require.Equal(message.GetOp, inboundGetMsg.Op())
-//
-//	for _, net := range networks {
-//		net.StartClose()
-//	}
-//	wg.Wait()
-//}
-//
+func TestSendWithFilter(t *testing.T) {
+	require := require.New(t)
+
+	received := make(chan message.InboundMessage)
+	nodeIDs, networks, wg := newFullyConnectedTestNetwork(
+		t,
+		[]router.InboundHandler{
+			router.InboundHandlerFunc(func(context.Context, message.InboundMessage) {
+				require.FailNow("unexpected message received")
+			}),
+			router.InboundHandlerFunc(func(_ context.Context, msg message.InboundMessage) {
+				received <- msg
+			}),
+			router.InboundHandlerFunc(func(context.Context, message.InboundMessage) {
+				require.FailNow("unexpected message received")
+			}),
+		},
+	)
+
+	net0 := networks[0]
+
+	mc := newMessageCreator(t)
+	outboundAppRequestMsg, err := mc.AppRequest(ids.Empty, 1, time.Second, []byte("content"))
+	require.NoError(err)
+
+	toSend := set.Of(nodeIDs...)
+	validNodeID := nodeIDs[1]
+	sentTo := net0.Send(
+		outboundAppRequestMsg,
+		common.SendConfig{
+			NodeIDs: toSend,
+		},
+		constants.PrimaryNetworkID,
+		newNodeIDConnector(validNodeID),
+	)
+	require.Len(sentTo, 1)
+	require.Contains(sentTo, validNodeID)
+
+	inboundGetMsg := <-received
+	require.Equal(message.AppRequestOp, inboundGetMsg.Op())
+
+	for _, net := range networks {
+		net.StartClose()
+	}
+	wg.Wait()
+}
+
 //func TestTrackVerifiesSignatures(t *testing.T) {
 //	require := require.New(t)
 //
