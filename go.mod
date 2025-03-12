@@ -5,10 +5,12 @@ go 1.22.8
 require (
 	cosmossdk.io/log v1.3.1
 	github.com/CosmWasm/wasmd v0.50.0
+	github.com/DataDog/zstd v1.5.5
 	github.com/cometbft/cometbft v0.38.10
 	github.com/cometbft/cometbft-db v0.9.1
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/cosmos-sdk v0.50.9
+	github.com/gorilla/rpc v1.2.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/mr-tron/base58 v1.2.0
 	github.com/prometheus/client_golang v1.19.0
@@ -19,6 +21,7 @@ require (
 	github.com/thepudds/fzgen v0.4.3
 	go.uber.org/mock v0.5.0
 	go.uber.org/zap v1.26.0
+	golang.org/x/crypto v0.31.0
 	golang.org/x/exp v0.0.0-20240404231335-c0f41cb1a7a0
 	golang.org/x/sync v0.10.0
 	gonum.org/v1/gonum v0.12.0
@@ -51,7 +54,6 @@ require (
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/CosmWasm/wasmvm v1.5.0 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
-	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
@@ -192,7 +194,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/goleak v1.3.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect

@@ -10,6 +10,8 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
+	"github.com/landslidenetwork/slide-sdk/utils/codec"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/peer/stats"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/message"
 	"github.com/landslidenetwork/slide-sdk/utils/network/p2p"
@@ -42,13 +44,13 @@ import (
 //	"github.com/ava-labs/subnets-evm/peer/stats"
 //	"github.com/ava-labs/subnets-evm/plugin/evm/message"
 //)
-//
-//// Minimum amount of time to handle a request
-//const minRequestHandlingDuration = 100 * time.Millisecond
+
+// Minimum amount of time to handle a request
+const minRequestHandlingDuration = 100 * time.Millisecond
 
 var (
 	errAcquiringSemaphore = errors.New("error acquiring semaphore")
-	//	errExpiredRequest                          = errors.New("expired request")
+	errExpiredRequest     = errors.New("expired request")
 	//	_                     Network              = &network{}
 	//	_                     validators.Connector = &network{}
 	//	_                     common.AppHandler    = &network{}
@@ -56,8 +58,8 @@ var (
 
 type Network interface {
 	//validators.Connector
-	//common.AppHandler
-	//
+	common.AppHandler
+
 	//// SendAppRequestAny synchronously sends request to an arbitrary peer with a
 	//// node version greater than or equal to minVersion.
 	//// Returns the ID of the chosen peer, and an error if the request could not
@@ -74,10 +76,10 @@ type Network interface {
 	//
 	//// SetGossipHandler sets the provided gossip handler as the gossip handler
 	//SetGossipHandler(handler message.GossipHandler)
-	//
-	//// SetRequestHandler sets the provided request handler as the request handler
-	//SetRequestHandler(handler message.RequestHandler)
-	//
+
+	// SetRequestHandler sets the provided request handler as the request handler
+	SetRequestHandler(handler message.RequestHandler)
+
 	//// Size returns the size of the network in number of connected peers
 	//Size() uint32
 	//
@@ -101,12 +103,12 @@ type network struct {
 	outstandingRequestHandlers map[uint32]message.ResponseHandler // maps avalanchego requestID => message.ResponseHandler
 	activeAppRequests          *semaphore.Weighted                // controls maximum number of active outbound requests
 	p2pNetwork                 *p2p.Network
-	appSender                  common.AppSender // avalanchego AppSender for sending messages
-	//codec                      codec.Manager             // Codec used for parsing messages
-	//appRequestHandler          message.RequestHandler    // maps request type => handler
+	appSender                  common.AppSender       // avalanchego AppSender for sending messages
+	codec                      codec.Manager          // Codec used for parsing messages
+	appRequestHandler          message.RequestHandler // maps request type => handler
 	//gossipHandler              message.GossipHandler     // maps gossip type => handler
-	peers *peerTracker // tracking of peers & bandwidth
-	//appStats                   stats.RequestHandlerStats // Provide request handler metrics
+	peers    *peerTracker              // tracking of peers & bandwidth
+	appStats stats.RequestHandlerStats // Provide request handler metrics
 	//
 	//// Set to true when Shutdown is called, after which all operations on this
 	//// struct are no-ops.
@@ -119,22 +121,22 @@ type network struct {
 	closed utils.Atomic[bool]
 }
 
-func NewNetwork(p2pNetwork *p2p.Network, appSender common.AppSender, log log.Logger, maxActiveAppRequests int64,
+func NewNetwork(p2pNetwork *p2p.Network, appSender common.AppSender, log log.Logger, maxActiveAppRequests int64, codec codec.Manager,
 
-// codec codec.Manager, self ids.NodeID, maxActiveAppRequests int64
+// self ids.NodeID, maxActiveAppRequests int64
 ) Network {
 	return &network{
 		log:       log,
 		appSender: appSender,
-		//codec:                      codec,
+		codec:     codec,
 		//self:                       self,
 		outstandingRequestHandlers: make(map[uint32]message.ResponseHandler),
 		activeAppRequests:          semaphore.NewWeighted(maxActiveAppRequests),
 		p2pNetwork:                 p2pNetwork,
 		//gossipHandler:              message.NoopMempoolGossipHandler{},
-		//appRequestHandler:          message.NoopRequestHandler{},
-		peers: NewPeerTracker(log),
-		//appStats:                   stats.NewRequestHandlerStats(),
+		appRequestHandler: message.NoopRequestHandler{},
+		peers:             NewPeerTracker(log),
+		appStats:          stats.NewRequestHandlerStats(),
 	}
 }
 
@@ -248,40 +250,39 @@ func (n *network) sendAppRequest(ctx context.Context, nodeID ids.NodeID, request
 // sends a response back to the sender if length of response returned by the handler is >0
 // expects the deadline to not have been passed
 func (n *network) AppRequest(ctx context.Context, nodeID ids.NodeID, requestID uint32, deadline time.Time, request []byte) error {
-	//if n.closed.Get() {
-	//	return nil
-	//}
-	//
-	//log.Debug("received AppRequest from node", "nodeID", nodeID, "requestID", requestID, "requestLen", len(request))
-	//
-	//var req message.Request
-	//if _, err := n.codec.Unmarshal(request, &req); err != nil {
-	//	log.Debug("forwarding AppRequest to SDK network", "nodeID", nodeID, "requestID", requestID, "requestLen", len(request), "err", err)
-	//	return n.p2pNetwork.AppRequest(ctx, nodeID, requestID, deadline, request)
-	//}
-	//
-	//bufferedDeadline, err := calculateTimeUntilDeadline(deadline, n.appStats)
-	//if err != nil {
-	//	log.Debug("deadline to process AppRequest has expired, skipping", "nodeID", nodeID, "requestID", requestID, "err", err)
-	//	return nil
-	//}
-	//
-	//log.Debug("processing incoming request", "nodeID", nodeID, "requestID", requestID, "req", req)
-	//// We make a new context here because we don't want to cancel the context
-	//// passed into n.AppSender.SendAppResponse below
-	//handleCtx, cancel := context.WithDeadline(context.Background(), bufferedDeadline)
-	//defer cancel()
-	//
-	//responseBytes, err := req.Handle(handleCtx, nodeID, requestID, n.appRequestHandler)
-	//switch {
-	//case err != nil && err != context.DeadlineExceeded:
-	//	return err // Return a fatal error
-	//case responseBytes != nil:
-	//	return n.appSender.SendAppResponse(ctx, nodeID, requestID, responseBytes) // Propagate fatal error
-	//default:
-	//	return nil
-	//}
-	return nil
+	if n.closed.Get() {
+		return nil
+	}
+
+	n.log.Debug("received AppRequest from node", "nodeID", nodeID, "requestID", requestID, "requestLen", len(request))
+
+	var req message.Request
+	if err := n.codec.Unmarshal(request, &req); err != nil {
+		n.log.Debug("forwarding AppRequest to SDK network", "nodeID", nodeID, "requestID", requestID, "requestLen", len(request), "err", err)
+		return n.p2pNetwork.AppRequest(ctx, nodeID, requestID, deadline, request)
+	}
+
+	bufferedDeadline, err := calculateTimeUntilDeadline(deadline, n.appStats)
+	if err != nil {
+		n.log.Debug("deadline to process AppRequest has expired, skipping", "nodeID", nodeID, "requestID", requestID, "err", err)
+		return nil
+	}
+
+	n.log.Debug("processing incoming request", "nodeID", nodeID, "requestID", requestID, "req", req)
+	// We make a new context here because we don't want to cancel the context
+	// passed into n.AppSender.SendAppResponse below
+	handleCtx, cancel := context.WithDeadline(context.Background(), bufferedDeadline)
+	defer cancel()
+
+	responseBytes, err := req.Handle(handleCtx, nodeID, requestID, n.appRequestHandler)
+	switch {
+	case err != nil && err != context.DeadlineExceeded:
+		return err // Return a fatal error
+	case responseBytes != nil:
+		return n.appSender.SendAppResponse(ctx, nodeID, requestID, responseBytes) // Propagate fatal error
+	default:
+		return nil
+	}
 }
 
 // AppResponse is invoked when there is a response received from a peer regarding a request
@@ -304,50 +305,50 @@ func (n *network) AppResponse(ctx context.Context, nodeID ids.NodeID, requestID 
 	return nil
 }
 
-//
-//// AppRequestFailed can be called by the avalanchego -> VM in following cases:
-//// - node is benched
-//// - failed to send message to [nodeID] due to a network issue
-//// - request times out before a response is provided
-//// error returned by this function is expected to be treated as fatal by the engine
-//// returns error only when the response handler returns an error
-//func (n *network) AppRequestFailed(ctx context.Context, nodeID ids.NodeID, requestID uint32, appErr *common.AppError) error {
-//	log.Debug("received AppRequestFailed from peer", "nodeID", nodeID, "requestID", requestID)
-//
-//	handler, exists := n.markRequestFulfilled(requestID)
-//	if !exists {
-//		log.Debug("forwarding AppRequestFailed to SDK network", "nodeID", nodeID, "requestID", requestID)
-//		return n.p2pNetwork.AppRequestFailed(ctx, nodeID, requestID, appErr)
-//	}
-//
-//	// We must release the slot
-//	n.activeAppRequests.Release(1)
-//
-//	return handler.OnFailure()
-//}
-//
-//// calculateTimeUntilDeadline calculates the time until deadline and drops it if we missed he deadline to response.
-//// This function updates metrics for app requests.
-//// This is called by [AppRequest].
-//func calculateTimeUntilDeadline(deadline time.Time, stats stats.RequestHandlerStats) (time.Time, error) {
-//	// calculate how much time is left until the deadline
-//	timeTillDeadline := time.Until(deadline)
-//	stats.UpdateTimeUntilDeadline(timeTillDeadline)
-//
-//	// bufferedDeadline is half the time till actual deadline so that the message has a reasonable chance
-//	// of completing its processing and sending the response to the peer.
-//	bufferedDeadline := time.Now().Add(timeTillDeadline / 2)
-//
-//	// check if we have enough time to handle this request
-//	if time.Until(bufferedDeadline) < minRequestHandlingDuration {
-//		// Drop the request if we already missed the deadline to respond.
-//		stats.IncDeadlineDroppedRequest()
-//		return time.Time{}, errExpiredRequest
-//	}
-//
-//	return bufferedDeadline, nil
-//}
-//
+// AppRequestFailed can be called by the avalanchego -> VM in following cases:
+// - node is benched
+// - failed to send message to [nodeID] due to a network issue
+// - request times out before a response is provided
+// error returned by this function is expected to be treated as fatal by the engine
+// returns error only when the response handler returns an error
+func (n *network) AppRequestFailed(ctx context.Context, nodeID ids.NodeID, requestID uint32, appErr *common.AppError) error {
+	//	log.Debug("received AppRequestFailed from peer", "nodeID", nodeID, "requestID", requestID)
+	//
+	//	handler, exists := n.markRequestFulfilled(requestID)
+	//	if !exists {
+	//		log.Debug("forwarding AppRequestFailed to SDK network", "nodeID", nodeID, "requestID", requestID)
+	//		return n.p2pNetwork.AppRequestFailed(ctx, nodeID, requestID, appErr)
+	//	}
+	//
+	//	// We must release the slot
+	//	n.activeAppRequests.Release(1)
+	//
+	//	return handler.OnFailure()
+	return nil
+}
+
+// calculateTimeUntilDeadline calculates the time until deadline and drops it if we missed he deadline to response.
+// This function updates metrics for app requests.
+// This is called by [AppRequest].
+func calculateTimeUntilDeadline(deadline time.Time, stats stats.RequestHandlerStats) (time.Time, error) {
+	// calculate how much time is left until the deadline
+	timeTillDeadline := time.Until(deadline)
+	stats.UpdateTimeUntilDeadline(timeTillDeadline)
+
+	// bufferedDeadline is half the time till actual deadline so that the message has a reasonable chance
+	// of completing its processing and sending the response to the peer.
+	bufferedDeadline := time.Now().Add(timeTillDeadline / 2)
+
+	// check if we have enough time to handle this request
+	if time.Until(bufferedDeadline) < minRequestHandlingDuration {
+		// Drop the request if we already missed the deadline to respond.
+		stats.IncDeadlineDroppedRequest()
+		return time.Time{}, errExpiredRequest
+	}
+
+	return bufferedDeadline, nil
+}
+
 //// markRequestFulfilled fetches the handler for [requestID] and marks the request with [requestID] as having been fulfilled.
 //// This is called by either [AppResponse] or [AppRequestFailed].
 //// Assumes that the write lock is not held.
@@ -437,14 +438,14 @@ func (n *network) AppResponse(ctx context.Context, nodeID ids.NodeID, requestID 
 //
 //	n.gossipHandler = handler
 //}
-//
-//func (n *network) SetRequestHandler(handler message.RequestHandler) {
-//	n.lock.Lock()
-//	defer n.lock.Unlock()
-//
-//	n.appRequestHandler = handler
-//}
-//
+
+func (n *network) SetRequestHandler(handler message.RequestHandler) {
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
+	n.appRequestHandler = handler
+}
+
 //func (n *network) Size() uint32 {
 //	n.lock.RLock()
 //	defer n.lock.RUnlock()

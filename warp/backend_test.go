@@ -12,8 +12,8 @@ import (
 	"github.com/cometbft/cometbft/libs/rand"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/evm/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 	"github.com/stretchr/testify/require"
 )
 

@@ -5,14 +5,13 @@ package dialer
 
 import (
 	"context"
+	"github.com/cometbft/cometbft/libs/log"
 	"net"
 	"net/netip"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/ava-labs/avalanchego/utils/logging"
 )
 
 // Test that canceling a context passed into Dial results
@@ -55,7 +54,7 @@ func TestDialerCancelDial(t *testing.T) {
 			ThrottleRps:       10,
 			ConnectionTimeout: 30 * time.Second,
 		},
-		logging.NoLog{},
+		log.NewNopLogger(),
 	)
 
 	// Make an outgoing connection with a cancelled context

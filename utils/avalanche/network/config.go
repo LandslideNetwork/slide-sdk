@@ -9,9 +9,9 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
-	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 	"net/netip"
 	"time"
 )

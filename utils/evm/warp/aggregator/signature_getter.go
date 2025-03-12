@@ -6,13 +6,13 @@ package aggregator
 import (
 	"context"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/payload"
 	"github.com/landslidenetwork/slide-sdk/utils/message"
-	"github.com/landslidenetwork/slide-sdk/utils/warp/payload"
 	"time"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
+	avalancheWarp "github.com/landslidenetwork/slide-sdk/utils/evm/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	avalancheWarp "github.com/landslidenetwork/slide-sdk/utils/warp"
 )
 
 const (

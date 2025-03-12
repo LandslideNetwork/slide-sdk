@@ -98,12 +98,12 @@ type Peer interface {
 	//// Ready returns true if the peer has finished the p2p handshake and is
 	//// ready to send and receive messages.
 	//Ready() bool
-	//
-	//// AwaitReady will block until the peer has finished the p2p handshake. If
-	//// the context is cancelled or the peer starts closing, then an error will
-	//// be returned.
-	//AwaitReady(ctx context.Context) error
-	//
+
+	// AwaitReady will block until the peer has finished the p2p handshake. If
+	// the context is cancelled or the peer starts closing, then an error will
+	// be returned.
+	AwaitReady(ctx context.Context) error
+
 	//// Info returns a description of the state of this peer. It should only be
 	//// called after [Ready] returns true.
 	//Info() Info

@@ -38,7 +38,7 @@ package sender_test
 //	"github.com/landslidenetwork/slide-sdk/utils/math/meter"
 //	"github.com/landslidenetwork/slide-sdk/utils/set"
 //	"github.com/landslidenetwork/slide-sdk/utils/version"
-//	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
+//	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/validators"
 //
 //	commontracker "github.com/ava-labs/avalanchego/snow/engine/common/tracker"
 //	p2ppb "github.com/landslidenetwork/slide-sdk/proto/p2p"

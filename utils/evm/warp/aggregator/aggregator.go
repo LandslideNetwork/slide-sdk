@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/cometbft/cometbft/libs/log"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/evm/warp"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/set"

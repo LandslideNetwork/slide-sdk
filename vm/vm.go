@@ -6,24 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/landslidenetwork/slide-sdk/utils"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/compression"
-	message "github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	network2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/network"
-	dialer2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/network/dialer"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/benchlist"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/sender"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/timeout"
-	peer2 "github.com/landslidenetwork/slide-sdk/utils/evm/peer"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/peer"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/aggregator"
+	"github.com/landslidenetwork/slide-sdk/utils/message"
 	"github.com/landslidenetwork/slide-sdk/utils/network/p2p"
-	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
-	"github.com/landslidenetwork/slide-sdk/utils/set"
-	"github.com/landslidenetwork/slide-sdk/utils/staking"
-	"github.com/landslidenetwork/slide-sdk/utils/warp/aggregator"
-	"github.com/landslidenetwork/slide-sdk/utils/warp/validators"
-	"math"
-	"net"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -33,7 +23,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/grpcutils/gvalidators"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/evm/warp"
 	"github.com/landslidenetwork/slide-sdk/warp"
 
 	dbm "github.com/cometbft/cometbft-db"
@@ -79,8 +69,12 @@ import (
 )
 
 const (
-	genesisChunkSize             = 16 * 1024 * 1024 // 16
-	requirePrimaryNetworkSigners = true
+	genesisChunkSize                     = 16 * 1024 * 1024 // 16
+	requirePrimaryNetworkSigners         = true
+	DefaultNetworkPeerListBloomResetFreq = time.Minute
+	DefaultP2PPingFrequency              = time.Second
+	// The network must be "tcp", "tcp4", "tcp6", "unix" or "unixpacket".
+	NetworkType = "tcp"
 )
 
 var (
@@ -100,6 +94,46 @@ var (
 
 	ErrNotFound     = errors.New("not found")
 	ErrUnknownState = errors.New("unknown state")
+
+	InitiallyP2PActiveTime = time.Date(2025, time.February, 28, 5, 0, 0, 0, time.UTC)
+	defaultP2PHealthConfig = network2.HealthConfig{
+		MinConnectedPeers:            1,
+		MaxTimeSinceMsgReceived:      time.Minute,
+		MaxTimeSinceMsgSent:          time.Minute,
+		MaxPortionSendQueueBytesFull: .9,
+		MaxSendFailRate:              .1,
+		SendFailRateHalflife:         time.Second,
+	}
+	defaultPeerListGossipConfig = network2.PeerListGossipConfig{
+		PeerListNumValidatorIPs: 100,
+		PeerListPullGossipFreq:  time.Second,
+		PeerListBloomResetFreq:  DefaultNetworkPeerListBloomResetFreq,
+	}
+	defaultP2PTimeoutConfig = network2.TimeoutConfig{
+		PingPongTimeout:      30 * time.Second,
+		ReadHandshakeTimeout: 15 * time.Second,
+	}
+	defaultP2PDelayConfig = network2.DelayConfig{
+		MaxReconnectDelay:     time.Hour,
+		InitialReconnectDelay: time.Second,
+	}
+
+	defaultConfig = network2.Config{
+		HealthConfig:         defaultP2PHealthConfig,
+		PeerListGossipConfig: defaultPeerListGossipConfig,
+		TimeoutConfig:        defaultP2PTimeoutConfig,
+		DelayConfig:          defaultP2PDelayConfig,
+		//NetworkID:          49463,
+		MaxClockDifference: time.Minute,
+		PingFrequency:      DefaultP2PPingFrequency,
+		AllowPrivateIPs:    true,
+		//CompressionType: constants.DefaultNetworkCompressionType,
+		UptimeCalculator:  uptime.NewManager(uptime.NewTestState(), &mockable.Clock{}),
+		UptimeMetricFreq:  30 * time.Second,
+		UptimeRequirement: .8,
+
+		RequireValidatorToConnect: false,
+	}
 )
 
 type (
@@ -124,7 +158,7 @@ type (
 	AppCreator func(*AppCreatorOpts) (Application, error)
 
 	LandslideVM struct {
-		*p2p.Network
+		peer.Network
 		allowShutdown *vmtypes.Atomic[bool]
 
 		processMetrics prometheus.Gatherer
@@ -169,7 +203,7 @@ type (
 		warpSigner  warputils.Signer
 		warpService *API
 
-		p2pClient peer2.NetworkClient
+		p2pClient peer.NetworkClient
 
 		clientConn    grpc.ClientConnInterface
 		optClientConn *grpc.ClientConn
@@ -218,7 +252,7 @@ func WithOptClientConn(clientConn *grpc.ClientConn) func(vm *LandslideVM) {
 
 // Initialize initializes the VM.
 // This method should only be accessible by the AvalancheGo node and not exposed publicly.
-func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest) (*vmpb.InitializeResponse, error) {
+func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeRequest) (*vmpb.InitializeResponse, error) {
 	registerer := prometheus.NewRegistry()
 
 	// Current state of process metrics
@@ -523,78 +557,83 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		rpcClients[nodeID] = rpcClient
 	}
 
-	nodeID, err := ids.ToNodeID(req.NodeId)
-	if err != nil {
-		return nil, err
-	}
+	//nodeID, err := ids.ToNodeID(req.NodeId)
+	//if err != nil {
+	//	return nil, err
+	//}
 
-	p2pRouter := &router.P2PRouter{}
-	validatorsManager := validators.NewManager()
-	threshold := 5
-	minimumFailingDuration := time.Second
-	duration := 2 * time.Second
-	maxPortion := math.Pi
-	nwBenchlist, err := benchlist.NewBenchlist(p2pRouter, validatorsManager, threshold, minimumFailingDuration, duration, maxPortion, registerer)
-	if err != nil {
-		return nil, err
-	}
-	timeoutManager, err := timeout.NewManager(nwBenchlist)
-	if err != nil {
-		return nil, err
-	}
-	err = p2pRouter.Initialize(vm.logger, timeoutManager)
-	if err != nil {
-		return nil, err
-	}
-	maxMessageTimeout := time.Second
-	msgCreator, err := message.NewCreator(vm.logger, registerer, compression.TypeZstd, maxMessageTimeout)
-	if err != nil {
-		return nil, err
-	}
-	// Passes messages from the snowman engines to the network
+	//p2pRouter := &router.P2PRouter{}
+	//validatorsManager := validators.NewManager()
+	//threshold := 5
+	//minimumFailingDuration := time.Second
+	//duration := 2 * time.Second
+	//maxPortion := math.Pi
+	//nwBenchlist, err := benchlist.NewBenchlist(p2pRouter, validatorsManager, threshold, minimumFailingDuration, duration, maxPortion, registerer)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//timeoutManager, err := timeout.NewManager(nwBenchlist)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//err = p2pRouter.Initialize(vm.logger, timeoutManager)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//maxMessageTimeout := time.Second
+	//msgCreator, err := message.NewCreator(vm.logger, registerer, compression.TypeZstd, maxMessageTimeout)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//// Passes messages from the snowman engines to the network
+	//
+	//var p2pConfig = &network2.Config{}
+	//listenAddress := net.JoinHostPort(n.Config.ListenHost, strconv.FormatUint(uint64(n.Config.ListenPort), 10))
+	//listener, err := net.Listen(NetworkType, listenAddress)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//dialer := dialer2.NewDialer(NetworkType, dialer2.Config{}, vm.logger)
+	//
+	//tlsCert, err := staking.NewTLSCert()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//cert, err := staking.ParseCertificate(tlsCert.Leaf.Raw)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//nodeID := ids.NodeIDFromCert(cert)
+	//
+	//blsKey, err := bls.NewSigner()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//p2pConfig = &defaultConfig
+	//p2pConfig.TLSConfig = peer.TLSConfig(*tlsCert, nil)
+	//p2pConfig.MyNodeID = nodeID
+	//p2pConfig.MyIPPort = utils.NewAtomic(ip)
+	//p2pConfig.TLSKey = tlsCert.PrivateKey.(crypto.Signer)
+	//p2pConfig.BLSKey = blsKey
+	//
+	//externalSender, err := network2.NewNetwork(p2pConfig, InitiallyP2PActiveTime, msgCreator, vm.logger, listener, dialer, p2pRouter)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//allowedNodes := set.Set[ids.NodeID]{}
+	//for _, nodeID := range vm.config.P2PAllowedNodes {
+	//	parsedNodeID, err := ids.NodeIDFromString(nodeID)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	allowedNodes.Add(parsedNodeID)
+	//}
+	//appSender := sender.New(chainID, subnetID, nodeID, vm.logger, timeoutManager, msgCreator, externalSender, p2pRouter, allowedNodes)
 
-	var (
-		dialer    = dialer2.NewDialer("network", dialer2.Config{}, vm.logger)
-		p2pConfig = &network2.Config{}
-	)
-	listener := net.NewListener(addrPort)
-
-	tlsCert, err := staking.NewTLSCert()
-	if err != nil {
-		return nil, err
-	}
-
-	cert, err := staking.ParseCertificate(tlsCert.Leaf.Raw)
-	if err != nil {
-		return nil, err
-	}
-	nodeID := ids.NodeIDFromCert(cert)
-
-	blsKey, err := bls.NewSigner()
-	if err != nil {
-		return nil, err
-	}
-
-	p2pConfig = defaultConfig
-	p2pConfig.TLSConfig = peer.TLSConfig(*tlsCert, nil)
-	p2pConfig.MyNodeID = nodeID
-	p2pConfig.MyIPPort = utils.NewAtomic(ip)
-	p2pConfig.TLSKey = tlsCert.PrivateKey.(crypto.Signer)
-	p2pConfig.BLSKey = blsKey
-
-	externalSender, err := network2.NewNetwork(&network2.Config{}, P2PMinCompatibleTime, msgCreator, vm.logger, listener, dialer)
-	if err != nil {
-		return nil, err
-	}
-	allowedNodes := set.Set[ids.NodeID]{}
-	for _, nodeID := range vm.config.P2PAllowedNodes {
-		parsedNodeID, err := ids.NodeIDFromString(nodeID)
-		if err != nil {
-			return nil, err
-		}
-		allowedNodes.Add(parsedNodeID)
-	}
-	appSender := sender.New(chainID, subnetID, nodeID, vm.logger, timeoutManager, msgCreator, externalSender, p2pRouter, allowedNodes)
+	//TODO: implement
+	//appSenderClient := p2psender.NewClient(appsender.NewAppSenderClient(vm.clientConn))
 
 	//// Passes messages from the avalanche engines to the network
 	//avalancheMessageSender, err := sender.New(
@@ -608,17 +647,20 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	//	avalancheMetrics,
 	//)
 
-	vm.Network, err = p2p.NewNetwork(
+	appSenderClient := ctx.Value("appSender").(common.AppSender)
+
+	p2pNetwork, err := p2p.NewNetwork(
 		vm.logger,
-		appSender,
+		appSenderClient,
 		registerer,
-		"",
+		"p2p",
 	)
 	if err != nil {
 		return nil, err
 	}
-	network := peer2.NewNetwork(vm.Network, appSender, vm.logger, 100)
-	vm.p2pClient = peer2.NewNetworkClient(network)
+	networkCodec := message.Codec
+	vm.Network = peer.NewNetwork(p2pNetwork, appSenderClient, vm.logger, 100, networkCodec)
+	vm.p2pClient = peer.NewNetworkClient(vm.Network)
 	signatureGetter := aggregator.NewSignatureGetter(vm.p2pClient)
 
 	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, signatureGetter, rpcClients, requirePrimaryNetworkSigners)
@@ -628,9 +670,12 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	acp118Handler := warp.NewHandler(
 		vm.warpSigner,
 	)
-	if err := vm.Network.AddHandler(p2p.SignatureRequestHandlerID, acp118Handler); err != nil {
+	if err := p2pNetwork.AddHandler(p2p.SignatureRequestHandlerID, acp118Handler); err != nil {
 		return nil, err
 	}
+
+	networkHandler := newNetworkHandler(vm.warpBackend, networkCodec, vm.logger)
+	vm.Network.SetRequestHandler(networkHandler)
 
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
@@ -969,8 +1014,13 @@ func (vm *LandslideVM) Version(context.Context, *emptypb.Empty) (*vmpb.VersionRe
 }
 
 // AppRequest notify this engine of a request for data from [nodeID].
-func (vm *LandslideVM) AppRequest(context.Context, *vmpb.AppRequestMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me 3")
+func (vm *LandslideVM) AppRequest(ctx context.Context, msg *vmpb.AppRequestMsg) (*emptypb.Empty, error) {
+	nodeId, err := ids.ToNodeID(msg.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	err = vm.Network.AppRequest(ctx, nodeId, msg.RequestId, msg.Deadline.AsTime(), msg.Request)
+	return nil, err
 }
 
 // AppRequestFailed notify this engine that an AppRequest message it sent to [nodeID] with

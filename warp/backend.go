@@ -3,13 +3,13 @@ package warp
 import (
 	"fmt"
 
-	"github.com/landslidenetwork/slide-sdk/utils/warp/messages"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/messages"
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/evm/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/payload"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
-	"github.com/landslidenetwork/slide-sdk/utils/warp/payload"
 )
 
 // Backend tracks signature-eligible warp messages and provides an interface to fetch them.

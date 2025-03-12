@@ -10,6 +10,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/timeout"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/version"
 	"go.uber.org/zap"
 )
 
@@ -450,99 +451,99 @@ func (r *P2PRouter) HandleInbound(ctx context.Context, msg message.InboundMessag
 //			)
 //		}
 //	}
-//
-// // Connected routes an incoming notification that a validator was just connected
-//
-//	func (r *P2PRouter) Connected(nodeID ids.NodeID, nodeVersion *version.Application, subnetID ids.ID) {
-//		cr.lock.Lock()
-//		defer cr.lock.Unlock()
-//
-//		if cr.closing {
-//			cr.log.Debug("dropping connected message",
-//				zap.Stringer("nodeID", nodeID),
-//				zap.Error(errClosing),
-//			)
-//			return
-//		}
-//
-//		connectedPeer, exists := cr.peers[nodeID]
-//		if !exists {
-//			connectedPeer = &peer{
-//				version: nodeVersion,
-//			}
-//			cr.peers[nodeID] = connectedPeer
-//		}
-//		connectedPeer.trackedSubnets.Add(subnetID)
-//
-//		// If this validator is benched on any chain, treat them as disconnected on all chains
-//		if _, benched := cr.benched[nodeID]; benched {
-//			return
-//		}
-//
-//		msg := message.InternalConnected(nodeID, nodeVersion)
-//
-//		// TODO: fire up an event when validator state changes i.e when they leave
-//		// set, disconnect. we cannot put an L1 validator check here since
-//		// Disconnected would not be handled properly.
-//		//
-//		// When sybil protection is disabled, we only want this clause to happen
-//		// once. Therefore, we only update the chains during the connection of the
-//		// primary network, which is guaranteed to happen for every peer.
-//		if cr.sybilProtectionEnabled || subnetID == constants.PrimaryNetworkID {
-//			for _, chain := range cr.chainHandlers {
-//				// If sybil protection is disabled, send a Connected message to
-//				// every chain when connecting to the primary network.
-//				if subnetID == chain.Context().SubnetID || !cr.sybilProtectionEnabled {
-//					chain.Push(
-//						context.TODO(),
-//						handler.Message{
-//							InboundMessage: msg,
-//							EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
-//						},
-//					)
-//				}
-//			}
-//		}
-//	}
-//
-// // Disconnected routes an incoming notification that a validator was connected
-//
-//	func (r *P2PRouter) Disconnected(nodeID ids.NodeID) {
-//		cr.lock.Lock()
-//		defer cr.lock.Unlock()
-//
-//		if cr.closing {
-//			cr.log.Debug("dropping disconnected message",
-//				zap.Stringer("nodeID", nodeID),
-//				zap.Error(errClosing),
-//			)
-//			return
-//		}
-//
-//		peer := cr.peers[nodeID]
-//		delete(cr.peers, nodeID)
-//		if _, benched := cr.benched[nodeID]; benched {
-//			return
-//		}
-//
-//		msg := message.InternalDisconnected(nodeID)
-//
-//		// TODO: fire up an event when validator state changes i.e when they leave
-//		// set, disconnect. we cannot put an L1 validator check here since
-//		// if a validator connects then it leaves validator-set, it would not be
-//		// disconnected properly.
-//		for _, chain := range cr.chainHandlers {
-//			if peer.trackedSubnets.Contains(chain.Context().SubnetID) || !cr.sybilProtectionEnabled {
-//				chain.Push(
-//					context.TODO(),
-//					handler.Message{
-//						InboundMessage: msg,
-//						EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
-//					})
-//			}
-//		}
-//	}
-//
+
+// Connected routes an incoming notification that a validator was just connected
+
+func (r *P2PRouter) Connected(nodeID ids.NodeID, nodeVersion *version.Application, subnetID ids.ID) {
+	//		cr.lock.Lock()
+	//		defer cr.lock.Unlock()
+	//
+	//		if cr.closing {
+	//			cr.log.Debug("dropping connected message",
+	//				zap.Stringer("nodeID", nodeID),
+	//				zap.Error(errClosing),
+	//			)
+	//			return
+	//		}
+	//
+	//		connectedPeer, exists := cr.peers[nodeID]
+	//		if !exists {
+	//			connectedPeer = &peer{
+	//				version: nodeVersion,
+	//			}
+	//			cr.peers[nodeID] = connectedPeer
+	//		}
+	//		connectedPeer.trackedSubnets.Add(subnetID)
+	//
+	//		// If this validator is benched on any chain, treat them as disconnected on all chains
+	//		if _, benched := cr.benched[nodeID]; benched {
+	//			return
+	//		}
+	//
+	//		msg := message.InternalConnected(nodeID, nodeVersion)
+	//
+	//		// TODO: fire up an event when validator state changes i.e when they leave
+	//		// set, disconnect. we cannot put an L1 validator check here since
+	//		// Disconnected would not be handled properly.
+	//		//
+	//		// When sybil protection is disabled, we only want this clause to happen
+	//		// once. Therefore, we only update the chains during the connection of the
+	//		// primary network, which is guaranteed to happen for every peer.
+	//		if cr.sybilProtectionEnabled || subnetID == constants.PrimaryNetworkID {
+	//			for _, chain := range cr.chainHandlers {
+	//				// If sybil protection is disabled, send a Connected message to
+	//				// every chain when connecting to the primary network.
+	//				if subnetID == chain.Context().SubnetID || !cr.sybilProtectionEnabled {
+	//					chain.Push(
+	//						context.TODO(),
+	//						handler.Message{
+	//							InboundMessage: msg,
+	//							EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
+	//						},
+	//					)
+	//				}
+	//			}
+	//		}
+}
+
+// Disconnected routes an incoming notification that a validator was connected
+
+func (r *P2PRouter) Disconnected(nodeID ids.NodeID) {
+	//		cr.lock.Lock()
+	//		defer cr.lock.Unlock()
+	//
+	//		if cr.closing {
+	//			cr.log.Debug("dropping disconnected message",
+	//				zap.Stringer("nodeID", nodeID),
+	//				zap.Error(errClosing),
+	//			)
+	//			return
+	//		}
+	//
+	//		peer := cr.peers[nodeID]
+	//		delete(cr.peers, nodeID)
+	//		if _, benched := cr.benched[nodeID]; benched {
+	//			return
+	//		}
+	//
+	//		msg := message.InternalDisconnected(nodeID)
+	//
+	//		// TODO: fire up an event when validator state changes i.e when they leave
+	//		// set, disconnect. we cannot put an L1 validator check here since
+	//		// if a validator connects then it leaves validator-set, it would not be
+	//		// disconnected properly.
+	//		for _, chain := range cr.chainHandlers {
+	//			if peer.trackedSubnets.Contains(chain.Context().SubnetID) || !cr.sybilProtectionEnabled {
+	//				chain.Push(
+	//					context.TODO(),
+	//					handler.Message{
+	//						InboundMessage: msg,
+	//						EngineType:     p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
+	//					})
+	//			}
+	//		}
+}
+
 // Benched routes an incoming notification that a validator was benched
 func (r *P2PRouter) Benched(chainID ids.ID, nodeID ids.NodeID) {
 	//	cr.lock.Lock()
