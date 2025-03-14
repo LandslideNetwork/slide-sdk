@@ -5,6 +5,8 @@ package main
 
 import (
 	"context"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/payload"
 	"log"
 	"net/netip"
 	"time"
@@ -18,9 +20,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/compression"
 	avap2p "github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
-	"github.com/landslidenetwork/slide-sdk/utils/evm/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/messages"
-	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/payload"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/network/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/network/peer"

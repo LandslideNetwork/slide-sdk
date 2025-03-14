@@ -6,10 +6,9 @@ package aggregator
 import (
 	"context"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 
 	"github.com/cometbft/cometbft/libs/log"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/evm/warp"
-
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 )
@@ -22,7 +21,7 @@ type AggregateSignatureResult struct {
 	// Total weight of all validators in the subnets.
 	TotalWeight uint64
 	// The message with the aggregate signature.
-	Message *warputils.Message
+	Message *warp.Message
 }
 
 type signatureFetchResult struct {
@@ -35,13 +34,13 @@ type signatureFetchResult struct {
 // aggregates them into a single signature.
 type Aggregator struct {
 	logger      log.Logger
-	validators  []*warputils.Validator
+	validators  []*warp.Validator
 	totalWeight uint64
 	client      SignatureGetter
 }
 
 // New returns a signature aggregator that will attempt to aggregate signatures from [validators].
-func New(client SignatureGetter, logger log.Logger, validators []*warputils.Validator, totalWeight uint64) *Aggregator {
+func New(client SignatureGetter, logger log.Logger, validators []*warp.Validator, totalWeight uint64) *Aggregator {
 	return &Aggregator{
 		client:      client,
 		logger:      logger,
@@ -52,7 +51,7 @@ func New(client SignatureGetter, logger log.Logger, validators []*warputils.Vali
 
 // Returns an aggregate signature over [unsignedMessage].
 // The returned signature's weight exceeds the threshold given by [quorumNum].
-func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *warputils.UnsignedMessage, quorumNum uint64) (*AggregateSignatureResult, error) {
+func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *warp.UnsignedMessage, quorumNum uint64) (*AggregateSignatureResult, error) {
 	// Create a child context to cancel signature fetching if we reach signature threshold.
 	signatureFetchCtx, signatureFetchCancel := context.WithCancel(ctx)
 	defer signatureFetchCancel()
@@ -132,7 +131,7 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *w
 		)
 
 		// If the signature weight meets the requested threshold, cancel signature fetching
-		if err := warputils.VerifyWeight(signaturesWeight, a.totalWeight, quorumNum, WarpQuorumDenominator); err == nil {
+		if err := warp.VerifyWeight(signaturesWeight, a.totalWeight, quorumNum, WarpQuorumDenominator); err == nil {
 			a.logger.Debug("Verify weight passed, exiting aggregation early",
 				"quorumNum", quorumNum,
 				"totalWeight", a.totalWeight,
@@ -147,7 +146,7 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *w
 
 	// If I failed to fetch sufficient signature stake, return an error
 	if !signaturesPassedThreshold {
-		return nil, warputils.ErrInsufficientWeight
+		return nil, warp.ErrInsufficientWeight
 	}
 
 	// Otherwise, return the aggregate signature
@@ -156,12 +155,12 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *w
 		return nil, fmt.Errorf("failed to aggregate BLS signatures: %w", err)
 	}
 
-	warpSignature := &warputils.BitSetSignature{
+	warpSignature := &warp.BitSetSignature{
 		Signers: signersBitset.Bytes(),
 	}
 	copy(warpSignature.Signature[:], bls.SignatureToBytes(aggregateSignature))
 
-	msg, err := warputils.NewMessage(unsignedMessage, warpSignature)
+	msg, err := warp.NewMessage(unsignedMessage, warpSignature)
 	if err != nil {
 		return nil, fmt.Errorf("failed to construct warp message: %w", err)
 	}

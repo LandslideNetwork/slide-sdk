@@ -4,6 +4,8 @@
 package warp
 
 import (
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/warptest"
 	"os"
 	"testing"
 
@@ -12,7 +14,6 @@ import (
 	"github.com/cometbft/cometbft/libs/rand"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/evm/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/stretchr/testify/require"
 )
@@ -21,11 +22,11 @@ var (
 	err                 error
 	networkID           uint32 = 54321
 	sourceChainID              = ids.GenerateTestID()
-	testUnsignedMessage *warputils.UnsignedMessage
+	testUnsignedMessage *warp.UnsignedMessage
 )
 
 func init() {
-	testUnsignedMessage, err = warputils.NewUnsignedMessage(networkID, sourceChainID, []byte(rand.Str(30)))
+	testUnsignedMessage, err = warp.NewUnsignedMessage(networkID, sourceChainID, []byte(rand.Str(30)))
 	if err != nil {
 		panic(err)
 	}
@@ -37,8 +38,8 @@ func TestAddAndGetValidMessage(t *testing.T) {
 
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
-	warpSigner := warputils.NewSigner(sk, networkID, sourceChainID)
-	backend := NewBackend(networkID, sourceChainID, warpSigner, logger, db)
+	warpSigner := warp.NewSigner(sk, networkID, sourceChainID)
+	backend := NewBackend(networkID, sourceChainID, warpSigner, logger, db, nil, warptest.NoOpValidatorReader{})
 	require.NoError(t, err)
 
 	// Add testUnsignedMessage to the warp backend
@@ -67,8 +68,8 @@ func TestAddAndGetUnknownMessage(t *testing.T) {
 
 	sk, err := bls.NewSecretKey()
 	require.NoError(t, err)
-	warpSigner := warputils.NewSigner(sk, networkID, sourceChainID)
-	backend := NewBackend(networkID, sourceChainID, warpSigner, logger, db)
+	warpSigner := warp.NewSigner(sk, networkID, sourceChainID)
+	backend := NewBackend(networkID, sourceChainID, warpSigner, logger, db, nil, warptest.NoOpValidatorReader{})
 	require.NoError(t, err)
 
 	// Try getting a signature for a message that was not added.

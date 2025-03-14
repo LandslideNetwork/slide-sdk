@@ -10,6 +10,7 @@ import (
 	network2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/network"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/aggregator"
 	"github.com/landslidenetwork/slide-sdk/utils/message"
@@ -23,7 +24,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/grpcutils/gvalidators"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/evm/warp"
 	"github.com/landslidenetwork/slide-sdk/warp"
 
 	dbm "github.com/cometbft/cometbft-db"
@@ -1066,6 +1066,27 @@ func (vm *LandslideVM) CrossChainAppResponse(context.Context, *vmpb.CrossChainAp
 
 func (vm *LandslideVM) GetAncestors(context.Context, *vmpb.GetAncestorsRequest) (*vmpb.GetAncestorsResponse, error) {
 	return nil, errors.New("TODO: implement me 11")
+}
+
+// GetAcceptedBlock attempts to retrieve block [blkID] from the VM. This method
+// only returns accepted blocks.
+func (vm *LandslideVM) GetAcceptedBlock(ctx context.Context, blkID ids.ID) (*vmpb.GetBlockIDAtHeightResponse, error) {
+	blk, err := vm.GetBlock(ctx, blkID)
+	if err != nil {
+		return nil, err
+	}
+
+	height := blk.Height()
+	acceptedBlkID, err := vm.GetBlockIDAtHeight(ctx, height)
+	if err != nil {
+		return nil, err
+	}
+
+	if acceptedBlkID != blkID {
+		// The provided block is not accepted.
+		return nil, database.ErrNotFound
+	}
+	return blk, nil
 }
 
 func (vm *LandslideVM) BatchedParseBlock(ctx context.Context, req *vmpb.BatchedParseBlockRequest) (*vmpb.BatchedParseBlockResponse, error) {

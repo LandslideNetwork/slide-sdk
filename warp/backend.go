@@ -1,14 +1,16 @@
 package warp
 
 import (
+	"context"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
+	payload2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/payload"
 
+	"github.com/landslidenetwork/slide-sdk/utils/evm/validators/interfaces"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/messages"
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/evm/warp"
-	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/payload"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
@@ -16,38 +18,44 @@ import (
 // The backend is also used to query for warp message signatures by the signature request handler.
 type Backend interface {
 	// AddMessage signs [unsignedMessage] and adds it to the warp backend database
-	AddMessage(unsignedMessage *warputils.UnsignedMessage) error
+	AddMessage(unsignedMessage *warp.UnsignedMessage) error
 	// GetMessageSignature returns the signature of the requested message.
-	GetMessageSignature(message *warputils.UnsignedMessage) ([]byte, error)
+	GetMessageSignature(message *warp.UnsignedMessage) ([]byte, error)
 	// GetBlockSignature returns the signature of a hash payload containing blockID if it's the ID of an accepted block.
 	GetBlockSignature(blockID ids.ID) ([]byte, error)
 	// GetMessage retrieves the [unsignedMessage] from the warp backend database if available
 	// TODO: After E-Upgrade, the backend no longer needs to store the mapping from messageHash
 	// to unsignedMessage (and this method can be removed).
-	GetMessage(messageHash ids.ID) (*warputils.UnsignedMessage, error)
+	GetMessage(messageHash ids.ID) (*warp.UnsignedMessage, error)
 }
 
 // backend implements Backend, keeps track of warp messages, and generates message signatures.
 type backend struct {
-	logger        log.Logger
-	networkID     uint32
-	sourceChainID ids.ID
-	db            dbm.DB
-	warpSigner    warputils.Signer
+	logger          log.Logger
+	blockClient     BlockClient
+	validatorReader interfaces.ValidatorReader
+	networkID       uint32
+	sourceChainID   ids.ID
+	db              dbm.DB
+	warpSigner      warp.Signer
+	stats           *verifierStats
 }
 
 // NewBackend creates a new Backend, and initializes the signature cache and message tracking database.
-func NewBackend(networkID uint32, sourceChainID ids.ID, warpSigner warputils.Signer, logger log.Logger, db dbm.DB) Backend {
+func NewBackend(networkID uint32, sourceChainID ids.ID, warpSigner warp.Signer, logger log.Logger, db dbm.DB, blkReceiver BlockReceiver, validatorReader interfaces.ValidatorReader) Backend {
 	return &backend{
-		networkID:     networkID,
-		sourceChainID: sourceChainID,
-		warpSigner:    warpSigner,
-		logger:        logger,
-		db:            db,
+		networkID:       networkID,
+		sourceChainID:   sourceChainID,
+		warpSigner:      warpSigner,
+		logger:          logger,
+		db:              db,
+		stats:           newVerifierStats(),
+		blockClient:     &blockStorageClient{receiver: blkReceiver},
+		validatorReader: validatorReader,
 	}
 }
 
-func (b *backend) AddMessage(unsignedMessage *warputils.UnsignedMessage) error {
+func (b *backend) AddMessage(unsignedMessage *warp.UnsignedMessage) error {
 	messageID := unsignedMessage.ID()
 
 	// In the case when a node restarts, and possibly changes its bls key, the cache gets emptied but the database does not.
@@ -65,13 +73,13 @@ func (b *backend) AddMessage(unsignedMessage *warputils.UnsignedMessage) error {
 	return nil
 }
 
-func (b *backend) GetMessage(messageID ids.ID) (*warputils.UnsignedMessage, error) {
+func (b *backend) GetMessage(messageID ids.ID) (*warp.UnsignedMessage, error) {
 	unsignedMessageBytes, err := b.db.Get(messageID[:])
 	if err != nil {
 		return nil, fmt.Errorf("failed to get warp message %s from db: %w", messageID.String(), err)
 	}
 
-	unsignedMessage, err := warputils.ParseUnsignedMessage(unsignedMessageBytes)
+	unsignedMessage, err := warp.ParseUnsignedMessage(unsignedMessageBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse unsigned message %s: %w", messageID.String(), err)
 	}
@@ -79,10 +87,13 @@ func (b *backend) GetMessage(messageID ids.ID) (*warputils.UnsignedMessage, erro
 	return unsignedMessage, nil
 }
 
-func (b *backend) GetMessageSignature(unsignedMessage *warputils.UnsignedMessage) ([]byte, error) {
+func (b *backend) GetMessageSignature(unsignedMessage *warp.UnsignedMessage) ([]byte, error) {
 	messageID := unsignedMessage.ID()
 
 	b.logger.Debug("Getting warp message from backend", "messageID", messageID)
+	if err := b.Verify(context.Background(), unsignedMessage, nil); err != nil {
+		return nil, fmt.Errorf("failed to validate warp message: %w", err)
+	}
 	if err := b.ValidateMessage(unsignedMessage); err != nil {
 		return []byte{}, fmt.Errorf("failed to validate warp message: %w", err)
 	}
@@ -93,17 +104,19 @@ func (b *backend) GetMessageSignature(unsignedMessage *warputils.UnsignedMessage
 func (b *backend) GetBlockSignature(blockID ids.ID) ([]byte, error) {
 	b.logger.Debug("Getting block from backend", "blockID", blockID)
 
-	blockHashPayload, err := payload.NewHash(blockID)
+	blockHashPayload, err := payload2.NewHash(blockID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new block hash payload: %w", err)
 	}
 
-	unsignedMessage, err := warputils.NewUnsignedMessage(b.networkID, b.sourceChainID, blockHashPayload.Bytes())
+	unsignedMessage, err := warp.NewUnsignedMessage(b.networkID, b.sourceChainID, blockHashPayload.Bytes())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new unsigned warp message: %w", err)
 	}
 
-	//TODO: validate block by hash
+	if err := b.verifyBlockMessage(context.Background(), blockHashPayload); err != nil {
+		return nil, fmt.Errorf("failed to validate block message: %w", err)
+	}
 
 	sig, err := b.warpSigner.Sign(unsignedMessage)
 	if err != nil {
@@ -112,14 +125,14 @@ func (b *backend) GetBlockSignature(blockID ids.ID) ([]byte, error) {
 	return sig, nil
 }
 
-func (b *backend) ValidateMessage(unsignedMessage *warputils.UnsignedMessage) error {
+func (b *backend) ValidateMessage(unsignedMessage *warp.UnsignedMessage) error {
 	// Known on-chain messages should be signed
 	if _, err := b.GetMessage(unsignedMessage.ID()); err == nil {
 		return nil
 	}
 
 	// Try to parse the payload as an AddressedCall
-	addressedCall, err := payload.ParseAddressedCall(unsignedMessage.Payload)
+	addressedCall, err := payload2.ParseAddressedCall(unsignedMessage.Payload)
 	if err != nil {
 		return fmt.Errorf("failed to parse unknown message as AddressedCall: %w", err)
 	}
@@ -143,7 +156,7 @@ func (b *backend) ValidateMessage(unsignedMessage *warputils.UnsignedMessage) er
 	return nil
 }
 
-func (b *backend) signMessage(unsignedMessage *warputils.UnsignedMessage) ([]byte, error) {
+func (b *backend) signMessage(unsignedMessage *warp.UnsignedMessage) ([]byte, error) {
 	sig, err := b.warpSigner.Sign(unsignedMessage)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign warp message: %w", err)

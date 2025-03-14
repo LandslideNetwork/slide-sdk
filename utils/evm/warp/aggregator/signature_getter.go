@@ -6,12 +6,12 @@ package aggregator
 import (
 	"context"
 	"fmt"
-	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/payload"
+	avalancheWarp "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
+	payload2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/payload"
 	"github.com/landslidenetwork/slide-sdk/utils/message"
 	"time"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
-	avalancheWarp "github.com/landslidenetwork/slide-sdk/utils/evm/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
@@ -49,12 +49,12 @@ func NewSignatureGetter(client NetworkClient) *NetworkSignatureGetter {
 // The caller is responsible to cancel [ctx] if it no longer needs to fetch this signature.
 func (s *NetworkSignatureGetter) GetSignature(ctx context.Context, nodeID ids.NodeID, unsignedWarpMessage *avalancheWarp.UnsignedMessage) (*bls.Signature, error) {
 	var signatureReqBytes []byte
-	parsedPayload, err := payload.Parse(unsignedWarpMessage.Payload)
+	parsedPayload, err := payload2.Parse(unsignedWarpMessage.Payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse unsigned message payload: %w", err)
 	}
 	switch p := parsedPayload.(type) {
-	case *payload.AddressedCall:
+	case *payload2.AddressedCall:
 		signatureReq := message.MessageSignatureRequest{
 			MessageID: unsignedWarpMessage.ID(),
 		}
@@ -62,7 +62,7 @@ func (s *NetworkSignatureGetter) GetSignature(ctx context.Context, nodeID ids.No
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal signature request: %w", err)
 		}
-	case *payload.Hash:
+	case *payload2.Hash:
 		signatureReq := message.BlockSignatureRequest{
 			BlockID: p.Hash,
 		}

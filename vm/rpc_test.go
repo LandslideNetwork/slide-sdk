@@ -3,12 +3,12 @@ package vm
 import (
 	"context"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/engine/enginetest"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 	"net/http"
 	"testing"
 	"time"
 
 	"github.com/cometbft/cometbft/libs/rand"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/evm/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"

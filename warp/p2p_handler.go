@@ -3,7 +3,7 @@ package warp
 import (
 	"context"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
-	"github.com/landslidenetwork/slide-sdk/utils/evm/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"time"
 )

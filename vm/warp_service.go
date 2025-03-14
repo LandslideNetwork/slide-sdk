@@ -10,9 +10,9 @@ import (
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/libs/log"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/evm/warp"
+	warp2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/payload"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/aggregator"
-	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/payload"
 	warpValidators "github.com/landslidenetwork/slide-sdk/utils/evm/warp/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/validators"
@@ -77,7 +77,7 @@ func NewAPI(vm *LandslideVM, logger log.Logger, networkID uint32, state validato
 
 // AddMessage returns the Warp message associated with a messageID.
 func (a *API) AddMessage(_ *rpctypes.Context, message []byte) (*ResultAddMessage, error) {
-	msg, err := warputils.ParseUnsignedMessage(message)
+	msg, err := warp2.ParseUnsignedMessage(message)
 	if err != nil {
 		return nil, fmt.Errorf(failedParseWARPMessage, message, err)
 	}
@@ -142,7 +142,7 @@ func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, qu
 	if err != nil {
 		return nil, err
 	}
-	unsignedMessage, err := warputils.NewUnsignedMessage(a.networkID, a.sourceChainID, blockHashPayload.Bytes())
+	unsignedMessage, err := warp2.NewUnsignedMessage(a.networkID, a.sourceChainID, blockHashPayload.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, qu
 	return a.aggregateSignatures(ctx, unsignedMessage, quorumNum, subnetIDStr)
 }
 
-func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warputils.UnsignedMessage, quorumNum uint64, subnetIDStr string) (tmbytes.HexBytes, error) {
+func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp2.UnsignedMessage, quorumNum uint64, subnetIDStr string) (tmbytes.HexBytes, error) {
 	subnetID := a.sourceSubnetID
 	if len(subnetIDStr) > 0 {
 		sid, err := ids.FromString(subnetIDStr)
@@ -170,7 +170,7 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warputil
 	}
 
 	// Convert the validator set into the canonical ordering.
-	validators, totalWeight, err := warputils.FlattenValidatorSet(vdrSet)
+	validators, totalWeight, err := warp2.FlattenValidatorSet(vdrSet)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert the validator set into the canonical ordering: %w", err)
 	}
