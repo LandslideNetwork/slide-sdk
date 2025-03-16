@@ -18,12 +18,12 @@ import (
 	"github.com/landslidenetwork/slide-sdk/proto/sdk"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/api/info"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/compression"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
 	avap2p "github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/messages"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	"github.com/landslidenetwork/slide-sdk/utils/network/p2p"
-	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
 
 	p2pmessage "github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 )

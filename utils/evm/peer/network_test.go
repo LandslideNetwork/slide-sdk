@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
-	"github.com/landslidenetwork/slide-sdk/utils/network/p2p"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/prometheus/client_golang/prometheus"
 

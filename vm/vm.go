@@ -8,13 +8,15 @@ import (
 	"fmt"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	network2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/network"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/peer"
+	evmvalidators "github.com/landslidenetwork/slide-sdk/utils/evm/validators"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/validators/interfaces"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/aggregator"
 	"github.com/landslidenetwork/slide-sdk/utils/message"
-	"github.com/landslidenetwork/slide-sdk/utils/network/p2p"
 	http2 "net/http"
 	"os"
 	"slices"
@@ -80,11 +82,12 @@ const (
 var (
 	_ vmpb.VMServer = (*LandslideVM)(nil)
 
-	dbPrefixBlockStore   = []byte("block-store")
-	dbPrefixStateStore   = []byte("state-store")
-	dbPrefixTxIndexer    = []byte("tx-indexer")
-	dbPrefixBlockIndexer = []byte("block-indexer")
-	dbPrefixWarp         = []byte("warp")
+	dbPrefixBlockStore       = []byte("block-store")
+	dbPrefixStateStore       = []byte("state-store")
+	dbPrefixValidatorManager = []byte("validator-manager")
+	dbPrefixTxIndexer        = []byte("tx-indexer")
+	dbPrefixBlockIndexer     = []byte("block-indexer")
+	dbPrefixWarp             = []byte("warp")
 
 	// TODO: use internal app validators instead
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -190,12 +193,13 @@ type (
 		blockIndexer   indexer.BlockIndexer
 		indexerService *txindex.IndexerService
 
-		vmenabled      *vmtypes.Atomic[bool]
-		vmstate        *vmtypes.Atomic[vmpb.State]
-		vmconnected    *vmtypes.Atomic[bool]
-		verifiedBlocks sync.Map
-		preferred      [32]byte
-		wrappedBlocks  *vmstate.WrappedBlocksStorage
+		vmenabled         *vmtypes.Atomic[bool]
+		vmstate           *vmtypes.Atomic[vmpb.State]
+		vmconnected       *vmtypes.Atomic[bool]
+		verifiedBlocks    sync.Map
+		validatorsManager interfaces.ValidatorReader
+		preferred         [32]byte
+		wrappedBlocks     *vmstate.WrappedBlocksStorage
 
 		// Avalanche Warp Messaging backend
 		// Used to serve BLS signatures of warp messages over RPC
@@ -532,12 +536,21 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		return nil, err
 	}
 	vm.warpSigner = warputils.NewSigner(secretKey, req.NetworkId, chainID)
+
+	dbValidatorManager := dbm.NewPrefixDB(vm.database, dbPrefixValidatorManager)
+	vm.validatorsManager, err = evmvalidators.NewManager(dbValidatorManager, &mockable.Clock{})
+	if err != nil {
+		return nil, err
+	}
+
 	vm.warpBackend = warp.NewBackend(
 		req.NetworkId,
 		chainID,
 		vm.warpSigner,
 		vm.logger,
 		warpDB,
+		vm,
+		vm.validatorsManager,
 	)
 
 	subnetID, err := ids.ToID(req.SubnetId)
@@ -1066,27 +1079,6 @@ func (vm *LandslideVM) CrossChainAppResponse(context.Context, *vmpb.CrossChainAp
 
 func (vm *LandslideVM) GetAncestors(context.Context, *vmpb.GetAncestorsRequest) (*vmpb.GetAncestorsResponse, error) {
 	return nil, errors.New("TODO: implement me 11")
-}
-
-// GetAcceptedBlock attempts to retrieve block [blkID] from the VM. This method
-// only returns accepted blocks.
-func (vm *LandslideVM) GetAcceptedBlock(ctx context.Context, blkID ids.ID) (*vmpb.GetBlockIDAtHeightResponse, error) {
-	blk, err := vm.GetBlock(ctx, blkID)
-	if err != nil {
-		return nil, err
-	}
-
-	height := blk.Height()
-	acceptedBlkID, err := vm.GetBlockIDAtHeight(ctx, height)
-	if err != nil {
-		return nil, err
-	}
-
-	if acceptedBlkID != blkID {
-		// The provided block is not accepted.
-		return nil, database.ErrNotFound
-	}
-	return blk, nil
 }
 
 func (vm *LandslideVM) BatchedParseBlock(ctx context.Context, req *vmpb.BatchedParseBlockRequest) (*vmpb.BatchedParseBlockResponse, error) {

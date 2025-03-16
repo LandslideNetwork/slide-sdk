@@ -37,7 +37,7 @@ func (client *blockStorageClient) GetAcceptedBlock(ctx context.Context, blkID id
 		return nil, err
 	}
 
-	if slices.Equal(acceptedBlkIDResp.BlkId, blkID[:]) {
+	if !slices.Equal(acceptedBlkIDResp.BlkId, blkID[:]) {
 		// The provided block is not accepted.
 		return nil, database.ErrNotFound
 	}

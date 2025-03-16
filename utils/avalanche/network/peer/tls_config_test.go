@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/ed25519"
 
-	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/staking"
 )
 

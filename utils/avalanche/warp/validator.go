@@ -13,10 +13,10 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/landslidenetwork/slide-sdk/utils"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/math"
-	"github.com/landslidenetwork/slide-sdk/utils/validators"
 )
 
 var (

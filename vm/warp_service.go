@@ -10,12 +10,12 @@ import (
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/libs/log"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/validators"
 	warp2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/payload"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/aggregator"
 	warpValidators "github.com/landslidenetwork/slide-sdk/utils/evm/warp/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	"github.com/landslidenetwork/slide-sdk/utils/validators"
 	"github.com/landslidenetwork/slide-sdk/warp"
 )
 

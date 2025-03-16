@@ -20,7 +20,7 @@ import (
 
 	_ "embed"
 
-	"github.com/landslidenetwork/slide-sdk/utils/network/peer"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/staking"
 )
 

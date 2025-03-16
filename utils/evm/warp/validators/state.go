@@ -6,8 +6,8 @@ package validators
 import (
 	"context"
 
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	"github.com/landslidenetwork/slide-sdk/utils/validators"
 )
 
 var (
