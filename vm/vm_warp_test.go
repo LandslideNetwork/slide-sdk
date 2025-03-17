@@ -7,10 +7,12 @@ import (
 	_ "embed"
 	"github.com/golang/protobuf/ptypes/empty"
 	vmpb "github.com/landslidenetwork/slide-sdk/proto/vm"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	avalancheWarp "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/message"
+	"github.com/landslidenetwork/slide-sdk/warp"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -801,10 +803,10 @@ func TestBlockSignatureRequestsToVM(t *testing.T) {
 		blockID          ids.ID
 		expectedResponse [bls.SignatureLen]byte
 	}{
-		//"known": {
-		//	blockID:          blkId,
-		//	expectedResponse: knownSignature,
-		//},
+		"known": {
+			blockID:          blkId,
+			expectedResponse: knownSignature,
+		},
 		"unknown": {
 			blockID:          ids.GenerateTestID(),
 			expectedResponse: [bls.SignatureLen]byte{},
@@ -839,61 +841,99 @@ func TestBlockSignatureRequestsToVM(t *testing.T) {
 	}
 }
 
-//
-//func TestClearWarpDB(t *testing.T) {
-//	ctx, db, genesisBytes, issuer, _ := setupGenesis(t, genesisJSONLatest)
-//	vm := &VM{}
-//	err := vm.Initialize(context.Background(), ctx, db, genesisBytes, []byte{}, []byte{}, issuer, []*commonEng.Fx{}, &enginetest.Sender{})
-//	require.NoError(t, err)
-//
-//	// use multiple messages to test that all messages get cleared
-//	payloads := [][]byte{[]byte("test1"), []byte("test2"), []byte("test3"), []byte("test4"), []byte("test5")}
-//	messages := []*avalancheWarp.UnsignedMessage{}
-//
-//	// add all messages
-//	for _, payload := range payloads {
-//		unsignedMsg, err := avalancheWarp.NewUnsignedMessage(vm.ctx.NetworkID, vm.ctx.ChainID, payload)
-//		require.NoError(t, err)
-//		err = vm.warpBackend.AddMessage(unsignedMsg)
-//		require.NoError(t, err)
-//		// ensure that the message was added
-//		_, err = vm.warpBackend.GetMessageSignature(context.TODO(), unsignedMsg)
-//		require.NoError(t, err)
-//		messages = append(messages, unsignedMsg)
-//	}
-//
-//	require.NoError(t, vm.Shutdown(context.Background()))
-//
-//	// Restart VM with the same database default should not prune the warp db
-//	vm = &VM{}
-//	// we need new context since the previous one has registered metrics.
-//	ctx, _, _, _, _ = setupGenesis(t, genesisJSONLatest)
-//	err = vm.Initialize(context.Background(), ctx, db, genesisBytes, []byte{}, []byte{}, issuer, []*commonEng.Fx{}, &enginetest.Sender{})
-//	require.NoError(t, err)
-//
-//	// check messages are still present
-//	for _, message := range messages {
-//		bytes, err := vm.warpBackend.GetMessageSignature(context.TODO(), message)
-//		require.NoError(t, err)
-//		require.NotEmpty(t, bytes)
-//	}
-//
-//	require.NoError(t, vm.Shutdown(context.Background()))
-//
-//	// restart the VM with pruning enabled
-//	vm = &VM{}
-//	config := `{"prune-warp-db-enabled": true}`
-//	ctx, _, _, _, _ = setupGenesis(t, genesisJSONLatest)
-//	err = vm.Initialize(context.Background(), ctx, db, genesisBytes, []byte{}, []byte(config), issuer, []*commonEng.Fx{}, &enginetest.Sender{})
-//	require.NoError(t, err)
-//
-//	it := vm.warpDB.NewIterator()
-//	require.False(t, it.Next())
-//	it.Release()
-//
-//	// ensure all messages have been deleted
-//	for _, message := range messages {
-//		_, err := vm.warpBackend.GetMessageSignature(context.TODO(), message)
-//		require.ErrorIs(t, err, &commonEng.AppError{Code: warp.ParseErrCode})
-//	}
-//}
+func TestClearWarpDB(t *testing.T) {
+	vm, _ := NewFreshKvApp(t)
+	vmLnd := vm.(*LandslideVM)
+	//ctx, db, genesisBytes, issuer, _ := setupGenesis(t, genesisJSONLatest)
+	//vm := &VM{}
+	//err := vm.Initialize(context.Background(), ctx, db, genesisBytes, []byte{}, []byte{}, issuer, []*commonEng.Fx{}, &enginetest.Sender{})
+	//require.NoError(t, err)
+
+	// use multiple messages to test that all messages get cleared
+	payloads := [][]byte{[]byte("test1"), []byte("test2"), []byte("test3"), []byte("test4"), []byte("test5")}
+	messages := []*avalancheWarp.UnsignedMessage{}
+
+	chainID, err := ids.ToID(vmLnd.appOpts.ChainID)
+	require.NoError(t, err)
+	// add all messages
+	for _, payload := range payloads {
+		unsignedMsg, err := avalancheWarp.NewUnsignedMessage(vmLnd.appOpts.NetworkID, chainID, payload)
+		require.NoError(t, err)
+		err = vmLnd.warpBackend.AddMessage(unsignedMsg)
+		require.NoError(t, err)
+		// ensure that the message was added
+		_, err = vmLnd.warpBackend.GetMessageSignature(unsignedMsg)
+		require.NoError(t, err)
+		messages = append(messages, unsignedMsg)
+	}
+
+	_, err = vm.Shutdown(context.Background(), &empty.Empty{})
+	require.NoError(t, err)
+
+	// Restart VM with the same database default should not prune the warp db
+	//vm = &VM{}
+	// we need new context since the previous one has registered metrics.
+	//ctx, _, _, _, _ = setupGenesis(t, genesisJSONLatest)
+	_, err = vm.Initialize(context.Background(), &vmpb.InitializeRequest{
+		NetworkId:    0,
+		SubnetId:     nil,
+		ChainId:      nil,
+		NodeId:       nil,
+		PublicKey:    nil,
+		XChainId:     nil,
+		CChainId:     nil,
+		AvaxAssetId:  nil,
+		ChainDataDir: "",
+		GenesisBytes: nil,
+		UpgradeBytes: nil,
+		ConfigBytes:  nil,
+		DbServerAddr: "",
+		ServerAddr:   "",
+	})
+	//ctx, db, genesisBytes, []byte{}, []byte{}, issuer, []*commonEng.Fx{}, &enginetest.Sender{})
+	require.NoError(t, err)
+
+	// check messages are still present
+	for _, message := range messages {
+		bytes, err := vmLnd.warpBackend.GetMessageSignature(message)
+		require.NoError(t, err)
+		require.NotEmpty(t, bytes)
+	}
+
+	_, err = vm.Shutdown(context.Background(), &empty.Empty{})
+	require.NoError(t, err)
+
+	// restart the VM with pruning enabled
+	//vm = &VM{}
+	//config := `{"prune-warp-db-enabled": true}`
+	//ctx, _, _, _, _ = setupGenesis(t, genesisJSONLatest)
+	//err = vm.Initialize(context.Background(), ctx, db, genesisBytes, []byte{}, []byte(config), issuer, []*commonEng.Fx{}, &enginetest.Sender{})
+	_, err = vm.Initialize(context.Background(), &vmpb.InitializeRequest{
+		NetworkId:    0,
+		SubnetId:     nil,
+		ChainId:      nil,
+		NodeId:       nil,
+		PublicKey:    nil,
+		XChainId:     nil,
+		CChainId:     nil,
+		AvaxAssetId:  nil,
+		ChainDataDir: "",
+		GenesisBytes: nil,
+		UpgradeBytes: nil,
+		ConfigBytes:  nil,
+		DbServerAddr: "",
+		ServerAddr:   "",
+	})
+	require.NoError(t, err)
+
+	it, err := vmLnd.warpDB.Iterator(nil, nil)
+	require.NoError(t, err)
+	require.False(t, it.Valid())
+	it.Close()
+
+	// ensure all messages have been deleted
+	for _, message := range messages {
+		_, err := vmLnd.warpBackend.GetMessageSignature(message)
+		require.ErrorIs(t, err, &common.AppError{Code: warp.ParseErrCode})
+	}
+}

@@ -206,6 +206,7 @@ type (
 		warpBackend warp.Backend
 		warpSigner  warputils.Signer
 		warpService *API
+		warpDB      dbm.DB
 
 		p2pClient peer.NetworkClient
 
@@ -519,7 +520,7 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 
 	parentHash := block.ParentHash(blk)
 
-	warpDB := dbm.NewPrefixDB(vm.database, dbPrefixWarp)
+	vm.warpDB = dbm.NewPrefixDB(vm.database, dbPrefixWarp)
 	// TODO: implement bls secret key check
 	// if vm.config.BLSSecretKey == nil {
 	//	if err != nil {
@@ -548,7 +549,7 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		chainID,
 		vm.warpSigner,
 		vm.logger,
-		warpDB,
+		vm.warpDB,
 		vm,
 		vm.validatorsManager,
 	)
