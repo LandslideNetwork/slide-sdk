@@ -114,10 +114,13 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *w
 		signaturesWeight          = uint64(0)
 		signaturesPassedThreshold = false
 	)
+	a.logger.Info("START signature fetching")
 
+	a.logger.Info("amount of validators", len(a.validators))
 	for i := 0; i < len(a.validators); i++ {
 		signatureFetchResult := <-signatureFetchResultChan
 		if signatureFetchResult == nil {
+			a.logger.Info("WARNING: nil result of signature fetch process")
 			continue
 		}
 
@@ -141,11 +144,14 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *w
 			signatureFetchCancel()
 			signaturesPassedThreshold = true
 			break
+		} else {
+			a.logger.Error("ERROR WARP AGGREGATE SIGNATURE VERIFY WEIGHT: INSUFFICIENT WEIGHT, weight", signaturesWeight, "totalWeight", a.totalWeight, "quorumNum", quorumNum, "quorumDenominator", WarpQuorumDenominator)
 		}
 	}
 
 	// If I failed to fetch sufficient signature stake, return an error
 	if !signaturesPassedThreshold {
+		a.logger.Error("ERROR WARP AGGREGATE SIGNATURE: INSUFFICIENT WEIGHT")
 		return nil, warp.ErrInsufficientWeight
 	}
 

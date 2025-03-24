@@ -38,6 +38,10 @@ type ResultGetMessageSignature struct {
 	Signature []byte `json:"signature"`
 }
 
+type ResultAggregatedSignatures struct {
+	AggregatedSignatures []byte `json:"aggregated_signature"`
+}
+
 // API introduces snowman specific functionality to the evm
 type API struct {
 	vm                            *LandslideVM
@@ -119,16 +123,19 @@ func (a *API) GetMessageSignature(_ *rpctypes.Context, messageID string) (*Resul
 }
 
 // GetMessageAggregateSignature fetches the aggregate signature for the requested [messageID]
-func (a *API) GetMessageAggregateSignature(ctx context.Context, messageID ids.ID, quorumNum uint64, subnetIDStr string) (signedMessageBytes tmbytes.HexBytes, err error) {
+func (a *API) GetMessageAggregateSignature(_ *rpctypes.Context, messageID ids.ID, quorumNum uint64, subnetIDStr string) (*ResultAggregatedSignatures, error) {
 	unsignedMessage, err := a.backend.GetMessage(messageID)
+	a.vm.logger.Info("Get unsigned message with backend")
 	if err != nil {
 		return nil, err
 	}
-	return a.aggregateSignatures(ctx, unsignedMessage, quorumNum, subnetIDStr)
+	a.vm.logger.Info("Try to aggregate signatures")
+	aggregatedSignatures, err := a.aggregateSignatures(context.Background(), unsignedMessage, quorumNum, subnetIDStr)
+	return &ResultAggregatedSignatures{AggregatedSignatures: aggregatedSignatures}, err
 }
 
 // GetBlockSignature returns the BLS signature associated with a blockID.
-func (a *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (tmbytes.HexBytes, error) {
+func (a *API) GetBlockSignature(_ *rpctypes.Context, blockID ids.ID) (tmbytes.HexBytes, error) {
 	signature, err := a.backend.GetBlockSignature(blockID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get signature for block %s with error %w", blockID, err)
@@ -137,7 +144,7 @@ func (a *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (tmbytes.He
 }
 
 // GetBlockAggregateSignature fetches the aggregate signature for the requested [blockID]
-func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, quorumNum uint64, subnetIDStr string) (signedMessageBytes tmbytes.HexBytes, err error) {
+func (a *API) GetBlockAggregateSignature(_ *rpctypes.Context, blockID ids.ID, quorumNum uint64, subnetIDStr string) (*ResultAggregatedSignatures, error) {
 	blockHashPayload, err := payload.NewHash(blockID)
 	if err != nil {
 		return nil, err
@@ -147,7 +154,8 @@ func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, qu
 		return nil, err
 	}
 
-	return a.aggregateSignatures(ctx, unsignedMessage, quorumNum, subnetIDStr)
+	aggregatedSignatures, err := a.aggregateSignatures(context.Background(), unsignedMessage, quorumNum, subnetIDStr)
+	return &ResultAggregatedSignatures{AggregatedSignatures: aggregatedSignatures}, err
 }
 
 func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp2.UnsignedMessage, quorumNum uint64, subnetIDStr string) (tmbytes.HexBytes, error) {
@@ -163,12 +171,13 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp2.Un
 	if err != nil {
 		return nil, err
 	}
+	a.logger.Info("received pchain height")
 	// Get the validator set at the given height.
 	vdrSet, err := a.valState.GetValidatorSet(ctx, pChainHeight, subnetID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get validator set: %w", err)
 	}
-
+	a.logger.Info("receive flatten validator set")
 	// Convert the validator set into the canonical ordering.
 	validators, totalWeight, err := warp2.FlattenValidatorSet(vdrSet)
 	if err != nil {
@@ -185,6 +194,7 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp2.Un
 		"totalWeight", totalWeight,
 	)
 	agg := aggregator.New(a.signatureGetter, a.logger, validators, totalWeight)
+	a.vm.logger.Info("agg.AggregateSignatures")
 	signatureResult, err := agg.AggregateSignatures(ctx, unsignedMessage, quorumNum)
 	if err != nil {
 		return nil, err

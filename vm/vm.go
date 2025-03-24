@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/grpcutils/p2psender"
+	appsenderpb "github.com/landslidenetwork/slide-sdk/proto/appsender"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	network2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/network"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
@@ -456,6 +458,7 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 	)
 	vm.mempool.SetLogger(vm.logger.With("module", "mempool"))
 	vm.mempool.EnableTxsAvailable()
+	vm.logger.Info("MEMPOOL INITIALIZED")
 
 	go func() {
 		for {
@@ -511,12 +514,14 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		vm.state = newstate
 	}
 
+	vm.logger.Info("ENCODE BLOCK WITH STATUS ACCEPTED")
 	blockBytes, err := vmstate.EncodeBlockWithStatus(blk, vmpb.Status_STATUS_ACCEPTED)
 	if err != nil {
-		return nil, err
+		vm.logger.Info(fmt.Sprintf("failed to encode block with status ACCEPTED: %s", err))
+		return nil, fmt.Errorf("failed to encode block with status ACCEPTED: %w", err)
 	}
 	// vm.logger.Debug("initialize block", "bytes ", blockBytes)
-	vm.logger.Info("vm initialization completed")
+	//vm.logger.Info("vm initialization completed")
 
 	parentHash := block.ParentHash(blk)
 
@@ -529,19 +534,22 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 	// }
 	chainID, err := ids.ToID(req.ChainId)
 	if err != nil {
-		return nil, err
+		vm.logger.Info(fmt.Sprintf("failed to parse chain ID: %s", err))
+		return nil, fmt.Errorf("failed to parse chain ID: %w", err)
 	}
 	fmt.Println(vm.config.BLSSecretKey)
 	secretKey, err := bls.SecretKeyFromBytes(vm.config.BLSSecretKey)
 	if err != nil {
-		return nil, err
+		vm.logger.Info(fmt.Sprintf("failed to parse BLS secret key: %s", err))
+		return nil, fmt.Errorf("failed to parse BLS secret key: %w", err)
 	}
 	vm.warpSigner = warputils.NewSigner(secretKey, req.NetworkId, chainID)
 
 	dbValidatorManager := dbm.NewPrefixDB(vm.database, dbPrefixValidatorManager)
 	vm.validatorsManager, err = evmvalidators.NewManager(dbValidatorManager, &mockable.Clock{})
 	if err != nil {
-		return nil, err
+		vm.logger.Info(fmt.Sprintf("failed to create validators manager: %s", err))
+		return nil, fmt.Errorf("failed to create validators manager: %w", err)
 	}
 
 	vm.warpBackend = warp.NewBackend(
@@ -556,20 +564,24 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 
 	subnetID, err := ids.ToID(req.SubnetId)
 	if err != nil {
-		return nil, err
+		vm.logger.Info(fmt.Sprintf("failed to parse subnet ID: %s", err))
+		return nil, fmt.Errorf("failed to parse subnet ID: %w", err)
 	}
+	//TODO: exclude rpcClients and AddressBook
 	rpcClients := make(map[ids.NodeID]warp.Client)
-	for id, nodeURI := range vm.config.AddressBook {
-		nodeID, err := ids.ToNodeID([]byte(id))
-		if err != nil {
-			return nil, err
-		}
-		rpcClient, err := warp.NewClient(nodeURI, string(req.ChainId))
-		if err != nil {
-			return nil, err
-		}
-		rpcClients[nodeID] = rpcClient
-	}
+	//for id, nodeURI := range vm.config.AddressBook {
+	//	nodeID, err := ids.ToNodeID([]byte(id))
+	//	if err != nil {
+	//		vm.logger.Info(fmt.Sprintf("failed to parse nodeID from AddressBook: %s", err))
+	//		return nil, err
+	//	}
+	//	rpcClient, err := warp.NewClient(nodeURI, string(req.ChainId))
+	//	if err != nil {
+	//		vm.logger.Info(fmt.Sprintf("failed to create warp client from AddressBook: %s", err))
+	//		return nil, err
+	//	}
+	//	rpcClients[nodeID] = rpcClient
+	//}
 
 	//nodeID, err := ids.ToNodeID(req.NodeId)
 	//if err != nil {
@@ -661,7 +673,13 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 	//	avalancheMetrics,
 	//)
 
-	appSenderClient := ctx.Value("appSender").(common.AppSender)
+	var appSenderClient common.AppSender
+	appSenderClientIfc := ctx.Value("appSender")
+	if appSenderClientIfc != nil {
+		appSenderClient = appSenderClientIfc.(common.AppSender)
+	} else {
+		appSenderClient = p2psender.NewClient(appsenderpb.NewAppSenderClient(vm.clientConn))
+	}
 
 	p2pNetwork, err := p2p.NewNetwork(
 		vm.logger,
@@ -670,7 +688,8 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		"p2p",
 	)
 	if err != nil {
-		return nil, err
+		vm.logger.Info(fmt.Sprintf("failed to create p2p network: %s", err))
+		return nil, fmt.Errorf("failed to create p2p network: %w", err)
 	}
 	networkCodec := message.Codec
 	vm.Network = peer.NewNetwork(p2pNetwork, appSenderClient, vm.logger, 100, networkCodec)
@@ -685,12 +704,14 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		vm.warpSigner,
 	)
 	if err := p2pNetwork.AddHandler(p2p.SignatureRequestHandlerID, acp118Handler); err != nil {
-		return nil, err
+		vm.logger.Info(fmt.Sprintf("failed to add p2p handler: %s", err))
+		return nil, fmt.Errorf("failed to add p2p handler: %w", err)
 	}
 
 	networkHandler := newNetworkHandler(vm.warpBackend, networkCodec, vm.logger)
 	vm.Network.SetRequestHandler(networkHandler)
 
+	vm.logger.Info("vm initialization completed")
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
 		LastAcceptedParentId: parentHash[:],

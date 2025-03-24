@@ -40,7 +40,6 @@ const (
 	signersPrimary
 )
 
-//
 //func TestSendWarpMessage(t *testing.T) {
 //	require := require.New(t)
 //	genesis := &core.Genesis{}
@@ -148,6 +147,7 @@ const (
 //	// Verify the produced message signature is valid
 //	require.True(bls.Verify(vm.ctx.PublicKey, blsSignature, unsignedMessage.Bytes()))
 //}
+
 //
 //func TestValidateWarpMessage(t *testing.T) {
 //	require := require.New(t)
@@ -174,7 +174,7 @@ const (
 //
 //	testWarpVMTransaction(t, unsignedMessage, true, exampleWarpPayload)
 //}
-//
+
 //func TestValidateInvalidWarpMessage(t *testing.T) {
 //	require := require.New(t)
 //	sourceChainID := ids.GenerateTestID()
@@ -393,7 +393,7 @@ const (
 //	require.NoError(err)
 //	require.JSONEq(string(txTraceResultBytes), string(blockTxTraceResultBytes))
 //}
-//
+
 //func TestReceiveWarpMessage(t *testing.T) {
 //	require := require.New(t)
 //	genesis := &core.Genesis{}
@@ -496,7 +496,7 @@ const (
 //		)
 //	}
 //}
-//
+
 //func testReceiveWarpMessage(
 //	t *testing.T, issuer chan commonEng.Message, vm *VM,
 //	sourceChainID ids.ID,
