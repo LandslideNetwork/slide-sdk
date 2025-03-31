@@ -104,7 +104,7 @@ func (s *NetworkSignatureGetter) GetSignature(ctx context.Context, nodeID ids.No
 			return nil, fmt.Errorf("failed to unmarshal signature res: %w", err)
 		}
 		if response.Signature == [bls.SignatureLen]byte{} {
-			return nil, fmt.Errorf("received empty signature response")
+			return nil, fmt.Errorf("received empty signature response, signatureRes: %s", string(signatureRes))
 		}
 		blsSignature, err := bls.SignatureFromBytes(response.Signature[:])
 		if err != nil {

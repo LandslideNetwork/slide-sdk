@@ -18,7 +18,13 @@ import (
 
 var (
 	ErrExistingAppProtocol = errors.New("existing app protocol")
+	ErrUnrequestedResponse = errors.New("unrequested response")
 )
+
+type pendingAppRequest struct {
+	handlerID string
+	callback  AppResponseCallback
+}
 
 type metrics struct {
 	msgTime  *prometheus.GaugeVec
@@ -49,10 +55,10 @@ type router struct {
 	sender  common.AppSender
 	metrics metrics
 
-	lock     sync.RWMutex
-	handlers map[uint64]*responder
-	//pendingAppRequests map[uint32]pendingAppRequest
-	requestID uint32
+	lock               sync.RWMutex
+	handlers           map[uint64]*responder
+	pendingAppRequests map[uint32]pendingAppRequest
+	requestID          uint32
 }
 
 // newRouter returns a new instance of Router
@@ -126,6 +132,30 @@ func (r *router) AppRequest(ctx context.Context, nodeID ids.NodeID, requestID ui
 	)
 }
 
+// AppResponse routes an AppResponse message to the callback corresponding to
+// requestID.
+//
+// Any error condition propagated outside Handler application logic is
+// considered fatal
+func (r *router) AppResponse(ctx context.Context, nodeID ids.NodeID, requestID uint32, response []byte) error {
+	start := time.Now()
+	pending, ok := r.clearAppRequest(requestID)
+	if !ok {
+		// we should never receive a timeout without a corresponding requestID
+		return ErrUnrequestedResponse
+	}
+
+	pending.callback(ctx, nodeID, response, nil)
+
+	return r.metrics.observe(
+		prometheus.Labels{
+			opLabel:      message.AppResponseOp.String(),
+			handlerLabel: pending.handlerID,
+		},
+		start,
+	)
+}
+
 // Parse parses a gossip or request message and maps it to a corresponding
 // handler if present.
 //
@@ -149,6 +179,16 @@ func (r *router) parse(prefixedMsg []byte) ([]byte, *responder, string, bool) {
 
 	handler, ok := r.handlers[handlerID]
 	return msg, handler, handlerStr, ok
+}
+
+// Invariant: Assumes [r.lock] isn't held.
+func (r *router) clearAppRequest(requestID uint32) (pendingAppRequest, bool) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	callback, ok := r.pendingAppRequests[requestID]
+	delete(r.pendingAppRequests, requestID)
+	return callback, ok
 }
 
 // Parse a gossip or request message.

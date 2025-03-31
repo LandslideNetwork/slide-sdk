@@ -39,6 +39,7 @@ func NewSignatureRequestHandler(backend warp.Backend, codec codec.Manager, logge
 // Returns empty response if signature is not found
 // Assumes ctx is active
 func (s *SignatureRequestHandler) OnMessageSignatureRequest(ctx context.Context, nodeID ids.NodeID, requestID uint32, signatureRequest message.MessageSignatureRequest) ([]byte, error) {
+	s.log.Debug("OnMessageSignatureRequest START", "messageID", signatureRequest.MessageID)
 	startTime := time.Now()
 	s.stats.IncMessageSignatureRequest()
 
@@ -58,18 +59,23 @@ func (s *SignatureRequestHandler) OnMessageSignatureRequest(ctx context.Context,
 			s.log.Debug("Unknown warp signature requested", "messageID", signatureRequest.MessageID)
 			s.stats.IncMessageSignatureMiss()
 		} else {
+			s.log.Debug("GetMessageSignature Status: success", "signature", sig)
 			s.stats.IncMessageSignatureHit()
 			copy(signature[:], sig)
 		}
+		//TODO: remove signature logging
+		s.log.Debug("WARP SIGNATURE INITIAL VALUE", "signature", signature)
+		s.log.Debug("WARP SIGNATURE INITIAL VALUE NR2", "signature", sig)
+		s.log.Debug("WARP UNSIGNED MESSAGE INITIAL VALUE", "unsignedMessage", unsignedMessage)
 	}
-
+	s.log.Debug("GetMessageSignature Copy Signature", "signatureAfterCopy", signature)
 	response := message.SignatureResponse{Signature: signature}
 	responseBytes, err := s.codec.Marshal(&response)
 	if err != nil {
 		s.log.Error("could not marshal SignatureResponse, dropping request", "nodeID", nodeID, "requestID", requestID, "err", err)
 		return nil, nil
 	}
-
+	s.log.Debug("GetMessageSignature Response Ready", "responseBytes", responseBytes)
 	return responseBytes, nil
 }
 

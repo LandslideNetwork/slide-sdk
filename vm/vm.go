@@ -8,12 +8,14 @@ import (
 	"fmt"
 	"github.com/landslidenetwork/slide-sdk/grpcutils/p2psender"
 	appsenderpb "github.com/landslidenetwork/slide-sdk/proto/appsender"
+	warppb "github.com/landslidenetwork/slide-sdk/proto/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	network2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/network"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/gwarp"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/peer"
 	evmvalidators "github.com/landslidenetwork/slide-sdk/utils/evm/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/validators/interfaces"
@@ -27,7 +29,6 @@ import (
 
 	"github.com/landslidenetwork/slide-sdk/grpcutils/gvalidators"
 
-	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/warp"
 
 	dbm "github.com/cometbft/cometbft-db"
@@ -205,10 +206,10 @@ type (
 
 		// Avalanche Warp Messaging backend
 		// Used to serve BLS signatures of warp messages over RPC
-		warpBackend warp.Backend
-		warpSigner  warputils.Signer
-		warpService *API
-		warpDB      dbm.DB
+		warpBackend      warp.Backend
+		warpSignerClient warputils.Signer
+		warpService      *API
+		warpDB           dbm.DB
 
 		p2pClient peer.NetworkClient
 
@@ -310,6 +311,8 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 	msgClient := messengerpb.NewMessengerClient(vm.clientConn)
 
 	validatorStateClient := gvalidators.NewClient(validatorstatepb.NewValidatorStateClient(vm.clientConn))
+
+	vm.warpSignerClient = gwarp.NewClient(warppb.NewSignerClient(vm.clientConn))
 
 	vm.toEngine = make(chan messengerpb.Message, 1)
 	vm.closed = make(chan struct{})
@@ -537,13 +540,13 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		vm.logger.Info(fmt.Sprintf("failed to parse chain ID: %s", err))
 		return nil, fmt.Errorf("failed to parse chain ID: %w", err)
 	}
-	fmt.Println(vm.config.BLSSecretKey)
-	secretKey, err := bls.SecretKeyFromBytes(vm.config.BLSSecretKey)
-	if err != nil {
-		vm.logger.Info(fmt.Sprintf("failed to parse BLS secret key: %s", err))
-		return nil, fmt.Errorf("failed to parse BLS secret key: %w", err)
-	}
-	vm.warpSigner = warputils.NewSigner(secretKey, req.NetworkId, chainID)
+	vm.logger.Info("BLS Public KEY:", req.PublicKey)
+	//secretKey, err := bls.SecretKeyFromBytes(req.PublicKey)
+	//if err != nil {
+	//	vm.logger.Info(fmt.Sprintf("failed to parse BLS secret key: %s", err))
+	//	return nil, fmt.Errorf("failed to parse BLS secret key: %w", err)
+	//}
+	//vm.warpSigner = warputils.NewSigner(secretKey, req.NetworkId, chainID)
 
 	dbValidatorManager := dbm.NewPrefixDB(vm.database, dbPrefixValidatorManager)
 	vm.validatorsManager, err = evmvalidators.NewManager(dbValidatorManager, &mockable.Clock{})
@@ -555,7 +558,7 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 	vm.warpBackend = warp.NewBackend(
 		req.NetworkId,
 		chainID,
-		vm.warpSigner,
+		vm.warpSignerClient,
 		vm.logger,
 		vm.warpDB,
 		vm,
@@ -679,6 +682,7 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		appSenderClient = appSenderClientIfc.(common.AppSender)
 	} else {
 		appSenderClient = p2psender.NewClient(appsenderpb.NewAppSenderClient(vm.clientConn))
+		vm.logger.Debug("Setup p2p communication with avalanche engine")
 	}
 
 	p2pNetwork, err := p2p.NewNetwork(
@@ -701,7 +705,7 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 	// Allow signing of all warp messages. This is not typically safe, but is
 	// allowed for this example.
 	acp118Handler := warp.NewHandler(
-		vm.warpSigner,
+		vm.warpSignerClient,
 	)
 	if err := p2pNetwork.AddHandler(p2p.SignatureRequestHandlerID, acp118Handler); err != nil {
 		vm.logger.Info(fmt.Sprintf("failed to add p2p handler: %s", err))
@@ -1066,8 +1070,13 @@ func (vm *LandslideVM) AppRequestFailed(context.Context, *vmpb.AppRequestFailedM
 
 // AppResponse notify this engine of a response to the AppRequest message it sent to
 // [nodeID] with request ID [requestID].
-func (vm *LandslideVM) AppResponse(context.Context, *vmpb.AppResponseMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me 5")
+func (vm *LandslideVM) AppResponse(ctx context.Context, msg *vmpb.AppResponseMsg) (*emptypb.Empty, error) {
+	nodeId, err := ids.ToNodeID(msg.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	err = vm.Network.AppResponse(ctx, nodeId, msg.RequestId, msg.Response)
+	return nil, err
 }
 
 // AppGossip notify this engine of a gossip message from [nodeID].

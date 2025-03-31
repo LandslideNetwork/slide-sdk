@@ -171,7 +171,6 @@ func (n *network) SendAppRequest(ctx context.Context, nodeID ids.NodeID, request
 	if nodeID == ids.EmptyNodeID {
 		return fmt.Errorf("cannot send request to empty nodeID, nodeID=%s, requestLen=%d", nodeID, len(request))
 	}
-
 	// If the context was cancelled, we can skip sending this request.
 	if err := ctx.Err(); err != nil {
 		return err
@@ -184,7 +183,7 @@ func (n *network) SendAppRequest(ctx context.Context, nodeID ids.NodeID, request
 
 	n.lock.Lock()
 	defer n.lock.Unlock()
-
+	n.log.Debug("SEND APP REQUEST: environment prepared")
 	return n.sendAppRequest(ctx, nodeID, request, responseHandler)
 }
 
@@ -279,6 +278,7 @@ func (n *network) AppRequest(ctx context.Context, nodeID ids.NodeID, requestID u
 	case err != nil && err != context.DeadlineExceeded:
 		return err // Return a fatal error
 	case responseBytes != nil:
+		n.log.Debug("send app response", "responseBytes", responseBytes)
 		return n.appSender.SendAppResponse(ctx, nodeID, requestID, responseBytes) // Propagate fatal error
 	default:
 		return nil
@@ -290,19 +290,18 @@ func (n *network) AppRequest(ctx context.Context, nodeID ids.NodeID, requestID u
 // If [requestID] is not known, this function will emit a log and return a nil error.
 // If the response handler returns an error it is propagated as a fatal error.
 func (n *network) AppResponse(ctx context.Context, nodeID ids.NodeID, requestID uint32, response []byte) error {
-	//log.Debug("received AppResponse from peer", "nodeID", nodeID, "requestID", requestID)
-	//
-	//handler, exists := n.markRequestFulfilled(requestID)
-	//if !exists {
-	//	log.Debug("forwarding AppResponse to SDK network", "nodeID", nodeID, "requestID", requestID, "responseLen", len(response))
-	//	return n.p2pNetwork.AppResponse(ctx, nodeID, requestID, response)
-	//}
-	//
-	//// We must release the slot
-	//n.activeAppRequests.Release(1)
-	//
-	//return handler.OnResponse(response)
-	return nil
+	n.log.Debug("received AppResponse from peer", "nodeID", nodeID, "requestID", requestID)
+
+	handler, exists := n.markRequestFulfilled(requestID)
+	if !exists {
+		n.log.Debug("forwarding AppResponse to SDK network", "nodeID", nodeID, "requestID", requestID, "responseLen", len(response))
+		return n.p2pNetwork.AppResponse(ctx, nodeID, requestID, response)
+	}
+
+	// We must release the slot
+	n.activeAppRequests.Release(1)
+
+	return handler.OnResponse(response)
 }
 
 // AppRequestFailed can be called by the avalanchego -> VM in following cases:
@@ -349,23 +348,23 @@ func calculateTimeUntilDeadline(deadline time.Time, stats stats.RequestHandlerSt
 	return bufferedDeadline, nil
 }
 
-//// markRequestFulfilled fetches the handler for [requestID] and marks the request with [requestID] as having been fulfilled.
-//// This is called by either [AppResponse] or [AppRequestFailed].
-//// Assumes that the write lock is not held.
-//func (n *network) markRequestFulfilled(requestID uint32) (message.ResponseHandler, bool) {
-//	n.lock.Lock()
-//	defer n.lock.Unlock()
-//
-//	handler, exists := n.outstandingRequestHandlers[requestID]
-//	if !exists {
-//		return nil, false
-//	}
-//	// mark message as processed
-//	delete(n.outstandingRequestHandlers, requestID)
-//
-//	return handler, true
-//}
-//
+// markRequestFulfilled fetches the handler for [requestID] and marks the request with [requestID] as having been fulfilled.
+// This is called by either [AppResponse] or [AppRequestFailed].
+// Assumes that the write lock is not held.
+func (n *network) markRequestFulfilled(requestID uint32) (message.ResponseHandler, bool) {
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
+	handler, exists := n.outstandingRequestHandlers[requestID]
+	if !exists {
+		return nil, false
+	}
+	// mark message as processed
+	delete(n.outstandingRequestHandlers, requestID)
+
+	return handler, true
+}
+
 //// AppGossip is called by avalanchego -> VM when there is an incoming AppGossip
 //// from a peer. An error returned by this function is treated as fatal by the
 //// engine.

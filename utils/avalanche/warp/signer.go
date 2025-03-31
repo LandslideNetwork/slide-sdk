@@ -7,7 +7,6 @@ import (
 	"errors"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
-	blst "github.com/supranational/blst/bindings/go"
 
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
@@ -24,7 +23,7 @@ type Signer interface {
 	Sign(msg *UnsignedMessage) ([]byte, error)
 }
 
-func NewSigner(sk *blst.SecretKey, networkID uint32, chainID ids.ID) Signer {
+func NewSigner(sk bls.Signer, networkID uint32, chainID ids.ID) Signer {
 	return &signer{
 		sk:        sk,
 		networkID: networkID,
@@ -33,7 +32,7 @@ func NewSigner(sk *blst.SecretKey, networkID uint32, chainID ids.ID) Signer {
 }
 
 type signer struct {
-	sk        *blst.SecretKey
+	sk        bls.Signer
 	networkID uint32
 	chainID   ids.ID
 }
@@ -47,6 +46,6 @@ func (s *signer) Sign(msg *UnsignedMessage) ([]byte, error) {
 	}
 
 	msgBytes := msg.Bytes()
-	signature := bls.Sign(s.sk, msgBytes)
-	return signature.Compress(), nil
+	sig := s.sk.Sign(msgBytes)
+	return bls.SignatureToBytes(sig), nil
 }

@@ -126,10 +126,10 @@ func (n *Network) AppRequest(ctx context.Context, nodeID ids.NodeID, requestID u
 	return n.router.AppRequest(ctx, nodeID, requestID, deadline, request)
 }
 
-//func (n *Network) AppResponse(ctx context.Context, nodeID ids.NodeID, requestID uint32, response []byte) error {
-//	return n.router.AppResponse(ctx, nodeID, requestID, response)
-//}
-//
+func (n *Network) AppResponse(ctx context.Context, nodeID ids.NodeID, requestID uint32, response []byte) error {
+	return n.router.AppResponse(ctx, nodeID, requestID, response)
+}
+
 //func (n *Network) AppRequestFailed(ctx context.Context, nodeID ids.NodeID, requestID uint32, appErr *common.AppError) error {
 //	return n.router.AppRequestFailed(ctx, nodeID, requestID, appErr)
 //}

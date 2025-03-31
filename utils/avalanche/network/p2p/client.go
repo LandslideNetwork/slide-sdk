@@ -1,5 +1,20 @@
 package p2p
 
+import (
+	"context"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
+)
+
+// AppResponseCallback is called upon receiving an AppResponse for an AppRequest
+// issued by Client.
+// Callers should check [err] to see whether the AppRequest failed or not.
+type AppResponseCallback func(
+	ctx context.Context,
+	nodeID ids.NodeID,
+	responseBytes []byte,
+	err error,
+)
+
 // PrefixMessage prefixes the original message with the protocol identifier.
 //
 // Only gossip and request messages need to be prefixed.

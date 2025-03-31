@@ -93,7 +93,7 @@ func TestWarpGetMessageSignature(t *testing.T) {
 	result := new(ResultGetMessageSignature)
 	_, err = rpcClient.Call(context.Background(), "warp_get_message_signature", map[string]interface{}{"messageID": testUnsignedMessage.ID().String()}, result)
 	require.NoError(t, err)
-	expectedSig, err := vm.warpSigner.Sign(testUnsignedMessage)
+	expectedSig, err := vm.warpSignerClient.Sign(testUnsignedMessage)
 	require.NoError(t, err)
 	require.NotNil(t, expectedSig)
 

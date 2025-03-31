@@ -153,11 +153,11 @@ func newKvApp(t *testing.T, vmdb, appdb dbm.DB) (vmpb.VMServer, *enginetest.Send
 	if err != nil {
 		t.Fatalf("Failed to generate secret key: %v", err)
 	}
-	skBytes := bls.SecretKeyToBytes(sk)
+	//skBytes := bls.SecretKeyToBytes(sk)
 	vmCfg := vmtypes.Config{}
 	vmCfg.VMConfig.SetDefaults()
 
-	vmCfg.VMConfig.BLSSecretKey = skBytes
+	//vmCfg.VMConfig.BLSSecretKey = skBytes
 
 	appSender := &enginetest.Sender{T: t}
 	appSender.CantSendAppGossip = true

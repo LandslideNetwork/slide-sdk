@@ -195,6 +195,7 @@ func (s *P2PAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.N
 
 func (s *P2PAppSender) SendAppResponse(ctx context.Context, nodeID ids.NodeID, requestID uint32, appResponseBytes []byte) error {
 	//TODO implement me
+	s.logger.Debug("P2PAppSender SendAppResponse call")
 	panic("implement me")
 }
 
