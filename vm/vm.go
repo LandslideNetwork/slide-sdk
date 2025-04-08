@@ -291,6 +291,9 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		vm.connCloser.Add(vm.optClientConn)
 		vm.clientConn = vm.optClientConn
 	} else {
+		vm.logger.Info("Server Address initial:", req.ServerAddr)
+		addrData := []byte(req.ServerAddr)
+		err := os.WriteFile("/tmp/vm_server_address", addrData, 0644)
 		clientConn, err := grpc.NewClient(
 			"passthrough:///"+req.ServerAddr,
 			grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),

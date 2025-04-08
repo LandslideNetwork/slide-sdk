@@ -30,7 +30,6 @@ import (
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/abci/example/kvstore"
 	"github.com/cometbft/cometbft/libs/rand"
-	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	vmtypes "github.com/landslidenetwork/slide-sdk/vm/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -149,10 +148,10 @@ func newKvApp(t *testing.T, vmdb, appdb dbm.DB) (vmpb.VMServer, *enginetest.Send
 		return kvstore.NewApplication(appdb), nil
 	}, WithOptClientConn(mockConn))
 	require.NotNil(t, vm)
-	sk, err := bls.NewSecretKey()
-	if err != nil {
-		t.Fatalf("Failed to generate secret key: %v", err)
-	}
+	//sk, err := bls.NewSecretKey()
+	//if err != nil {
+	//	t.Fatalf("Failed to generate secret key: %v", err)
+	//}
 	//skBytes := bls.SecretKeyToBytes(sk)
 	vmCfg := vmtypes.Config{}
 	vmCfg.VMConfig.SetDefaults()

@@ -38,8 +38,8 @@ type ResultGetMessageSignature struct {
 	Signature []byte `json:"signature"`
 }
 
-type ResultAggregatedSignatures struct {
-	AggregatedSignatures []byte `json:"aggregated_signature"`
+type ResultGetAggregatedSignature struct {
+	Message []byte `json:"message"`
 }
 
 // API introduces snowman specific functionality to the evm
@@ -123,7 +123,7 @@ func (a *API) GetMessageSignature(_ *rpctypes.Context, messageID string) (*Resul
 }
 
 // GetMessageAggregateSignature fetches the aggregate signature for the requested [messageID]
-func (a *API) GetMessageAggregateSignature(_ *rpctypes.Context, messageID ids.ID, quorumNum uint64, subnetIDStr string) (*ResultAggregatedSignatures, error) {
+func (a *API) GetMessageAggregateSignature(_ *rpctypes.Context, messageID ids.ID, quorumNum uint64, subnetIDStr string) (*ResultGetAggregatedSignature, error) {
 	unsignedMessage, err := a.backend.GetMessage(messageID)
 	a.vm.logger.Info("Get unsigned message with backend")
 	if err != nil {
@@ -131,7 +131,7 @@ func (a *API) GetMessageAggregateSignature(_ *rpctypes.Context, messageID ids.ID
 	}
 	a.vm.logger.Info("Try to aggregate signatures")
 	aggregatedSignatures, err := a.aggregateSignatures(context.Background(), unsignedMessage, quorumNum, subnetIDStr)
-	return &ResultAggregatedSignatures{AggregatedSignatures: aggregatedSignatures}, err
+	return &ResultGetAggregatedSignature{Message: aggregatedSignatures}, err
 }
 
 // GetBlockSignature returns the BLS signature associated with a blockID.
@@ -144,7 +144,7 @@ func (a *API) GetBlockSignature(_ *rpctypes.Context, blockID ids.ID) (tmbytes.He
 }
 
 // GetBlockAggregateSignature fetches the aggregate signature for the requested [blockID]
-func (a *API) GetBlockAggregateSignature(_ *rpctypes.Context, blockID ids.ID, quorumNum uint64, subnetIDStr string) (*ResultAggregatedSignatures, error) {
+func (a *API) GetBlockAggregateSignature(_ *rpctypes.Context, blockID ids.ID, quorumNum uint64, subnetIDStr string) (*ResultGetAggregatedSignature, error) {
 	blockHashPayload, err := payload.NewHash(blockID)
 	if err != nil {
 		return nil, err
@@ -155,7 +155,7 @@ func (a *API) GetBlockAggregateSignature(_ *rpctypes.Context, blockID ids.ID, qu
 	}
 
 	aggregatedSignatures, err := a.aggregateSignatures(context.Background(), unsignedMessage, quorumNum, subnetIDStr)
-	return &ResultAggregatedSignatures{AggregatedSignatures: aggregatedSignatures}, err
+	return &ResultGetAggregatedSignature{Message: aggregatedSignatures}, err
 }
 
 func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp2.UnsignedMessage, quorumNum uint64, subnetIDStr string) (tmbytes.HexBytes, error) {
