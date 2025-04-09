@@ -5,6 +5,7 @@ package message
 
 import (
 	"context"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
@@ -12,6 +13,20 @@ import (
 var (
 	_ RequestHandler = NoopRequestHandler{}
 )
+
+// GossipHandler handles incoming gossip messages
+type GossipHandler interface {
+	HandleTxs(nodeID ids.NodeID, msg interface{}) error
+}
+
+type NoopMempoolGossipHandler struct {
+	logger log.Logger
+}
+
+func (n NoopMempoolGossipHandler) HandleTxs(nodeID ids.NodeID, msg interface{}) error {
+	n.logger.Debug("dropping unexpected EthTxsGossip message", "peerID", nodeID)
+	return nil
+}
 
 // RequestHandler interface handles incoming requests from peers
 // Must have methods in format of handleType(context.Context, ids.NodeID, uint32, request Type) error

@@ -132,6 +132,30 @@ func (r *router) AppRequest(ctx context.Context, nodeID ids.NodeID, requestID ui
 	)
 }
 
+// AppRequestFailed routes an AppRequestFailed message to the callback
+// corresponding to requestID.
+//
+// Any error condition propagated outside Handler application logic is
+// considered fatal
+func (r *router) AppRequestFailed(ctx context.Context, nodeID ids.NodeID, requestID uint32, appErr *common.AppError) error {
+	start := time.Now()
+	pending, ok := r.clearAppRequest(requestID)
+	if !ok {
+		// we should never receive a timeout without a corresponding requestID
+		return ErrUnrequestedResponse
+	}
+
+	pending.callback(ctx, nodeID, nil, appErr)
+
+	return r.metrics.observe(
+		prometheus.Labels{
+			opLabel:      message.AppErrorOp.String(),
+			handlerLabel: pending.handlerID,
+		},
+		start,
+	)
+}
+
 // AppResponse routes an AppResponse message to the callback corresponding to
 // requestID.
 //
@@ -151,6 +175,34 @@ func (r *router) AppResponse(ctx context.Context, nodeID ids.NodeID, requestID u
 		prometheus.Labels{
 			opLabel:      message.AppResponseOp.String(),
 			handlerLabel: pending.handlerID,
+		},
+		start,
+	)
+}
+
+// AppGossip routes an AppGossip message to a Handler based on the handler
+// prefix. The message is dropped if no matching handler can be found.
+//
+// Any error condition propagated outside Handler application logic is
+// considered fatal
+func (r *router) AppGossip(ctx context.Context, nodeID ids.NodeID, gossip []byte) error {
+	start := time.Now()
+	parsedMsg, handler, handlerID, ok := r.parse(gossip)
+	if !ok {
+		r.log.Debug("received message for unregistered handler",
+			zap.Stringer("messageOp", message.AppGossipOp),
+			zap.Stringer("nodeID", nodeID),
+			zap.Binary("message", gossip),
+		)
+		return nil
+	}
+
+	handler.AppGossip(ctx, nodeID, parsedMsg)
+
+	return r.metrics.observe(
+		prometheus.Labels{
+			opLabel:      message.AppGossipOp.String(),
+			handlerLabel: handlerID,
 		},
 		start,
 	)

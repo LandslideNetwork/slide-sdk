@@ -28,18 +28,18 @@ const (
 
 var (
 	_ Handler = (*NoOpHandler)(nil)
-	//	_ Handler = (*TestHandler)(nil)
-	//	_ Handler = (*ValidatorHandler)(nil)
+	_ Handler = (*TestHandler)(nil)
+	_ Handler = (*ValidatorHandler)(nil)
 )
 
 // Handler is the server-side logic for virtual machine application protocols.
 type Handler interface {
-	//// AppGossip is called when handling an AppGossip message.
-	//AppGossip(
-	//	ctx context.Context,
-	//	nodeID ids.NodeID,
-	//	gossipBytes []byte,
-	//)
+	// AppGossip is called when handling an AppGossip message.
+	AppGossip(
+		ctx context.Context,
+		nodeID ids.NodeID,
+		gossipBytes []byte,
+	)
 	// AppRequest is called when handling an AppRequest message.
 	// Sends a response with the response corresponding to [requestBytes] or
 	// an application-defined error.
@@ -54,8 +54,7 @@ type Handler interface {
 // NoOpHandler drops all messages
 type NoOpHandler struct{}
 
-//
-//func (NoOpHandler) AppGossip(context.Context, ids.NodeID, []byte) {}
+func (NoOpHandler) AppGossip(context.Context, ids.NodeID, []byte) {}
 
 func (NoOpHandler) AppRequest(context.Context, ids.NodeID, time.Time, []byte) ([]byte, *common.AppError) {
 	return nil, nil
@@ -80,17 +79,17 @@ type ValidatorHandler struct {
 	log          log.Logger
 }
 
-//func (v ValidatorHandler) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte) {
-//	if !v.validatorSet.Has(ctx, nodeID) {
-//		v.log.Debug("dropping message",
-//			zap.Stringer("nodeID", nodeID),
-//			zap.String("reason", "not a validator"),
-//		)
-//		return
-//	}
-//
-//	v.handler.AppGossip(ctx, nodeID, gossipBytes)
-//}
+func (v ValidatorHandler) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte) {
+	if !v.validatorSet.Has(ctx, nodeID) {
+		v.log.Debug("dropping message",
+			zap.Stringer("nodeID", nodeID),
+			zap.String("reason", "not a validator"),
+		)
+		return
+	}
+
+	v.handler.AppGossip(ctx, nodeID, gossipBytes)
+}
 
 func (v ValidatorHandler) AppRequest(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *common.AppError) {
 	if !v.validatorSet.Has(ctx, nodeID) {
@@ -126,23 +125,23 @@ func (r *responder) AppRequest(ctx context.Context, nodeID ids.NodeID, requestID
 	return r.sender.SendAppResponse(ctx, nodeID, requestID, appResponse)
 }
 
-//type TestHandler struct {
-//	AppGossipF  func(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte)
-//	AppRequestF func(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *common.AppError)
-//}
-//
-//func (t TestHandler) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte) {
-//	if t.AppGossipF == nil {
-//		return
-//	}
-//
-//	t.AppGossipF(ctx, nodeID, gossipBytes)
-//}
-//
-//func (t TestHandler) AppRequest(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *common.AppError) {
-//	if t.AppRequestF == nil {
-//		return nil, nil
-//	}
-//
-//	return t.AppRequestF(ctx, nodeID, deadline, requestBytes)
-//}
+type TestHandler struct {
+	AppGossipF  func(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte)
+	AppRequestF func(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *common.AppError)
+}
+
+func (t TestHandler) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte) {
+	if t.AppGossipF == nil {
+		return
+	}
+
+	t.AppGossipF(ctx, nodeID, gossipBytes)
+}
+
+func (t TestHandler) AppRequest(ctx context.Context, nodeID ids.NodeID, deadline time.Time, requestBytes []byte) ([]byte, *common.AppError) {
+	if t.AppRequestF == nil {
+		return nil, nil
+	}
+
+	return t.AppRequestF(ctx, nodeID, deadline, requestBytes)
+}

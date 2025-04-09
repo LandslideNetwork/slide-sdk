@@ -103,12 +103,12 @@ type network struct {
 	outstandingRequestHandlers map[uint32]message.ResponseHandler // maps avalanchego requestID => message.ResponseHandler
 	activeAppRequests          *semaphore.Weighted                // controls maximum number of active outbound requests
 	p2pNetwork                 *p2p.Network
-	appSender                  common.AppSender       // avalanchego AppSender for sending messages
-	codec                      codec.Manager          // Codec used for parsing messages
-	appRequestHandler          message.RequestHandler // maps request type => handler
-	//gossipHandler              message.GossipHandler     // maps gossip type => handler
-	peers    *peerTracker              // tracking of peers & bandwidth
-	appStats stats.RequestHandlerStats // Provide request handler metrics
+	appSender                  common.AppSender          // avalanchego AppSender for sending messages
+	codec                      codec.Manager             // Codec used for parsing messages
+	appRequestHandler          message.RequestHandler    // maps request type => handler
+	gossipHandler              message.GossipHandler     // maps gossip type => handler
+	peers                      *peerTracker              // tracking of peers & bandwidth
+	appStats                   stats.RequestHandlerStats // Provide request handler metrics
 	//
 	//// Set to true when Shutdown is called, after which all operations on this
 	//// struct are no-ops.
@@ -133,10 +133,10 @@ func NewNetwork(p2pNetwork *p2p.Network, appSender common.AppSender, log log.Log
 		outstandingRequestHandlers: make(map[uint32]message.ResponseHandler),
 		activeAppRequests:          semaphore.NewWeighted(maxActiveAppRequests),
 		p2pNetwork:                 p2pNetwork,
-		//gossipHandler:              message.NoopMempoolGossipHandler{},
-		appRequestHandler: message.NoopRequestHandler{},
-		peers:             NewPeerTracker(log),
-		appStats:          stats.NewRequestHandlerStats(),
+		gossipHandler:              message.NoopMempoolGossipHandler{},
+		appRequestHandler:          message.NoopRequestHandler{},
+		peers:                      NewPeerTracker(log),
+		appStats:                   stats.NewRequestHandlerStats(),
 	}
 }
 
@@ -311,19 +311,18 @@ func (n *network) AppResponse(ctx context.Context, nodeID ids.NodeID, requestID 
 // error returned by this function is expected to be treated as fatal by the engine
 // returns error only when the response handler returns an error
 func (n *network) AppRequestFailed(ctx context.Context, nodeID ids.NodeID, requestID uint32, appErr *common.AppError) error {
-	//	log.Debug("received AppRequestFailed from peer", "nodeID", nodeID, "requestID", requestID)
-	//
-	//	handler, exists := n.markRequestFulfilled(requestID)
-	//	if !exists {
-	//		log.Debug("forwarding AppRequestFailed to SDK network", "nodeID", nodeID, "requestID", requestID)
-	//		return n.p2pNetwork.AppRequestFailed(ctx, nodeID, requestID, appErr)
-	//	}
-	//
-	//	// We must release the slot
-	//	n.activeAppRequests.Release(1)
-	//
-	//	return handler.OnFailure()
-	return nil
+	n.log.Debug("received AppRequestFailed from peer", "nodeID", nodeID, "requestID", requestID)
+
+	handler, exists := n.markRequestFulfilled(requestID)
+	if !exists {
+		n.log.Debug("forwarding AppRequestFailed to SDK network", "nodeID", nodeID, "requestID", requestID)
+		return n.p2pNetwork.AppRequestFailed(ctx, nodeID, requestID, appErr)
+	}
+
+	// We must release the slot
+	n.activeAppRequests.Release(1)
+
+	return handler.OnFailure()
 }
 
 // calculateTimeUntilDeadline calculates the time until deadline and drops it if we missed he deadline to response.
@@ -365,20 +364,20 @@ func (n *network) markRequestFulfilled(requestID uint32) (message.ResponseHandle
 	return handler, true
 }
 
-//// AppGossip is called by avalanchego -> VM when there is an incoming AppGossip
-//// from a peer. An error returned by this function is treated as fatal by the
-//// engine.
-//func (n *network) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte) error {
-//	var gossipMsg message.GossipMessage
-//	if _, err := n.codec.Unmarshal(gossipBytes, &gossipMsg); err != nil {
-//		log.Debug("forwarding AppGossip to SDK network", "nodeID", nodeID, "gossipLen", len(gossipBytes), "err", err)
-//		return n.p2pNetwork.AppGossip(ctx, nodeID, gossipBytes)
-//	}
-//
-//	log.Debug("processing AppGossip from node", "nodeID", nodeID, "msg", gossipMsg)
-//	return gossipMsg.Handle(n.gossipHandler, nodeID)
-//}
-//
+// AppGossip is called by avalanchego -> VM when there is an incoming AppGossip
+// from a peer. An error returned by this function is treated as fatal by the
+// engine.
+func (n *network) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes []byte) error {
+	var gossipMsg message.GossipMessage
+	if err := n.codec.Unmarshal(gossipBytes, &gossipMsg); err != nil {
+		n.log.Debug("forwarding AppGossip to SDK network", "nodeID", nodeID, "gossipLen", len(gossipBytes), "err", err)
+		return n.p2pNetwork.AppGossip(ctx, nodeID, gossipBytes)
+	}
+
+	n.log.Debug("processing AppGossip from node", "nodeID", nodeID, "msg", gossipMsg)
+	return gossipMsg.Handle(n.gossipHandler, nodeID)
+}
+
 //// Connected adds the given nodeID to the peer list so that it can receive messages
 //func (n *network) Connected(ctx context.Context, nodeID ids.NodeID, nodeVersion *version.Application) error {
 //	log.Debug("adding new peer", "nodeID", nodeID)
@@ -430,13 +429,13 @@ func (n *network) markRequestFulfilled(requestID uint32) (message.ResponseHandle
 //	n.peers = NewPeerTracker() // reset peers
 //	n.closed.Set(true)         // mark network as closed
 //}
-//
-//func (n *network) SetGossipHandler(handler message.GossipHandler) {
-//	n.lock.Lock()
-//	defer n.lock.Unlock()
-//
-//	n.gossipHandler = handler
-//}
+
+func (n *network) SetGossipHandler(handler message.GossipHandler) {
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
+	n.gossipHandler = handler
+}
 
 func (n *network) SetRequestHandler(handler message.RequestHandler) {
 	n.lock.Lock()

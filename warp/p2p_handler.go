@@ -3,6 +3,7 @@ package warp
 import (
 	"context"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"time"
@@ -22,8 +23,8 @@ func NewHandler(
 
 // Handler signs warp messages
 type Handler struct {
-	//p2p.NoOpHandler
-	//
+	p2p.NoOpHandler
+
 	//signatureCache cache.Cacher[ids.ID, []byte]
 	//verifier       Verifier
 	signer warp.Signer

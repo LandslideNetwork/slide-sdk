@@ -1,17 +1,23 @@
 package message
 
 import (
-	"math"
-
 	"github.com/landslidenetwork/slide-sdk/utils/codec"
 	"github.com/landslidenetwork/slide-sdk/utils/codec/linearcodec"
+	"github.com/landslidenetwork/slide-sdk/utils/units"
 )
+
+const maxMessageSize = 2*units.MiB - 64*units.KiB
 
 var Codec codec.Manager
 
 func init() {
 	lc := linearcodec.NewDefault()
-	err := lc.RegisterType(MessageSignatureRequest{})
+	// Gossip types
+	err := lc.RegisterType(TxsGossip{})
+	if err != nil {
+		panic(err)
+	}
+	err = lc.RegisterType(MessageSignatureRequest{})
 	if err != nil {
 		panic(err)
 	}
@@ -23,5 +29,5 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	Codec = codec.NewManager(math.MaxInt, lc)
+	Codec = codec.NewManager(maxMessageSize, lc)
 }

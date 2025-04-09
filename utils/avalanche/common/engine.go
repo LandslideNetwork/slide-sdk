@@ -13,7 +13,7 @@ import (
 type AppHandler interface {
 	AppRequestHandler
 	AppResponseHandler
-	//AppGossipHandler
+	AppGossipHandler
 }
 
 type AppRequestHandler interface {
@@ -62,18 +62,17 @@ type AppResponseHandler interface {
 	) error
 }
 
-//
-//type AppGossipHandler interface {
-//	// Notify this engine of a gossip message from nodeID.
-//	//
-//	// The meaning of msg is application (VM) specific, and the VM defines how
-//	// to react to this message.
-//	//
-//	// This message is not expected in response to any event, and it does not
-//	// need to be responded to.
-//	AppGossip(
-//		ctx context.Context,
-//		nodeID ids.NodeID,
-//		msg []byte,
-//	) error
-//}
+type AppGossipHandler interface {
+	// Notify this engine of a gossip message from nodeID.
+	//
+	// The meaning of msg is application (VM) specific, and the VM defines how
+	// to react to this message.
+	//
+	// This message is not expected in response to any event, and it does not
+	// need to be responded to.
+	AppGossip(
+		ctx context.Context,
+		nodeID ids.NodeID,
+		msg []byte,
+	) error
+}
