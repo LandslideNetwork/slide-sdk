@@ -4,7 +4,7 @@ package appsender;
 
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/landslidenetwork/slide-sdk/proto/pb/appsender";
+option go_package = "github.com/landslidenetwork/slide-sdk/proto/appsender";
 
 service AppSender {
   rpc SendAppRequest(SendAppRequestMsg) returns (google.protobuf.Empty);
