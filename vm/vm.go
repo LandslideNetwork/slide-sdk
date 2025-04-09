@@ -1067,8 +1067,16 @@ func (vm *LandslideVM) AppRequest(ctx context.Context, msg *vmpb.AppRequestMsg) 
 
 // AppRequestFailed notify this engine that an AppRequest message it sent to [nodeID] with
 // request ID [requestID] failed.
-func (vm *LandslideVM) AppRequestFailed(context.Context, *vmpb.AppRequestFailedMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me 4")
+func (vm *LandslideVM) AppRequestFailed(ctx context.Context, msg *vmpb.AppRequestFailedMsg) (*emptypb.Empty, error) {
+	nodeId, err := ids.ToNodeID(msg.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	err = vm.Network.AppRequestFailed(ctx, nodeId, msg.RequestId, &common.AppError{
+		Code:    msg.ErrorCode,
+		Message: msg.ErrorMessage,
+	})
+	return nil, err
 }
 
 // AppResponse notify this engine of a response to the AppRequest message it sent to
