@@ -84,42 +84,18 @@ type DelayConfig struct {
 	MaxReconnectDelay time.Duration `json:"maxReconnectDelay"`
 }
 
-//type ThrottlerConfig struct {
-//	InboundConnUpgradeThrottlerConfig throttling.InboundConnUpgradeThrottlerConfig `json:"inboundConnUpgradeThrottlerConfig"`
-//	InboundMsgThrottlerConfig         throttling.InboundMsgThrottlerConfig         `json:"inboundMsgThrottlerConfig"`
-//	OutboundMsgThrottlerConfig        throttling.MsgByteThrottlerConfig            `json:"outboundMsgThrottlerConfig"`
-//	MaxInboundConnsPerSec             float64                                      `json:"maxInboundConnsPerSec"`
-//}
-
 type Config struct {
 	HealthConfig         `json:"healthConfig"`
 	PeerListGossipConfig `json:"peerListGossipConfig"`
 	TimeoutConfig        `json:"timeoutConfigs"`
 	DelayConfig          `json:"delayConfig"`
-	//ThrottlerConfig      ThrottlerConfig `json:"throttlerConfig"`
-	//
-	//ProxyEnabled           bool          `json:"proxyEnabled"`
-	//ProxyReadHeaderTimeout time.Duration `json:"proxyReadHeaderTimeout"`
-	//
-	////DialerConfig dialer.Config `json:"dialerConfig"`
-	TLSConfig *tls.Config `json:"-"`
+	TLSConfig            *tls.Config `json:"-"`
 
-	//TLSKeyLogFile string `json:"tlsKeyLogFile"`
-
-	MyNodeID ids.NodeID                    `json:"myNodeID"`
-	MyIPPort *utils.Atomic[netip.AddrPort] `json:"myIP"`
-	////NetworkID          uint32                        `json:"networkID"`
-	MaxClockDifference time.Duration `json:"maxClockDifference"`
-	PingFrequency      time.Duration `json:"pingFrequency"`
-	AllowPrivateIPs    bool          `json:"allowPrivateIPs"`
-	////
-	////SupportedACPs set.Set[uint32] `json:"supportedACPs"`
-	////ObjectedACPs  set.Set[uint32] `json:"objectedACPs"`
-	////
-	////// The compression type to use when compressing outbound messages.
-	////// Assumes all peers support this compression type.
-	////CompressionType compression.Type `json:"compressionType"`
-	////
+	MyNodeID           ids.NodeID                    `json:"myNodeID"`
+	MyIPPort           *utils.Atomic[netip.AddrPort] `json:"myIP"`
+	MaxClockDifference time.Duration                 `json:"maxClockDifference"`
+	PingFrequency      time.Duration                 `json:"pingFrequency"`
+	AllowPrivateIPs    bool                          `json:"allowPrivateIPs"`
 	// TLSKey is this node's TLS key that is used to sign IPs.
 	TLSKey crypto.Signer `json:"-"`
 	// BLSKey is this node's BLS key that is used to sign IPs.
@@ -128,8 +104,6 @@ type Config struct {
 	// TrackedSubnets of the node.
 	// It must not include the primary network ID.
 	TrackedSubnets set.Set[ids.ID] `json:"-"`
-	////Beacons        validators.Manager `json:"-"`
-	////
 	// Validators are the current validators in the Avalanche network
 	Validators validators.Manager `json:"-"`
 
@@ -148,28 +122,4 @@ type Config struct {
 	// node wants to connect to the minimum number of nodes without impacting
 	// the network negatively.
 	RequireValidatorToConnect bool `json:"requireValidatorToConnect"`
-	//
-	//// MaximumInboundMessageTimeout is the maximum deadline duration in a
-	//// message. Messages sent by clients setting values higher than this value
-	//// will be reset to this value.
-	//MaximumInboundMessageTimeout time.Duration `json:"maximumInboundMessageTimeout"`
-	//
-	//// Size, in bytes, of the buffer that we read peer messages into
-	//// (there is one buffer per peer)
-	//PeerReadBufferSize int `json:"peerReadBufferSize"`
-	//
-	//// Size, in bytes, of the buffer that we write peer messages into
-	//// (there is one buffer per peer)
-	//PeerWriteBufferSize int `json:"peerWriteBufferSize"`
-	//
-	////// Tracks the CPU/disk usage caused by processing messages of each peer.
-	////ResourceTracker tracker.ResourceTracker `json:"-"`
-	////
-	////// Specifies how much CPU usage each peer can cause before
-	////// we rate-limit them.
-	////CPUTargeter tracker.Targeter `json:"-"`
-	////
-	////// Specifies how much disk usage each peer can cause before
-	////// we rate-limit them.
-	////DiskTargeter tracker.Targeter `json:"-"`
 }

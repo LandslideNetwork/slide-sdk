@@ -27,7 +27,6 @@ type dialer struct {
 	dialer  net.Dialer
 	log     log.Logger
 	network string
-	//throttler throttling.DialThrottler
 }
 
 type Config struct {
@@ -41,12 +40,6 @@ type Config struct {
 // [dialerConfig.throttleRps] gives the max number of outgoing connection attempts/second.
 // If [dialerConfig.throttleRps] == 0, outgoing connections aren't rate-limited.
 func NewDialer(network string, dialerConfig Config, log log.Logger) Dialer {
-	//var throttler throttling.DialThrottler
-	//if dialerConfig.ThrottleRps <= 0 {
-	//	throttler = throttling.NewNoDialThrottler()
-	//} else {
-	//	throttler = throttling.NewDialThrottler(int(dialerConfig.ThrottleRps))
-	//}
 	log.Debug(
 		"creating dialer",
 		zap.Uint32("throttleRPS", dialerConfig.ThrottleRps),
@@ -56,14 +49,10 @@ func NewDialer(network string, dialerConfig Config, log log.Logger) Dialer {
 		dialer:  net.Dialer{Timeout: dialerConfig.ConnectionTimeout},
 		log:     log,
 		network: network,
-		//throttler: throttler,
 	}
 }
 
 func (d *dialer) Dial(ctx context.Context, ip netip.AddrPort) (net.Conn, error) {
-	//if err := d.throttler.Acquire(ctx); err != nil {
-	//	return nil, err
-	//}
 	d.log.Info("dialing",
 		zap.Stringer("ip", ip),
 	)

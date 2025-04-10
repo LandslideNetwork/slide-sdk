@@ -5,17 +5,18 @@ package network
 
 import (
 	"crypto/rand"
+	"errors"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
-	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
-	"github.com/landslidenetwork/slide-sdk/utils/sampler"
-	"github.com/prometheus/client_golang/prometheus"
-	//"github.com/landslidenetwork/slide-sdk/utils/sampler"
-
-	//"github.com/ava-labs/avalanchego/snow/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/bloom"
+	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/ips"
+	"github.com/landslidenetwork/slide-sdk/utils/sampler"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
+	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
 	"sync"
 )
 
@@ -35,47 +36,41 @@ const (
 	newTimestamp       = 2
 )
 
-//var _ validators.ManagerCallbackListener = (*ipTracker)(nil)
+var _ validators.ManagerCallbackListener = (*ipTracker)(nil)
 
 func newIPTracker(
 	trackedSubnets set.Set[ids.ID],
-// log log.Logger,
-// registerer prometheus.Registerer,
+	log log.Logger,
+	registerer prometheus.Registerer,
 ) (*ipTracker, error) {
-	//bloomMetrics, err := bloom.NewMetrics("ip_bloom", registerer)
-	//if err != nil {
-	//	return nil, err
-	//}
+	bloomMetrics, err := bloom.NewMetrics("ip_bloom", registerer)
+	if err != nil {
+		return nil, err
+	}
 	tracker := &ipTracker{
 		trackedSubnets: trackedSubnets,
-		//log:            log,
-		//numTrackedPeers: prometheus.NewGauge(prometheus.GaugeOpts{
-		//	Name: "tracked_peers",
-		//	Help: "number of peers this node is monitoring",
-		//}),
+		log:            log,
+		numTrackedPeers: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "tracked_peers",
+			Help: "number of peers this node is monitoring",
+		}),
 		numGossipableIPs: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "gossipable_ips",
 			Help: "number of IPs this node considers able to be gossiped",
 		}),
-		//numTrackedSubnets: prometheus.NewGauge(prometheus.GaugeOpts{
-		//	Name: "tracked_subnets",
-		//	Help: "number of subnets this node is monitoring",
-		//}),
-		//TODO: implement bloomMetrics
-		//bloomMetrics:   bloomMetrics,
+		bloomMetrics:   bloomMetrics,
 		tracked:        make(map[ids.NodeID]*trackedNode),
 		bloomAdditions: make(map[ids.NodeID]int),
 		connected:      make(map[ids.NodeID]*connectedNode),
 		subnets:        make(map[ids.ID]*gossipableSubnet),
 	}
-	//err = errors.Join(
-	//	registerer.Register(tracker.numTrackedPeers),
-	//	registerer.Register(tracker.numGossipableIPs),
-	//	registerer.Register(tracker.numTrackedSubnets),
-	//)
-	//if err != nil {
-	//	return nil, err
-	//}
+	err = errors.Join(
+		registerer.Register(tracker.numTrackedPeers),
+		registerer.Register(tracker.numGossipableIPs),
+	)
+	if err != nil {
+		return nil, err
+	}
 	return tracker, tracker.resetBloom()
 }
 
@@ -99,9 +94,9 @@ func (n *trackedNode) wantsConnection() bool {
 	return n.manuallyTracked || n.trackedSubnets.Len() > 0
 }
 
-//func (n *trackedNode) canDelete() bool {
-//	return !n.manuallyTracked && n.validatedSubnets.Len() == 0
-//}
+func (n *trackedNode) canDelete() bool {
+	return !n.manuallyTracked && n.validatedSubnets.Len() == 0
+}
 
 type connectedNode struct {
 	// trackedSubnets contains all the subnets that this node is syncing,
@@ -203,13 +198,12 @@ func (s *gossipableSubnet) canDelete() bool {
 
 type ipTracker struct {
 	// trackedSubnets does not include the primary network.
-	trackedSubnets set.Set[ids.ID]
-	//	log               logging.Logger
-	//	numTrackedPeers   prometheus.Gauge
+	trackedSubnets   set.Set[ids.ID]
+	log              log.Logger
+	numTrackedPeers  prometheus.Gauge
 	numGossipableIPs prometheus.Gauge // IPs are not deduplicated across subnets
-	//	numTrackedSubnets prometheus.Gauge
-	//	bloomMetrics      *bloom.Metrics
-	//
+	bloomMetrics     *bloom.Metrics
+
 	lock    sync.RWMutex
 	tracked map[ids.NodeID]*trackedNode
 
@@ -273,29 +267,29 @@ func (i *ipTracker) WantsConnection(nodeID ids.NodeID) bool {
 	return ok && node.wantsConnection()
 }
 
-//// ShouldVerifyIP is used as an optimization to avoid unnecessary IP
-//// verification. It returns true if all of the following conditions are met:
-////  1. The provided IP is from a node whose connection is desired.
-////  2. This IP is newer than the most recent IP we know of for the node.
-//func (i *ipTracker) ShouldVerifyIP(
-//	ip *ips.ClaimedIPPort,
-//	trackAllSubnets bool,
-//) bool {
-//	i.lock.RLock()
-//	defer i.lock.RUnlock()
-//
-//	node, ok := i.tracked[ip.NodeID]
-//	if !ok {
-//		return false
-//	}
-//
-//	if !trackAllSubnets && !node.wantsConnection() {
-//		return false
-//	}
-//
-//	return node.ip == nil || // This would be the first IP
-//		node.ip.Timestamp < ip.Timestamp // This would be a newer IP
-//}
+// ShouldVerifyIP is used as an optimization to avoid unnecessary IP
+// verification. It returns true if all of the following conditions are met:
+//  1. The provided IP is from a node whose connection is desired.
+//  2. This IP is newer than the most recent IP we know of for the node.
+func (i *ipTracker) ShouldVerifyIP(
+	ip *ips.ClaimedIPPort,
+	trackAllSubnets bool,
+) bool {
+	i.lock.RLock()
+	defer i.lock.RUnlock()
+
+	node, ok := i.tracked[ip.NodeID]
+	if !ok {
+		return false
+	}
+
+	if !trackAllSubnets && !node.wantsConnection() {
+		return false
+	}
+
+	return node.ip == nil || // This would be the first IP
+		node.ip.Timestamp < ip.Timestamp // This would be a newer IP
+}
 
 // AddIP attempts to update the node's IP to the provided IP. This function
 // assumes the provided IP has been verified. Returns true if all of the
@@ -392,23 +386,23 @@ func (i *ipTracker) setGossipableIP(ip *ips.ClaimedIPPort, trackedSubnets set.Se
 	}
 }
 
-//// Disconnected is called when a connection to the peer is closed.
-//func (i *ipTracker) Disconnected(nodeID ids.NodeID) {
-//	i.lock.Lock()
-//	defer i.lock.Unlock()
-//
-//	connectedNode, ok := i.connected[nodeID]
-//	if !ok {
-//		return
-//	}
-//	delete(i.connected, nodeID)
-//
-//	for subnetID := range connectedNode.trackedSubnets {
-//		if subnets, ok := i.subnets[subnetID]; ok {
-//			subnets.removeGossipableIP(nodeID)
-//		}
-//	}
-//}
+// Disconnected is called when a connection to the peer is closed.
+func (i *ipTracker) Disconnected(nodeID ids.NodeID) {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	connectedNode, ok := i.connected[nodeID]
+	if !ok {
+		return
+	}
+	delete(i.connected, nodeID)
+
+	for subnetID := range connectedNode.trackedSubnets {
+		if subnets, ok := i.subnets[subnetID]; ok {
+			subnets.removeGossipableIP(nodeID)
+		}
+	}
+}
 
 func (i *ipTracker) OnValidatorAdded(subnetID ids.ID, nodeID ids.NodeID, _ *bls.PublicKey, _ ids.ID, _ uint64) {
 	i.lock.Lock()
@@ -422,7 +416,7 @@ func (i *ipTracker) OnValidatorAdded(subnetID ids.ID, nodeID ids.NodeID, _ *bls.
 func (i *ipTracker) addTrackableID(nodeID ids.NodeID, subnetID *ids.ID) {
 	nodeTracker, previouslyTracked := i.tracked[nodeID]
 	if !previouslyTracked {
-		//i.numTrackedPeers.Inc()
+		i.numTrackedPeers.Inc()
 		nodeTracker = &trackedNode{}
 		i.tracked[nodeID] = nodeTracker
 	}
@@ -453,7 +447,6 @@ func (i *ipTracker) addTrackableID(nodeID ids.NodeID, subnetID *ids.ID) {
 func (i *ipTracker) addGossipableID(nodeID ids.NodeID, subnetID ids.ID, manuallyGossiped bool) {
 	subnets, ok := i.subnets[subnetID]
 	if !ok {
-		//i.numTrackedSubnets.Inc()
 		subnets = &gossipableSubnet{
 			numGossipableIPs:  i.numGossipableIPs,
 			gossipableIndices: make(map[ids.NodeID]int),
@@ -487,10 +480,10 @@ func (i *ipTracker) OnValidatorRemoved(subnetID ids.ID, nodeID ids.NodeID, _ uin
 
 	subnets, ok := i.subnets[subnetID]
 	if !ok {
-		//i.Log.Error("attempted removal of validator from untracked subnets",
-		//	zap.Stringer("subnetID", subnetID),
-		//	zap.Stringer("nodeID", nodeID),
-		//)
+		i.log.Error("attempted removal of validator from untracked subnets",
+			zap.Stringer("subnetID", subnetID),
+			zap.Stringer("nodeID", nodeID),
+		)
 		return
 	}
 
@@ -502,57 +495,55 @@ func (i *ipTracker) OnValidatorRemoved(subnetID ids.ID, nodeID ids.NodeID, _ uin
 	subnets.removeGossipableIP(nodeID)
 
 	if subnets.canDelete() {
-		//i.numTrackedSubnets.Dec()
 		delete(i.subnets, subnetID)
 	}
 
 	trackedNode, ok := i.tracked[nodeID]
 	if !ok {
-		//i.log.Error("attempted removal of untracked validator",
-		//	zap.Stringer("subnetID", subnetID),
-		//	zap.Stringer("nodeID", nodeID),
-		//)
+		i.log.Error("attempted removal of untracked validator",
+			zap.Stringer("subnetID", subnetID),
+			zap.Stringer("nodeID", nodeID),
+		)
 		return
 	}
 
 	trackedNode.validatedSubnets.Remove(subnetID)
 	trackedNode.trackedSubnets.Remove(subnetID)
 
-	//if trackedNode.canDelete() {
-	//	i.numTrackedPeers.Dec()
-	//	delete(i.tracked, nodeID)
-	//}
+	if trackedNode.canDelete() {
+		i.numTrackedPeers.Dec()
+		delete(i.tracked, nodeID)
+	}
 }
 
 func (i *ipTracker) updateMostRecentTrackedIP(node *trackedNode, ip *ips.ClaimedIPPort) {
 	node.ip = ip
-	//TODO: implement if necessary
-	//
-	//oldCount := i.bloomAdditions[ip.NodeID]
-	//if oldCount >= maxIPEntriesPerNode {
-	//	return
-	//}
-	//
-	//// If the validator set is growing rapidly, we should increase the size of
-	//// the bloom filter.
-	//if count := i.bloom.Count(); count >= i.maxBloomCount {
-	//	if err := i.resetBloom(); err != nil {
-	//		i.log.Error("failed to reset validator tracker bloom filter",
-	//			zap.Int("maxCount", i.maxBloomCount),
-	//			zap.Int("currentCount", count),
-	//			zap.Error(err),
-	//		)
-	//	} else {
-	//		i.log.Info("reset validator tracker bloom filter",
-	//			zap.Int("currentCount", count),
-	//		)
-	//	}
-	//	return
-	//}
-	//
-	//i.bloomAdditions[ip.NodeID] = oldCount + 1
-	//bloom.Add(i.bloom, ip.GossipID[:], i.bloomSalt)
-	//i.bloomMetrics.Count.Inc()
+
+	oldCount := i.bloomAdditions[ip.NodeID]
+	if oldCount >= maxIPEntriesPerNode {
+		return
+	}
+
+	// If the validator set is growing rapidly, we should increase the size of
+	// the bloom filter.
+	if count := i.bloom.Count(); count >= i.maxBloomCount {
+		if err := i.resetBloom(); err != nil {
+			i.log.Error("failed to reset validator tracker bloom filter",
+				zap.Int("maxCount", i.maxBloomCount),
+				zap.Int("currentCount", count),
+				zap.Error(err),
+			)
+		} else {
+			i.log.Info("reset validator tracker bloom filter",
+				zap.Int("currentCount", count),
+			)
+		}
+		return
+	}
+
+	i.bloomAdditions[ip.NodeID] = oldCount + 1
+	bloom.Add(i.bloom, ip.GossipID[:], i.bloomSalt)
+	i.bloomMetrics.Count.Inc()
 }
 
 // ResetBloom prunes the current bloom filter. This must be called periodically
@@ -607,7 +598,7 @@ func (i *ipTracker) resetBloom() error {
 		bloom.Add(newFilter, trackedNode.ip.GossipID[:], newSalt)
 		i.bloomAdditions[nodeID] = 1
 	}
-	//i.bloomMetrics.Reset(newFilter, i.maxBloomCount)
+	i.bloomMetrics.Reset(newFilter, i.maxBloomCount)
 	return nil
 }
 
