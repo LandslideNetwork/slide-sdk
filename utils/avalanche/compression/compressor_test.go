@@ -5,6 +5,7 @@ package compression
 
 import (
 	"fmt"
+	bftrand "github.com/cometbft/cometbft/libs/rand"
 	"math"
 	"runtime"
 	"testing"
@@ -13,7 +14,6 @@ import (
 
 	_ "embed"
 
-	"github.com/landslidenetwork/slide-sdk/utils"
 	"github.com/landslidenetwork/slide-sdk/utils/units"
 )
 
@@ -71,8 +71,8 @@ func TestCompressDecompress(t *testing.T) {
 		t.Run(compressionType.String(), func(t *testing.T) {
 			require := require.New(t)
 
-			data := utils.RandomBytes(4096)
-			data2 := utils.RandomBytes(4096)
+			data := bftrand.Bytes(4096)
+			data2 := bftrand.Bytes(4096)
 
 			compressor, err := newCompressorFunc(maxMessageSize)
 			require.NoError(err)
@@ -95,7 +95,7 @@ func TestCompressDecompress(t *testing.T) {
 			require.NoError(err)
 			require.Equal(data, dataDecompressed)
 
-			maxMessage := utils.RandomBytes(maxMessageSize)
+			maxMessage := bftrand.Bytes(maxMessageSize)
 			maxMessageCompressed, err := compressor.Compress(maxMessage)
 			require.NoError(err)
 
@@ -200,7 +200,7 @@ func BenchmarkCompress(b *testing.B) {
 			b.Run(fmt.Sprintf("%s_%d", compressionType, size), func(b *testing.B) {
 				require := require.New(b)
 
-				bytes := utils.RandomBytes(size)
+				bytes := bftrand.Bytes(size)
 				compressor, err := newCompressorFunc(maxMessageSize)
 				require.NoError(err)
 				for n := 0; n < b.N; n++ {
@@ -228,7 +228,7 @@ func BenchmarkDecompress(b *testing.B) {
 			b.Run(fmt.Sprintf("%s_%d", compressionType, size), func(b *testing.B) {
 				require := require.New(b)
 
-				bytes := utils.RandomBytes(size)
+				bytes := bftrand.Bytes(size)
 				compressor, err := newCompressorFunc(maxMessageSize)
 				require.NoError(err)
 

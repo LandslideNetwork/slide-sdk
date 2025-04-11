@@ -36,7 +36,7 @@ func TestAddAndGetValidMessage(t *testing.T) {
 	logger := log.NewTMLogger(os.Stdout)
 	db := dbm.NewMemDB()
 
-	sk, err := bls.NewSecretKey()
+	sk, err := bls.NewSigner()
 	require.NoError(t, err)
 	warpSigner := warp.NewSigner(sk, networkID, sourceChainID)
 	backend := NewBackend(networkID, sourceChainID, warpSigner, logger, db, nil, warptest.NoOpValidatorReader{})
@@ -66,7 +66,7 @@ func TestAddAndGetUnknownMessage(t *testing.T) {
 	logger := log.NewTMLogger(os.Stdout)
 	db := dbm.NewMemDB()
 
-	sk, err := bls.NewSecretKey()
+	sk, err := bls.NewSigner()
 	require.NoError(t, err)
 	warpSigner := warp.NewSigner(sk, networkID, sourceChainID)
 	backend := NewBackend(networkID, sourceChainID, warpSigner, logger, db, nil, warptest.NoOpValidatorReader{})

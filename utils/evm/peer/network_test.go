@@ -54,7 +54,8 @@ func TestNetworkDoesNotConnectToItself(t *testing.T) {
 	selfNodeID := ids.GenerateTestNodeID()
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	n := NewNetwork(p2pNetwork, nil, nil, 1)
+	networkCodec := message.Codec
+	n := NewNetwork(p2pNetwork, nil, nil, 1, networkCodec)
 	//TODO: implement if necessary
 	t.Log(n)
 	t.Log(selfNodeID)
@@ -97,7 +98,8 @@ func TestRequestAnyRequestsRoutingAndResponse(t *testing.T) {
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 16)
+	networkCodec := message.Codec
+	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 16, networkCodec)
 	//TODO: implement
 	t.Log(net)
 	//net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
@@ -154,7 +156,8 @@ func TestAppRequestOnCtxCancellation(t *testing.T) {
 
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	net := NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1)
+	networkCodec := message.Codec
+	net := NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1, networkCodec)
 	//net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
 
 	requestMessage := HelloRequest{Message: "this is a request"}
@@ -209,7 +212,8 @@ func TestRequestRequestsRoutingAndResponse(t *testing.T) {
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 16)
+	networkCodec := message.Codec
+	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 16, networkCodec)
 	//TODO: implement if necessary
 	//net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
 	client := NewNetworkClient(net)
@@ -292,7 +296,8 @@ func TestAppRequestOnShutdown(t *testing.T) {
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1)
+	networkCodec := message.Codec
+	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1, networkCodec)
 	client := NewNetworkClient(net)
 	nodeID := ids.GenerateTestNodeID()
 	//TODO: implement
@@ -346,7 +351,8 @@ func TestAppRequestAnyOnCtxCancellation(t *testing.T) {
 
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	net := NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1)
+	networkCodec := message.Codec
+	net := NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1, networkCodec)
 	//net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
 	//assert.NoError(t,
 	//	net.Connected(
@@ -427,7 +433,8 @@ func TestRequestMinVersion(t *testing.T) {
 	// passing nil as codec works because the net.AppRequest is never called
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1)
+	networkCodec := message.Codec
+	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1, networkCodec)
 	client := NewNetworkClient(net)
 	requestMessage := TestMessage{Message: "this is a request"}
 	requestBytes, err := message.RequestToBytes(codecManager, requestMessage)
@@ -500,7 +507,8 @@ func TestOnRequestHonoursDeadline(t *testing.T) {
 
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1)
+	networkCodec := message.Codec
+	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1, networkCodec)
 	//net.SetRequestHandler(requestHandler)
 	//nodeID := ids.GenerateTestNodeID()
 
