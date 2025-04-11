@@ -220,7 +220,7 @@ func newFullyConnectedTestNetwork(t *testing.T, handlers []router.InboundHandler
 	)
 	for i, config := range configs {
 		msgCreator := newMessageCreator(t)
-		//registry := prometheus.NewRegistry()
+		registry := prometheus.NewRegistry()
 
 		beacons := validators.NewManager()
 		require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
@@ -240,6 +240,7 @@ func newFullyConnectedTestNetwork(t *testing.T, handlers []router.InboundHandler
 			config,
 			time.Now().Add(5*time.Second),
 			msgCreator,
+			registry,
 			log.NewNopLogger(),
 			listeners[i],
 			dialer,
@@ -455,7 +456,7 @@ func TestTrackDoesNotDialPrivateIPs(t *testing.T) {
 	networks := make([]Network, len(configs))
 	for i, config := range configs {
 		msgCreator := newMessageCreator(t)
-		//registry := prometheus.NewRegistry()
+		registry := prometheus.NewRegistry()
 
 		beacons := validators.NewManager()
 		require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
@@ -475,7 +476,7 @@ func TestTrackDoesNotDialPrivateIPs(t *testing.T) {
 			config,
 			InitiallyActiveTime,
 			msgCreator,
-			//registry,
+			registry,
 			log.NewNopLogger(),
 			listeners[i],
 			dialer,
@@ -540,7 +541,7 @@ func TestDialDeletesNonValidators(t *testing.T) {
 	networks := make([]Network, len(configs))
 	for i, config := range configs {
 		msgCreator := newMessageCreator(t)
-		//registry := prometheus.NewRegistry()
+		registry := prometheus.NewRegistry()
 
 		beacons := validators.NewManager()
 		require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
@@ -555,7 +556,7 @@ func TestDialDeletesNonValidators(t *testing.T) {
 			config,
 			InitiallyActiveTime,
 			msgCreator,
-			//registry,
+			registry,
 			log.NewNopLogger(),
 			listeners[i],
 			dialer,
@@ -692,7 +693,7 @@ func TestAllowConnectionAsAValidator(t *testing.T) {
 	networks := make([]Network, len(configs))
 	for i, config := range configs {
 		msgCreator := newMessageCreator(t)
-		//registry := prometheus.NewRegistry()
+		registry := prometheus.NewRegistry()
 
 		beacons := validators.NewManager()
 		require.NoError(beacons.AddStaker(constants.PrimaryNetworkID, nodeIDs[0], nil, ids.GenerateTestID(), 1))
@@ -710,7 +711,7 @@ func TestAllowConnectionAsAValidator(t *testing.T) {
 			config,
 			InitiallyActiveTime,
 			msgCreator,
-			//registry,
+			registry,
 			log.NewNopLogger(),
 			listeners[i],
 			dialer,
@@ -771,7 +772,7 @@ func TestGetAllPeers(t *testing.T) {
 		configs[0],
 		InitiallyActiveTime,
 		newMessageCreator(t),
-		//prometheus.NewRegistry(),
+		prometheus.NewRegistry(),
 		log.NewNopLogger(),
 		listeners[0],
 		dialer,

@@ -204,7 +204,7 @@ func NewNetwork(
 	config *Config,
 	minCompatibleTime time.Time,
 	msgCreator message.Creator,
-	// metricsRegisterer prometheus.Registerer,
+	metricsRegisterer prometheus.Registerer,
 	log log.Logger,
 	listener net.Listener,
 	dialer dialer.Dialer,
@@ -270,7 +270,7 @@ func NewNetwork(
 	//	}
 
 	//ipTracker, err := newIPTracker(config.TrackedSubnets, log, metricsRegisterer)
-	ipTracker, err := newIPTracker(config.TrackedSubnets)
+	ipTracker, err := newIPTracker(config.TrackedSubnets, log, metricsRegisterer)
 	if err != nil {
 		return nil, fmt.Errorf("initializing ip tracker failed with: %w", err)
 	}
