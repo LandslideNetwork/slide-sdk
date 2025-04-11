@@ -29,56 +29,12 @@ import (
 	"net"
 	"net/netip"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
-//import (
-//	"context"
-//	"errors"
-//	"fmt"
-//	"math"
-//	"net"
-//	"net/netip"
-//	"strings"
-//	"sync"
-//	"sync/atomic"
-//	"time"
-//
-//	"github.com/pires/go-proxyproto"
-//	"github.com/prometheus/client_golang/prometheus"
-//	"go.uber.org/zap"
-//
-//	"github.com/ava-labs/avalanchego/api/health"
-//	"github.com/ava-labs/avalanchego/genesis"
-//	"github.com/ava-labs/avalanchego/ids"
-//	"github.com/ava-labs/avalanchego/message"
-//	"github.com/ava-labs/avalanchego/network/dialer"
-//	"github.com/ava-labs/avalanchego/network/peer"
-//	"github.com/ava-labs/avalanchego/network/throttling"
-//	"github.com/ava-labs/avalanchego/snow/engine/common"
-//	"github.com/ava-labs/avalanchego/snow/networking/router"
-//	"github.com/ava-labs/avalanchego/snow/networking/sender"
-//	"github.com/ava-labs/avalanchego/subnets"
-//	"github.com/ava-labs/avalanchego/utils/bloom"
-//	"github.com/ava-labs/avalanchego/utils/constants"
-//	"github.com/ava-labs/avalanchego/utils/ips"
-//	"github.com/ava-labs/avalanchego/utils/logging"
-//	"github.com/ava-labs/avalanchego/utils/set"
-//	"github.com/ava-labs/avalanchego/utils/wrappers"
-//	"github.com/ava-labs/avalanchego/version"
-//
-//	safemath "github.com/ava-labs/avalanchego/utils/math"
-//)
-//
-//const (
-//	ConnectedPeersKey           = "connectedPeers"
-//	TimeSinceLastMsgReceivedKey = "timeSinceLastMsgReceived"
-//	TimeSinceLastMsgSentKey     = "timeSinceLastMsgSent"
-//	SendFailRateKey             = "sendFailRate"
-//)
-
 var (
-	//	_ Network = (*network)(nil)
+	_ Network = (*network)(nil)
 
 	errNotValidator = errors.New("node is not a validator")
 	//	errExpectedProxy          = errors.New("expected proxy")
@@ -108,11 +64,11 @@ type Network interface {
 	// Attempt to connect to this IP. The network will never stop attempting to
 	// connect to this ID.
 	ManuallyTrack(nodeID ids.NodeID, ip netip.AddrPort)
-	//
-	//// PeerInfo returns information about peers. If [nodeIDs] is empty, returns
-	//// info about all peers that have finished the handshake. Otherwise, returns
-	//// info about the peers in [nodeIDs] that have finished the handshake.
-	//PeerInfo(nodeIDs []ids.NodeID) []peer.Info
+
+	// PeerInfo returns information about peers. If [nodeIDs] is empty, returns
+	// info about all peers that have finished the handshake. Otherwise, returns
+	// info about the peers in [nodeIDs] that have finished the handshake.
+	PeerInfo(nodeIDs []ids.NodeID) []peer.Info
 
 	// NodeUptime returns given node's primary network UptimeResults in the view of
 	// this node's peer validators.
@@ -872,7 +828,7 @@ func (n *network) disconnectedFromConnecting(nodeID ids.NodeID) {
 }
 
 func (n *network) disconnectedFromConnected(peer peer.Peer, nodeID ids.NodeID) {
-	//n.ipTracker.Disconnected(nodeID)
+	n.ipTracker.Disconnected(nodeID)
 	n.router.Disconnected(nodeID)
 
 	n.peersLock.Lock()
@@ -1149,15 +1105,15 @@ func (n *network) upgrade(conn net.Conn, upgrader peer.Upgrader) error {
 	return nil
 }
 
-//func (n *network) PeerInfo(nodeIDs []ids.NodeID) []peer.Info {
-//	n.peersLock.RLock()
-//	defer n.peersLock.RUnlock()
-//
-//	if len(nodeIDs) == 0 {
-//		return n.connectedPeers.AllInfo()
-//	}
-//	return n.connectedPeers.Info(nodeIDs)
-//}
+func (n *network) PeerInfo(nodeIDs []ids.NodeID) []peer.Info {
+	n.peersLock.RLock()
+	defer n.peersLock.RUnlock()
+
+	if len(nodeIDs) == 0 {
+		return n.connectedPeers.AllInfo()
+	}
+	return n.connectedPeers.Info(nodeIDs)
+}
 
 func (n *network) StartClose() {
 	n.closeOnce.Do(func() {
@@ -1291,18 +1247,18 @@ func (n *network) pullGossipPeerLists() {
 	}
 }
 
-//func (n *network) getLastReceived() (time.Time, bool) {
-//	lastReceived := atomic.LoadInt64(&n.peerConfig.LastReceived)
-//	if lastReceived == 0 {
-//		return time.Time{}, false
-//	}
-//	return time.Unix(lastReceived, 0), true
-//}
-//
-//func (n *network) getLastSent() (time.Time, bool) {
-//	lastSent := atomic.LoadInt64(&n.peerConfig.LastSent)
-//	if lastSent == 0 {
-//		return time.Time{}, false
-//	}
-//	return time.Unix(lastSent, 0), true
-//}
+func (n *network) getLastReceived() (time.Time, bool) {
+	lastReceived := atomic.LoadInt64(&n.peerConfig.LastReceived)
+	if lastReceived == 0 {
+		return time.Time{}, false
+	}
+	return time.Unix(lastReceived, 0), true
+}
+
+func (n *network) getLastSent() (time.Time, bool) {
+	lastSent := atomic.LoadInt64(&n.peerConfig.LastSent)
+	if lastSent == 0 {
+		return time.Time{}, false
+	}
+	return time.Unix(lastSent, 0), true
+}

@@ -54,7 +54,6 @@ func requireMetricsConsistent(t *testing.T, tracker *ipTracker) {
 		numGossipableIPs += len(subnets.gossipableIndices)
 	}
 	require.Equal(float64(numGossipableIPs), testutil.ToFloat64(tracker.numGossipableIPs))
-	//require.Equal(float64(len(tracker.subnets)), testutil.ToFloat64(tracker.numTrackedSubnets))
 	require.Equal(float64(tracker.bloom.Count()), testutil.ToFloat64(tracker.bloomMetrics.Count))
 	require.Equal(float64(tracker.maxBloomCount), testutil.ToFloat64(tracker.bloomMetrics.MaxCount))
 }
