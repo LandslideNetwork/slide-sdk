@@ -48,6 +48,20 @@ else
     exit 1
 fi
 
+# Install libwasmvm.x86_64.so
+LIBWASMVM_PATH="/bin/libwasmvm.x86_64.so"
+LIBWASMVM_SYMLINK="/usr/lib/libwasmvm.x86_64.so"
+
+if [[ ! -f "$LIBWASMVM_PATH" ]]; then
+    echo "Installing libwasmvm.x86_64.so"
+    wget -O "$LIBWASMVM_PATH" https://github.com/CosmWasm/wasmvm/releases/download/v1.5.7/libwasmvm.x86_64.so
+    chmod 755 "$LIBWASMVM_PATH"
+fi
+
+if [[ ! -L "$LIBWASMVM_SYMLINK" ]]; then
+    ln -s "$LIBWASMVM_PATH" "$LIBWASMVM_SYMLINK"
+fi
+
 # Build Subnet EVM, which is run as a subprocess
 echo "Building Landslide VM at $BINARY_PATH"
 go build -o "$BINARY_PATH" "example/wasm/"*.go
