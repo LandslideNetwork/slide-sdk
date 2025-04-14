@@ -43,12 +43,12 @@ type Set interface {
 	// [precondition] to return true will be returned in the slice.
 	Sample(n int, precondition func(Peer) bool) []Peer
 
-	//// Returns information about all the peers.
-	//AllInfo() []Info
-	//
-	//// Info returns information about the requested peers if they are in the
-	//// set.
-	//Info(nodeIDs []ids.NodeID) []Info
+	// Returns information about all the peers.
+	AllInfo() []Info
+
+	// Info returns information about the requested peers if they are in the
+	// set.
+	Info(nodeIDs []ids.NodeID) []Info
 }
 
 type peerSet struct {
@@ -138,20 +138,20 @@ func (s *peerSet) Sample(n int, precondition func(Peer) bool) []Peer {
 	return peers
 }
 
-//func (s *peerSet) AllInfo() []Info {
-//	peerInfo := make([]Info, len(s.peersSlice))
-//	for i, peer := range s.peersSlice {
-//		peerInfo[i] = peer.Info()
-//	}
-//	return peerInfo
-//}
-//
-//func (s *peerSet) Info(nodeIDs []ids.NodeID) []Info {
-//	peerInfo := make([]Info, 0, len(nodeIDs))
-//	for _, nodeID := range nodeIDs {
-//		if peer, ok := s.GetByID(nodeID); ok {
-//			peerInfo = append(peerInfo, peer.Info())
-//		}
-//	}
-//	return peerInfo
-//}
+func (s *peerSet) AllInfo() []Info {
+	peerInfo := make([]Info, len(s.peersSlice))
+	for i, peer := range s.peersSlice {
+		peerInfo[i] = peer.Info()
+	}
+	return peerInfo
+}
+
+func (s *peerSet) Info(nodeIDs []ids.NodeID) []Info {
+	peerInfo := make([]Info, 0, len(nodeIDs))
+	for _, nodeID := range nodeIDs {
+		if peer, ok := s.GetByID(nodeID); ok {
+			peerInfo = append(peerInfo, peer.Info())
+		}
+	}
+	return peerInfo
+}

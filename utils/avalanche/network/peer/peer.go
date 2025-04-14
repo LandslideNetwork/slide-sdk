@@ -10,6 +10,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/json"
 	"github.com/landslidenetwork/slide-sdk/utils/bloom"
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ips"
@@ -104,9 +105,9 @@ type Peer interface {
 	// be returned.
 	AwaitReady(ctx context.Context) error
 
-	//// Info returns a description of the state of this peer. It should only be
-	//// called after [Ready] returns true.
-	//Info() Info
+	// Info returns a description of the state of this peer. It should only be
+	// called after [Ready] returns true.
+	Info() Info
 
 	// IP returns the claimed IP and signature provided by this peer during the
 	// handshake. It should only be called after [Ready] returns true.
@@ -263,23 +264,23 @@ func (p *peer) Cert() *staking.Certificate {
 	return p.cert
 }
 
-//func (p *peer) LastSent() time.Time {
-//	return time.Unix(
-//		atomic.LoadInt64(&p.lastSent),
-//		0,
-//	)
-//}
-//
-//func (p *peer) LastReceived() time.Time {
-//	return time.Unix(
-//		atomic.LoadInt64(&p.lastReceived),
-//		0,
-//	)
-//}
-//
-//func (p *peer) Ready() bool {
-//	return p.finishedHandshake.Get()
-//}
+func (p *peer) LastSent() time.Time {
+	return time.Unix(
+		atomic.LoadInt64(&p.lastSent),
+		0,
+	)
+}
+
+func (p *peer) LastReceived() time.Time {
+	return time.Unix(
+		atomic.LoadInt64(&p.lastReceived),
+		0,
+	)
+}
+
+func (p *peer) Ready() bool {
+	return p.finishedHandshake.Get()
+}
 
 func (p *peer) AwaitReady(ctx context.Context) error {
 	select {
@@ -292,23 +293,23 @@ func (p *peer) AwaitReady(ctx context.Context) error {
 	}
 }
 
-//func (p *peer) Info() Info {
-//	primaryUptime := p.ObservedUptime()
-//
-//	ip, _ := ips.ParseAddrPort(p.conn.RemoteAddr().String())
-//	return Info{
-//		IP:             ip,
-//		PublicIP:       p.ip.AddrPort,
-//		ID:             p.id,
-//		Version:        p.version.String(),
-//		LastSent:       p.LastSent(),
-//		LastReceived:   p.LastReceived(),
-//		ObservedUptime: json.Uint32(primaryUptime),
-//		TrackedSubnets: p.trackedSubnets,
-//		SupportedACPs:  p.supportedACPs,
-//		ObjectedACPs:   p.objectedACPs,
-//	}
-//}
+func (p *peer) Info() Info {
+	primaryUptime := p.ObservedUptime()
+
+	ip, _ := ips.ParseAddrPort(p.conn.RemoteAddr().String())
+	return Info{
+		IP:             ip,
+		PublicIP:       p.ip.AddrPort,
+		ID:             p.id,
+		Version:        p.version.String(),
+		LastSent:       p.LastSent(),
+		LastReceived:   p.LastReceived(),
+		ObservedUptime: json.Uint32(primaryUptime),
+		TrackedSubnets: p.trackedSubnets,
+		//SupportedACPs:  p.supportedACPs,
+		//ObjectedACPs:   p.objectedACPs,
+	}
+}
 
 func (p *peer) IP() *SignedIP {
 	return p.ip
@@ -351,14 +352,14 @@ func (p *peer) StartClose() {
 	})
 }
 
-//func (p *peer) Closed() bool {
-//	select {
-//	case _, ok := <-p.onClosed:
-//		return !ok
-//	default:
-//		return false
-//	}
-//}
+func (p *peer) Closed() bool {
+	select {
+	case _, ok := <-p.onClosed:
+		return !ok
+	default:
+		return false
+	}
+}
 
 func (p *peer) AwaitClosed(ctx context.Context) error {
 	select {
