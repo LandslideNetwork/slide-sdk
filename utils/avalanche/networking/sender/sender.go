@@ -8,7 +8,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
-	message2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/timeout"
 	"github.com/landslidenetwork/slide-sdk/utils/subnets"
@@ -90,7 +89,7 @@ func (s *P2PAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.N
 			nodeID,
 			s.ChainID,
 			requestID,
-			message2.AppResponseOp,
+			message.AppResponseOp,
 			inMsg,
 			p2p.EngineType_ENGINE_TYPE_UNSPECIFIED,
 		)
@@ -120,7 +119,7 @@ func (s *P2PAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.N
 	for nodeID := range nodeIDs {
 		if s.timeouts.IsBenched(nodeID) {
 			s.failedDueToBench.With(prometheus.Labels{
-				opLabel: message2.AppRequestOp.String(),
+				opLabel: message.AppRequestOp.String(),
 			}).Inc()
 			nodeIDs.Remove(nodeID)
 			s.timeouts.RegisterRequestToUnreachableValidator()
@@ -161,7 +160,7 @@ func (s *P2PAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.N
 		)
 	} else {
 		s.logger.Error("failed to build message",
-			zap.Stringer("messageOp", message2.AppRequestOp),
+			zap.Stringer("messageOp", message.AppRequestOp),
 			zap.Stringer("chainID", s.ChainID),
 			zap.Uint32("requestID", requestID),
 			zap.Binary("payload", appRequestBytes),
@@ -172,7 +171,7 @@ func (s *P2PAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.N
 	for nodeID := range nodeIDs {
 		if !sentTo.Contains(nodeID) {
 			s.logger.Debug("failed to send message",
-				zap.Stringer("messageOp", message2.AppRequestOp),
+				zap.Stringer("messageOp", message.AppRequestOp),
 				zap.Stringer("nodeID", nodeID),
 				zap.Stringer("chainID", s.ChainID),
 				zap.Uint32("requestID", requestID),

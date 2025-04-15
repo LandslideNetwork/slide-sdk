@@ -25,20 +25,20 @@ import (
 //	//go:embed ExampleWarp.abi
 //	exampleWarpABI string
 //)
-
-type warpMsgFrom int
-
-const (
-	fromSubnet warpMsgFrom = iota
-	fromPrimary
-)
-
-type useWarpMsgSigners int
-
-const (
-	signersSubnet useWarpMsgSigners = iota
-	signersPrimary
-)
+//
+//type warpMsgFrom int
+//
+//const (
+//	fromSubnet warpMsgFrom = iota
+//	fromPrimary
+//)
+//
+//type useWarpMsgSigners int
+//
+//const (
+//	signersSubnet useWarpMsgSigners = iota
+//	signersPrimary
+//)
 
 //func TestSendWarpMessage(t *testing.T) {
 //	require := require.New(t)

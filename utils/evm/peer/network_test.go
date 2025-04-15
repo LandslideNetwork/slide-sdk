@@ -384,7 +384,7 @@ func TestAppRequestAnyOnCtxCancellation(t *testing.T) {
 
 	// Cancel context after sending
 	assert.Empty(t, net.(*network).outstandingRequestHandlers) // no outstanding requests
-	ctx, cancel = context.WithCancel(context.Background())
+	_, cancel = context.WithCancel(context.Background())
 	doneChan := make(chan struct{})
 	go func() {
 		//_, _, err = client.SendAppRequestAny(ctx, defaultPeerVersion, requestBytes)
@@ -509,7 +509,7 @@ func TestOnRequestHonoursDeadline(t *testing.T) {
 	require.NoError(t, err)
 	networkCodec := message.Codec
 	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1, networkCodec)
-	//net.SetRequestHandler(requestHandler)
+	net.SetRequestHandler(requestHandler)
 	//nodeID := ids.GenerateTestNodeID()
 
 	requestHandler.response, err = marshalStruct(codecManager, TestMessage{Message: "hi there"})

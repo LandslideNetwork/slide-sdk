@@ -726,7 +726,7 @@ func (n *network) track(ip *ips.ClaimedIPPort, trackAllSubnets bool) error {
 //     the subnets based on its validator status.
 func (n *network) getPeers(
 	nodeIDs set.Set[ids.NodeID],
-	// subnetID ids.ID,
+// subnetID ids.ID,
 	allower subnets.Allower,
 ) []peer.Peer {
 	peers := make([]peer.Peer, 0, nodeIDs.Len())
@@ -1075,11 +1075,10 @@ func (n *network) upgrade(conn net.Conn, upgrader peer.Upgrader) error {
 	)
 
 	msgQueueBufferSize := 1024
-	var onFailure peer.SendFailedFunc
-
-	onFailure = func(msg message.OutboundMessage) {
+	var onFailure peer.SendFailedFunc = func(msg message.OutboundMessage) {
 		n.peerConfig.Log.Error("Failed to send message:", msg)
 	}
+
 	// peer.Start requires there is only ever one peer instance running with the
 	// same [peerConfig.InboundMsgThrottler]. This is guaranteed by the above
 	// de-duplications for [connectingPeers] and [connectedPeers].

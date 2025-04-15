@@ -11,7 +11,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/engine/enginetest"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
-	avap2p "github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/codec"
 	"github.com/landslidenetwork/slide-sdk/utils/codec/linearcodec"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
@@ -170,8 +169,8 @@ func newKvApp(t *testing.T, vmdb, appdb dbm.DB) (vmpb.VMServer, *enginetest.Send
 	initRes, err := vm.Initialize(ctx, &vmpb.InitializeRequest{
 		DbServerAddr: "inmemory",
 		GenesisBytes: kvstorevmGenesis,
-		ChainId:      []byte(rand.Str(32)),
-		SubnetId:     []byte(rand.Str(32)),
+		ChainId:      rand.Bytes(32),
+		SubnetId:     rand.Bytes(32),
 		NodeId:       ids.GenerateTestNodeID().Bytes(),
 		ConfigBytes:  cfg,
 	})
@@ -478,8 +477,8 @@ func TestP2PAppRequest(t *testing.T) {
 	protocolAppRequestBytes, err := evmmessage.RequestToBytes(codecManager, blkSignatureRequest)
 	require.NoError(t, err)
 
-	appRequestBytes := avap2p.PrefixMessage(
-		avap2p.ProtocolPrefix(p2p.SignatureRequestHandlerID),
+	appRequestBytes := p2p.PrefixMessage(
+		p2p.ProtocolPrefix(p2p.SignatureRequestHandlerID),
 		protocolAppRequestBytes,
 	)
 

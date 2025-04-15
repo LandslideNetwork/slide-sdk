@@ -4,22 +4,20 @@
 package peer
 
 import (
-	"github.com/rcrowley/go-metrics"
-	"math"
-	"math/rand"
-	"time"
-
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/version"
+	"github.com/rcrowley/go-metrics"
+	"math"
+	"math/rand"
 	//"github.com/ethereum/go-ethereum/log"
 	//
 	//"github.com/ava-labs/subnets-evm/metrics"
 )
 
 const (
-	bandwidthHalflife = 5 * time.Minute
+	//bandwidthHalflife = 5 * time.Minute
 
 	// controls how eagerly we connect to new peers vs. using
 	// peers with known good response bandwidth.

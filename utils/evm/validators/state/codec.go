@@ -10,10 +10,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/codec/linearcodec"
 )
 
-const (
-	codecVersion = uint16(0)
-)
-
 var vdrCodec codec.Manager
 
 func init() {

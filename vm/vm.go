@@ -10,10 +10,8 @@ import (
 	appsenderpb "github.com/landslidenetwork/slide-sdk/proto/appsender"
 	warppb "github.com/landslidenetwork/slide-sdk/proto/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
-	network2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/network"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/gwarp"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/peer"
@@ -100,46 +98,6 @@ var (
 
 	ErrNotFound     = errors.New("not found")
 	ErrUnknownState = errors.New("unknown state")
-
-	InitiallyP2PActiveTime = time.Date(2025, time.February, 28, 5, 0, 0, 0, time.UTC)
-	defaultP2PHealthConfig = network2.HealthConfig{
-		MinConnectedPeers:            1,
-		MaxTimeSinceMsgReceived:      time.Minute,
-		MaxTimeSinceMsgSent:          time.Minute,
-		MaxPortionSendQueueBytesFull: .9,
-		MaxSendFailRate:              .1,
-		SendFailRateHalflife:         time.Second,
-	}
-	defaultPeerListGossipConfig = network2.PeerListGossipConfig{
-		PeerListNumValidatorIPs: 100,
-		PeerListPullGossipFreq:  time.Second,
-		PeerListBloomResetFreq:  DefaultNetworkPeerListBloomResetFreq,
-	}
-	defaultP2PTimeoutConfig = network2.TimeoutConfig{
-		PingPongTimeout:      30 * time.Second,
-		ReadHandshakeTimeout: 15 * time.Second,
-	}
-	defaultP2PDelayConfig = network2.DelayConfig{
-		MaxReconnectDelay:     time.Hour,
-		InitialReconnectDelay: time.Second,
-	}
-
-	defaultConfig = network2.Config{
-		HealthConfig:         defaultP2PHealthConfig,
-		PeerListGossipConfig: defaultPeerListGossipConfig,
-		TimeoutConfig:        defaultP2PTimeoutConfig,
-		DelayConfig:          defaultP2PDelayConfig,
-		//NetworkID:          49463,
-		MaxClockDifference: time.Minute,
-		PingFrequency:      DefaultP2PPingFrequency,
-		AllowPrivateIPs:    true,
-		//CompressionType: constants.DefaultNetworkCompressionType,
-		UptimeCalculator:  uptime.NewManager(uptime.NewTestState(), &mockable.Clock{}),
-		UptimeMetricFreq:  30 * time.Second,
-		UptimeRequirement: .8,
-
-		RequireValidatorToConnect: false,
-	}
 )
 
 type (
@@ -294,6 +252,10 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		vm.logger.Info("Server Address initial:", req.ServerAddr)
 		addrData := []byte(req.ServerAddr)
 		err := os.WriteFile("/tmp/vm_server_address", addrData, 0644)
+		if err != nil {
+			vm.logger.Error("failed to write server address to file", "err", err)
+			return nil, err
+		}
 		clientConn, err := grpc.NewClient(
 			"passthrough:///"+req.ServerAddr,
 			grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),

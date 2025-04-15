@@ -19,7 +19,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/api/info"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/compression"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
-	avap2p "github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/peer"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/messages"
@@ -107,8 +106,8 @@ func main() {
 		sourceChainID,
 		0,
 		time.Hour,
-		avap2p.PrefixMessage(
-			avap2p.ProtocolPrefix(p2p.SignatureRequestHandlerID),
+		p2p.PrefixMessage(
+			p2p.ProtocolPrefix(p2p.SignatureRequestHandlerID),
 			appRequestPayload,
 		),
 	)
