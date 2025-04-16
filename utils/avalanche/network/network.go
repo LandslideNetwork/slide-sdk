@@ -38,9 +38,6 @@ var (
 	_ Network = (*network)(nil)
 
 	errNotValidator = errors.New("node is not a validator")
-	//	errExpectedProxy          = errors.New("expected proxy")
-	//	errExpectedTCPProtocol    = errors.New("expected TCP protocol")
-	//	errTrackingPrimaryNetwork = errors.New("cannot track primary network")
 )
 
 // Network defines the functionality of the networking library.
@@ -48,10 +45,6 @@ type Network interface {
 	// All consensus messages can be sent through this interface. Thread safety
 	// must be managed internally in the network.
 	sender.ExternalSender
-	//
-	//	// Has a health check
-	//	health.Checker
-	//
 	peer.Network
 
 	// StartClose this network and all existing connections it has. Calling
@@ -104,12 +97,6 @@ type network struct {
 	config          *Config
 	peerConfig      *peer.Config
 	tlsConnRejected prometheus.Counter
-	//	metrics    *metrics
-	//
-	//	outboundMsgThrottler throttling.OutboundMsgThrottler
-	//
-	//	// Limits the number of connection attempts based on IP.
-	//	inboundConnUpgradeThrottler throttling.InboundConnUpgradeThrottler
 	// Listens for and accepts new inbound connections
 	listener net.Listener
 	// Makes new outbound connections
@@ -167,123 +154,37 @@ func NewNetwork(
 	dialer dialer.Dialer,
 	router router.ExternalHandler,
 ) (Network, error) {
-	//	if config.ProxyEnabled {
-	//		// Wrap the listener to process the proxy header.
-	//		listener = &proxyproto.Listener{
-	//			Listener: listener,
-	//			Policy: func(net.Addr) (proxyproto.Policy, error) {
-	//				// Do not perform any fuzzy matching, the header must be
-	//				// provided.
-	//				return proxyproto.REQUIRE, nil
-	//			},
-	//			ValidateHeader: func(h *proxyproto.Header) error {
-	//				if !h.Command.IsProxy() {
-	//					return errExpectedProxy
-	//				}
-	//				if h.TransportProtocol != proxyproto.TCPv4 && h.TransportProtocol != proxyproto.TCPv6 {
-	//					return errExpectedTCPProtocol
-	//				}
-	//				return nil
-	//			},
-	//			ReadHeaderTimeout: config.ProxyReadHeaderTimeout,
-	//		}
-	//	}
-	//
-	//	if config.TrackedSubnets.Contains(constants.PrimaryNetworkID) {
-	//		return nil, errTrackingPrimaryNetwork
-	//	}
-	//
-	//	inboundMsgThrottler, err := throttling.NewInboundMsgThrottler(
-	//		log,
-	//		metricsRegisterer,
-	//		config.Validators,
-	//		config.ThrottlerConfig.InboundMsgThrottlerConfig,
-	//		config.ResourceTracker,
-	//		config.CPUTargeter,
-	//		config.DiskTargeter,
-	//	)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("initializing inbound message throttler failed with: %w", err)
-	//	}
-	//
-	//	outboundMsgThrottler, err := throttling.NewSybilOutboundMsgThrottler(
-	//		log,
-	//		metricsRegisterer,
-	//		config.Validators,
-	//		config.ThrottlerConfig.OutboundMsgThrottlerConfig,
-	//	)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("initializing outbound message throttler failed with: %w", err)
-	//	}
-	//
-	//	peerMetrics, err := peer.NewMetrics(metricsRegisterer)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("initializing peer metrics failed with: %w", err)
-	//	}
-	//
-	//	metrics, err := newMetrics(metricsRegisterer, config.TrackedSubnets)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("initializing network metrics failed with: %w", err)
-	//	}
-
-	//ipTracker, err := newIPTracker(config.TrackedSubnets, log, metricsRegisterer)
 	ipTracker, err := newIPTracker(config.TrackedSubnets, log, metricsRegisterer)
 	if err != nil {
 		return nil, fmt.Errorf("initializing ip tracker failed with: %w", err)
 	}
 	config.Validators.RegisterCallbackListener(ipTracker)
-	//	// Track all default bootstrappers to ensure their current IPs are gossiped
-	//	// like validator IPs.
-	//	for _, bootstrapper := range genesis.GetBootstrappers(config.NetworkID) {
-	//		ipTracker.ManuallyGossip(constants.PrimaryNetworkID, bootstrapper.ID)
-	//	}
-	//	// Track all recent validators to optimistically connect to them before the
-	//	// P-chain has finished syncing.
-	//	for nodeID := range genesis.GetValidators(config.NetworkID) {
-	//		ipTracker.ManuallyTrack(nodeID)
-	//	}
-	//
 	peerConfig := &peer.Config{
-		//ReadBufferSize:  config.PeerReadBufferSize,
-		//WriteBufferSize: config.PeerWriteBufferSize,
-		//Metrics:         peerMetrics,
 		MessageCreator: msgCreator,
 
-		Log: log,
-		//		InboundMsgThrottler:  inboundMsgThrottler,
+		Log:                  log,
 		Network:              nil, // This is set below.
 		Router:               router,
 		VersionCompatibility: version.GetCompatibility(minCompatibleTime),
 		MyNodeID:             config.MyNodeID,
-		//MySubnets:            config.TrackedSubnets,
-		//Beacons:              config.Beacons,
-		Validators: config.Validators,
-		//NetworkID:  config.NetworkID,
-		PingFrequency:      config.PingFrequency,
-		PongTimeout:        config.PingPongTimeout,
-		MaxClockDifference: config.MaxClockDifference,
-		//SupportedACPs:      config.SupportedACPs.List(),
-		//ObjectedACPs:       config.ObjectedACPs.List(),
-		//ResourceTracker:      config.ResourceTracker,
-		UptimeCalculator: config.UptimeCalculator,
-		IPSigner:         peer.NewIPSigner(config.MyIPPort, config.TLSKey, config.BLSKey),
+		Validators:           config.Validators,
+		PingFrequency:        config.PingFrequency,
+		PongTimeout:          config.PingPongTimeout,
+		MaxClockDifference:   config.MaxClockDifference,
+		UptimeCalculator:     config.UptimeCalculator,
+		IPSigner:             peer.NewIPSigner(config.MyIPPort, config.TLSKey, config.BLSKey),
 	}
 
 	onCloseCtx, cancel := context.WithCancel(context.Background())
 	tlsConnRejected := prometheus.NewCounter(prometheus.CounterOpts{Namespace: "P2P Network", Name: "tls_conn_rejected"})
 	n := &network{
-		config:          config,
-		peerConfig:      peerConfig,
-		tlsConnRejected: tlsConnRejected,
-		//		metrics:              metrics,
-		//		outboundMsgThrottler: outboundMsgThrottler,
-		//
-		//		inboundConnUpgradeThrottler: throttling.NewInboundConnUpgradeThrottler(log, config.ThrottlerConfig.InboundConnUpgradeThrottlerConfig),
-		listener:       listener,
-		dialer:         dialer,
-		serverUpgrader: peer.NewTLSServerUpgrader(config.TLSConfig, tlsConnRejected),
-		clientUpgrader: peer.NewTLSClientUpgrader(config.TLSConfig, tlsConnRejected),
-		//
+		config:           config,
+		peerConfig:       peerConfig,
+		tlsConnRejected:  tlsConnRejected,
+		listener:         listener,
+		dialer:           dialer,
+		serverUpgrader:   peer.NewTLSServerUpgrader(config.TLSConfig, tlsConnRejected),
+		clientUpgrader:   peer.NewTLSClientUpgrader(config.TLSConfig, tlsConnRejected),
 		onCloseCtx:       onCloseCtx,
 		onCloseCtxCancel: cancel,
 
@@ -310,10 +211,6 @@ func (n *network) Send(
 	allower subnets.Allower,
 ) set.Set[ids.NodeID] {
 	namedPeers := n.getPeers(config.NodeIDs, allower)
-	//n.peerConfig.Metrics.MultipleSendsFailed(
-	//	msg.Op(),
-	//	config.NodeIDs.Len()-len(namedPeers),
-	//)
 
 	var (
 		sampledPeers = n.samplePeers(config, subnetID, allower)
@@ -340,84 +237,6 @@ func (n *network) Send(
 	}
 	return sentTo
 }
-
-//// HealthCheck returns information about several network layer health checks.
-//// 1) Information about health check results
-//// 2) An error if the health check reports unhealthy
-//func (n *network) HealthCheck(context.Context) (interface{}, error) {
-//	n.peersLock.RLock()
-//	connectedTo := n.connectedPeers.Len()
-//	n.peersLock.RUnlock()
-//
-//	sendFailRate := n.sendFailRateCalculator.Read()
-//
-//	// Make sure we're connected to at least the minimum number of peers
-//	isConnected := connectedTo >= int(n.config.HealthConfig.MinConnectedPeers)
-//	healthy := isConnected
-//	details := map[string]interface{}{
-//		ConnectedPeersKey: connectedTo,
-//	}
-//
-//	// Make sure we've received an incoming message within the threshold
-//	now := n.peerConfig.Clock.Time()
-//
-//	lastMsgReceivedAt, msgReceived := n.getLastReceived()
-//	wasMsgReceivedRecently := msgReceived
-//	timeSinceLastMsgReceived := time.Duration(0)
-//	if msgReceived {
-//		timeSinceLastMsgReceived = now.Sub(lastMsgReceivedAt)
-//		wasMsgReceivedRecently = timeSinceLastMsgReceived <= n.config.HealthConfig.MaxTimeSinceMsgReceived
-//		details[TimeSinceLastMsgReceivedKey] = timeSinceLastMsgReceived.String()
-//		n.metrics.timeSinceLastMsgReceived.Set(float64(timeSinceLastMsgReceived))
-//	}
-//	healthy = healthy && wasMsgReceivedRecently
-//
-//	// Make sure we've sent an outgoing message within the threshold
-//	lastMsgSentAt, msgSent := n.getLastSent()
-//	wasMsgSentRecently := msgSent
-//	timeSinceLastMsgSent := time.Duration(0)
-//	if msgSent {
-//		timeSinceLastMsgSent = now.Sub(lastMsgSentAt)
-//		wasMsgSentRecently = timeSinceLastMsgSent <= n.config.HealthConfig.MaxTimeSinceMsgSent
-//		details[TimeSinceLastMsgSentKey] = timeSinceLastMsgSent.String()
-//		n.metrics.timeSinceLastMsgSent.Set(float64(timeSinceLastMsgSent))
-//	}
-//	healthy = healthy && wasMsgSentRecently
-//
-//	// Make sure the message send failed rate isn't too high
-//	isMsgFailRate := sendFailRate <= n.config.HealthConfig.MaxSendFailRate
-//	healthy = healthy && isMsgFailRate
-//	details[SendFailRateKey] = sendFailRate
-//	n.metrics.sendFailRate.Set(sendFailRate)
-//
-//	// emit metrics about the lifetime of peer connections
-//	n.metrics.updatePeerConnectionLifetimeMetrics()
-//
-//	// Network layer is healthy
-//	if healthy || !n.config.HealthConfig.Enabled {
-//		return details, nil
-//	}
-//
-//	var errorReasons []string
-//	if !isConnected {
-//		errorReasons = append(errorReasons, fmt.Sprintf("not connected to a minimum of %d peer(s) only %d", n.config.HealthConfig.MinConnectedPeers, connectedTo))
-//	}
-//	if !msgReceived {
-//		errorReasons = append(errorReasons, "no messages received from network")
-//	} else if !wasMsgReceivedRecently {
-//		errorReasons = append(errorReasons, fmt.Sprintf("no messages from network received in %s > %s", timeSinceLastMsgReceived, n.config.HealthConfig.MaxTimeSinceMsgReceived))
-//	}
-//	if !msgSent {
-//		errorReasons = append(errorReasons, "no messages sent to network")
-//	} else if !wasMsgSentRecently {
-//		errorReasons = append(errorReasons, fmt.Sprintf("no messages from network sent in %s > %s", timeSinceLastMsgSent, n.config.HealthConfig.MaxTimeSinceMsgSent))
-//	}
-//
-//	if !isMsgFailRate {
-//		errorReasons = append(errorReasons, fmt.Sprintf("messages failure send rate %g > %g", sendFailRate, n.config.HealthConfig.MaxSendFailRate))
-//	}
-//	return details, fmt.Errorf("network layer is unhealthy reason: %s", strings.Join(errorReasons, ", "))
-//}
 
 // Connected is called after the peer finishes the handshake.
 // Will not be called after [Disconnected] is called with this peer.
@@ -727,7 +546,6 @@ func (n *network) track(ip *ips.ClaimedIPPort, trackAllSubnets bool) error {
 //     the subnets based on its validator status.
 func (n *network) getPeers(
 	nodeIDs set.Set[ids.NodeID],
-	// subnetID ids.ID,
 	allower subnets.Allower,
 ) []peer.Peer {
 	peers := make([]peer.Peer, 0, nodeIDs.Len())
@@ -824,8 +642,6 @@ func (n *network) disconnectedFromConnecting(nodeID ids.NodeID) {
 			delete(n.trackedIPs, nodeID)
 		}
 	}
-
-	//n.metrics.disconnected.Inc()
 }
 
 func (n *network) disconnectedFromConnected(peer peer.Peer, nodeID ids.NodeID) {
@@ -843,8 +659,6 @@ func (n *network) disconnectedFromConnected(peer peer.Peer, nodeID ids.NodeID) {
 		n.trackedIPs[nodeID] = tracked
 		n.dial(nodeID, tracked)
 	}
-
-	//n.metrics.markDisconnected(peer)
 }
 
 // dial will spin up a new goroutine and attempt to establish a connection with
@@ -872,8 +686,6 @@ func (n *network) dial(nodeID ids.NodeID, ip *trackedIP) {
 		zap.Stringer("ip", ip.ip),
 	)
 	go func() {
-		//		n.metrics.numTracked.Inc()
-		//		defer n.metrics.numTracked.Dec()
 
 		for {
 			timer := time.NewTimer(ip.getDelay())
@@ -1088,12 +900,6 @@ func (n *network) upgrade(conn net.Conn, upgrader peer.Upgrader) error {
 		tlsConn,
 		cert,
 		nodeID,
-		//peer.NewThrottledMessageQueue(
-		//	n.peerConfig.Metrics,
-		//	nodeID,
-		//	n.peerConfig.Log,
-		//	n.outboundMsgThrottler,
-		//),
 		peer.NewBlockingMessageQueue(
 			onFailure,
 			n.peerConfig.Log,
@@ -1226,8 +1032,6 @@ func (n *network) runTimers() {
 				)
 			}
 			n.peerConfig.Log.Debug("primary uptime", primaryUptime)
-			//n.metrics.nodeUptimeWeightedAverage.Set(primaryUptime.WeightedAveragePercentage)
-			//n.metrics.nodeUptimeRewardingStake.Set(primaryUptime.RewardingStakePercentage)
 		}
 	}
 }

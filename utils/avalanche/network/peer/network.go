@@ -8,9 +8,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/ips"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
-	//"github.com/landslidenetwork/slide-sdk/utils/bloom"
-	//"github.com/ava-labs/avalanchego/utils/ips"
-	//"github.com/landslidenetwork/slide-sdk/utils/set"
 )
 
 // Network defines the interface that is used by a peer to help establish a well

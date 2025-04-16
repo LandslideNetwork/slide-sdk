@@ -26,35 +26,12 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/version"
 	"github.com/landslidenetwork/slide-sdk/utils/wrappers"
 
-	//"bufio"
 	"context"
 	"net"
 
 	"go.uber.org/zap"
 
-	//"errors"
-	//"io"
-	//"math"
-	//"net"
-	//"net/netip"
-	//"sync"
-	//"sync/atomic"
-	//"time"
-	//
-	//"go.uber.org/zap"
-
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
-	//"github.com/ava-labs/avalanchego/proto/pb/p2p"
-	//"github.com/ava-labs/avalanchego/staking"
-	//"github.com/ava-labs/avalanchego/utils"
-	//"github.com/ava-labs/avalanchego/utils/bloom"
-	//"github.com/ava-labs/avalanchego/utils/constants"
-	//"github.com/ava-labs/avalanchego/utils/crypto/bls"
-	//"github.com/ava-labs/avalanchego/utils/ips"
-	//"github.com/ava-labs/avalanchego/utils/json"
-	//"github.com/ava-labs/avalanchego/utils/set"
-	//"github.com/ava-labs/avalanchego/utils/wrappers"
-	//"github.com/ava-labs/avalanchego/version"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
@@ -91,16 +68,6 @@ type Peer interface {
 	// Cert returns the certificate that the remote peer is using to
 	// authenticate their messages.
 	Cert() *staking.Certificate
-	//
-	//// LastSent returns the last time a message was sent to the peer.
-	//LastSent() time.Time
-	//
-	//// LastReceived returns the last time a message was received from the peer.
-	//LastReceived() time.Time
-	//
-	//// Ready returns true if the peer has finished the p2p handshake and is
-	//// ready to send and receive messages.
-	//Ready() bool
 
 	// AwaitReady will block until the peer has finished the p2p handshake. If
 	// the context is cancelled or the peer starts closing, then an error will
@@ -141,11 +108,6 @@ type Peer interface {
 	// StartClose will begin shutting down the peer. It will not block.
 	StartClose()
 
-	//// Closed returns true once the peer has been fully shutdown. It is
-	//// guaranteed that no more messages will be received by this peer once this
-	//// returns true.
-	//Closed() bool
-
 	// AwaitClosed will block until the peer has been fully shutdown. If the
 	// context is cancelled, then an error will be returned.
 	AwaitClosed(ctx context.Context) error
@@ -175,9 +137,6 @@ type peer struct {
 	// trackedSubnets are the subnetIDs the peer sent us in the Handshake
 	// message. The primary network ID is always included.
 	trackedSubnets set.Set[ids.ID]
-	//// options of ACPs provided in the Handshake message.
-	//supportedACPs set.Set[uint32]
-	//objectedACPs  set.Set[uint32]
 
 	// txIDOfVerifiedBLSKey is the txID that added the BLS key that was most
 	// recently verified to have signed the IP.
@@ -308,8 +267,6 @@ func (p *peer) Info() Info {
 		LastReceived:   p.LastReceived(),
 		ObservedUptime: json.Uint32(primaryUptime),
 		TrackedSubnets: p.trackedSubnets,
-		//SupportedACPs:  p.supportedACPs,
-		//ObjectedACPs:   p.objectedACPs,
 	}
 }
 
@@ -386,10 +343,7 @@ func (p *peer) close() {
 // Read and handle messages from this peer.
 // When this method returns, the connection is closed.
 func (p *peer) readMessages() {
-	//// Track this node with the inbound message throttler.
-	//p.InboundMsgThrottler.AddNode(p.id)
 	defer func() {
-		//p.InboundMsgThrottler.RemoveNode(p.id)
 		p.StartClose()
 		p.close()
 	}()
@@ -430,31 +384,6 @@ func (p *peer) readMessages() {
 		//TODO: investigate onFinishedHandling
 		onFinishedHandling := func() {}
 
-		//// Wait until the throttler says we can proceed to read the message.
-		////
-		//// Invariant: When done processing this message, onFinishedHandling() is
-		//// called exactly once. If this is not honored, the message throttler
-		//// will leak until no new messages can be read. You can look at message
-		//// throttler metrics to verify that there is no leak.
-		////
-		//// Invariant: There must only be one call to Acquire at any given time
-		//// with the same nodeID. In this package, only this goroutine ever
-		//// performs Acquire. Additionally, we ensure that this goroutine has
-		//// exited before calling [Network.Disconnected] to guarantee that there
-		//// can't be multiple instances of this goroutine running over different
-		//// peer instances.
-		//onFinishedHandling := p.InboundMsgThrottler.Acquire(
-		//	p.onClosingCtx,
-		//	uint64(msgLen),
-		//	p.id,
-		//)
-
-		//// If the peer is shutting down, there's no need to read the message.
-		//if err := p.onClosingCtx.Err(); err != nil {
-		//	onFinishedHandling()
-		//	return
-		//}
-
 		// Time out and close connection if we can't read message
 		if err := p.conn.SetReadDeadline(p.nextTimeout()); err != nil {
 			p.Log.Error(failedToSetDeadlineLog,
@@ -462,7 +391,6 @@ func (p *peer) readMessages() {
 				zap.String("direction", "read"),
 				zap.Error(err),
 			)
-			//onFinishedHandling()
 			return
 		}
 
@@ -473,7 +401,6 @@ func (p *peer) readMessages() {
 				zap.Stringer("nodeID", p.id),
 				zap.Error(err),
 			)
-			//onFinishedHandling()
 			return
 		}
 
@@ -498,23 +425,15 @@ func (p *peer) readMessages() {
 				zap.Binary("messageBytes", msgBytes),
 				zap.Error(err),
 			)
-
-			//p.Metrics.NumFailedToParse.Inc()
-
-			//// Couldn't parse the message. Read the next one.
-			//onFinishedHandling()
-			//p.ResourceTracker.StopProcessing(p.id, p.Clock.Time())
 			continue
 		}
 
 		now := p.Clock.Time()
 		p.storeLastReceived(now)
-		//p.Metrics.Received(msg, msgLen)
 
 		// Handle the message. Note that when we are done handling this message,
 		// we must call [msg.OnFinishedHandling()].
 		p.handle(msg)
-		//p.ResourceTracker.StopProcessing(p.id, p.Clock.Time())
 	}
 }
 
@@ -645,7 +564,6 @@ func (p *peer) writeMessage(writer io.Writer, msg message.OutboundMessage) {
 
 	now := p.Clock.Time()
 	p.storeLastSent(now)
-	//p.Metrics.Sent(msg)
 }
 
 func (p *peer) sendNetworkMessages() {
@@ -868,15 +786,9 @@ func (p *peer) handleHandshake(msg *p2p.Handshake) {
 	localTime := p.Clock.Time()
 	localUnixTime := uint64(localTime.Unix())
 	clockDifference := math.Abs(float64(msg.MyTime) - float64(localUnixTime))
-	//
-	//p.Metrics.ClockSkewCount.Inc()
-	//p.Metrics.ClockSkewSum.Add(clockDifference)
 
 	if clockDifference > p.MaxClockDifference.Seconds() {
 		log := p.Log.Debug
-		//if _, ok := p.Beacons.GetValidator(constants.PrimaryNetworkID, p.id); ok {
-		//	log = p.Log.Warn
-		//}
 		log(malformedMessageLog,
 			zap.Stringer("nodeID", p.id),
 			zap.Stringer("messageOp", message.HandshakeOp),
@@ -897,9 +809,6 @@ func (p *peer) handleHandshake(msg *p2p.Handshake) {
 
 	if p.VersionCompatibility.Version().Before(p.version) {
 		log := p.Log.Debug
-		//if _, ok := p.Beacons.GetValidator(constants.PrimaryNetworkID, p.id); ok {
-		//	log = p.Log.Info
-		//}
 		log("peer attempting to connect with newer version. You may want to update your client",
 			zap.Stringer("nodeID", p.id),
 			zap.Stringer("peerVersion", p.version),
@@ -933,29 +842,6 @@ func (p *peer) handleHandshake(msg *p2p.Handshake) {
 		}
 		p.trackedSubnets.Add(subnetID)
 	}
-
-	//	for _, acp := range msg.SupportedAcps {
-	//		if constants.CurrentACPs.Contains(acp) {
-	//			p.supportedACPs.Add(acp)
-	//		}
-	//	}
-	//	for _, acp := range msg.ObjectedAcps {
-	//		if constants.CurrentACPs.Contains(acp) {
-	//			p.objectedACPs.Add(acp)
-	//		}
-	//	}
-	//
-	//	if p.supportedACPs.Overlaps(p.objectedACPs) {
-	//		p.Log.Debug(malformedMessageLog,
-	//			zap.Stringer("nodeID", p.id),
-	//			zap.Stringer("messageOp", message.HandshakeOp),
-	//			zap.String("field", "acps"),
-	//			zap.Reflect("supportedACPs", p.supportedACPs),
-	//			zap.Reflect("objectedACPs", p.objectedACPs),
-	//		)
-	//		p.StartClose()
-	//		return
-	//	}
 
 	var (
 		knownPeers = bloom.EmptyFilter
@@ -1025,9 +911,6 @@ func (p *peer) handleHandshake(msg *p2p.Handshake) {
 	maxTimestamp := localTime.Add(p.MaxClockDifference)
 	if err := p.ip.Verify(p.cert, maxTimestamp); err != nil {
 		log := p.Log.Debug
-		//if _, ok := p.Beacons.GetValidator(constants.PrimaryNetworkID, p.id); ok {
-		//	log = p.Log.Warn
-		//}
 		log(malformedMessageLog,
 			zap.Stringer("nodeID", p.id),
 			zap.Stringer("messageOp", message.HandshakeOp),

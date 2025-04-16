@@ -26,22 +26,6 @@ import (
 type Router interface {
 	ExternalHandler
 	InternalHandler
-
-	//Initialize(
-	//	nodeID ids.NodeID,
-	//	// log logging.Logger,
-	//	// timeouts timeout.Manager,
-	//	// shutdownTimeout time.Duration,
-	//	// criticalChains set.Set[ids.ID],
-	//	// sybilProtectionEnabled bool,
-	//	// trackedSubnets set.Set[ids.ID],
-	//	// onFatal func(exitCode int),
-	//	// healthConfig HealthConfig,
-	//	reg prometheus.Registerer,
-	// ) error
-	// Shutdown(context.Context)
-	//// AddChain(ctx context.Context, chain handler.Handler)
-	// health.Checker
 }
 
 // InternalHandler deals with messages internal to this node

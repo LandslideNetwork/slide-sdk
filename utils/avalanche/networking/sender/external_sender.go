@@ -9,7 +9,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/subnets"
 
-	//"github.com/ava-labs/avalanchego/subnets"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 )
 

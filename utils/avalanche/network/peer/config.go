@@ -23,18 +23,15 @@ type Config struct {
 	// Size, in bytes, of the buffer this peer writes messages into
 	WriteBufferSize int
 	Clock           mockable.Clock
-	//Metrics         *Metrics
-	MessageCreator message.Creator
+	MessageCreator  message.Creator
 
-	Log log.Logger
-	//InboundMsgThrottler  throttling.InboundMsgThrottler
+	Log                  log.Logger
 	Network              Network
 	Router               router.InboundHandler
 	VersionCompatibility version.Compatibility
 	MyNodeID             ids.NodeID
 	// MySubnets does not include the primary network ID
-	MySubnets set.Set[ids.ID]
-	//Beacons            validators.Manager
+	MySubnets          set.Set[ids.ID]
 	Validators         validators.Manager
 	NetworkID          uint32
 	PingFrequency      time.Duration
@@ -47,9 +44,6 @@ type Config struct {
 	// Unix time of the last message sent and received respectively
 	// Must only be accessed atomically
 	LastSent, LastReceived int64
-
-	//// Tracks CPU/disk usage caused by each peer.
-	//ResourceTracker tracker.ResourceTracker
 
 	// Calculates uptime of peers
 	UptimeCalculator uptime.Calculator

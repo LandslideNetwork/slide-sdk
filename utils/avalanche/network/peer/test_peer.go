@@ -86,21 +86,6 @@ func StartTestPeer(
 		return nil, err
 	}
 
-	//metrics, err := NewMetrics(prometheus.NewRegistry())
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	//resourceTracker, err := tracker.NewResourceTracker(
-	//	prometheus.NewRegistry(),
-	//	resource.NoUsage,
-	//	meter.ContinuousFactory{},
-	//	10*time.Second,
-	//)
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	tlsKey := tlsCert.PrivateKey.(crypto.Signer)
 	blsKey, err := bls.NewSigner()
 	if err != nil {
@@ -113,10 +98,8 @@ func StartTestPeer(
 
 	peer := Start(
 		&Config{
-			//Metrics:              metrics,
-			MessageCreator: mc,
-			Log:            tmlog.NewNopLogger(),
-			//InboundMsgThrottler:  throttling.NewNoInboundThrottler(),
+			MessageCreator:       mc,
+			Log:                  tmlog.NewNopLogger(),
 			Network:              TestNetwork,
 			Router:               router,
 			VersionCompatibility: version.GetCompatibility(InitiallyActiveTime),
@@ -127,8 +110,7 @@ func StartTestPeer(
 			PingFrequency:      constants.DefaultPingFrequency,
 			PongTimeout:        constants.DefaultPingPongTimeout,
 			MaxClockDifference: time.Minute,
-			//ResourceTracker:      resourceTracker,
-			UptimeCalculator: uptime.NoOpCalculator,
+			UptimeCalculator:   uptime.NoOpCalculator,
 			IPSigner: NewIPSigner(
 				utils.NewAtomic(netip.AddrPortFrom(
 					netip.IPv6Loopback(),
