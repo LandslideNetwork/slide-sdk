@@ -10,8 +10,10 @@ import (
 	"time"
 )
 
+var random *rand.Rand
+
 func init() {
-	rand.Seed(time.Now().UnixNano())
+	random = rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
 type trackedIP struct {
@@ -60,10 +62,10 @@ func (ip *trackedIP) increaseDelay(initialDelay, maxDelay time.Duration) {
 	// attempts to a node that previously shut down. This doesn't
 	// require cryptographically secure random number generation.
 	// set the timeout to [1, 2) * timeout
-	ip.delay = time.Duration(float64(ip.delay) * (1 + rand.Float64())) // #nosec G404
+	ip.delay = time.Duration(float64(ip.delay) * (1 + random.Float64())) // #nosec G404
 	if ip.delay > maxDelay {
 		// set the timeout to [.75, 1) * maxDelay
-		ip.delay = time.Duration(float64(maxDelay) * (3 + rand.Float64()) / 4) // #nosec G404
+		ip.delay = time.Duration(float64(maxDelay) * (3 + random.Float64()) / 4) // #nosec G404
 	}
 }
 

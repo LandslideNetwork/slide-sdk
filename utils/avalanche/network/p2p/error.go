@@ -6,12 +6,12 @@ package p2p
 import "github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 
 var (
-	//// ErrUnexpected should be used to indicate that a request failed due to a
-	//// generic error
-	//ErrUnexpected = &common.AppError{
-	//	Code:    -1,
-	//	Message: "unexpected error",
-	//}
+	// ErrUnexpected should be used to indicate that a request failed due to a
+	// generic error
+	ErrUnexpected = &common.AppError{
+		Code:    -1,
+		Message: "unexpected error",
+	}
 	// ErrUnregisteredHandler should be used to indicate that a request failed
 	// due to it not matching a registered handler
 	ErrUnregisteredHandler = &common.AppError{

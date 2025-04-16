@@ -112,8 +112,10 @@ func (n *Network) AddHandler(handlerID uint64, handler Handler) error {
 
 // Peers contains metadata about the current set of connected peers
 type Peers struct {
+	//lint:ignore U1000 will be used to manage peers
 	lock sync.RWMutex
-	set  set.SampleableSet[ids.NodeID]
+	//lint:ignore U1000 will be used to store peers
+	set set.SampleableSet[ids.NodeID]
 }
 
 func ProtocolPrefix(handlerID uint64) []byte {

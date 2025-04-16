@@ -106,8 +106,7 @@ func StartTestPeer(
 		return nil, err
 	}
 
-	var onFailure SendFailedFunc
-	onFailure = func(msg message.OutboundMessage) {
+	var onFailure SendFailedFunc = func(msg message.OutboundMessage) {
 		log.Fatal("Failed to send message:", msg)
 	}
 

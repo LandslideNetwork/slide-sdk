@@ -48,6 +48,7 @@ type noopListener struct {
 	closed chan struct{}
 }
 
+//lint:ignore U1000 will be used for test purposes
 func newNoopListener() net.Listener {
 	return &noopListener{
 		closed: make(chan struct{}),

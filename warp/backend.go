@@ -3,6 +3,7 @@ package warp
 import (
 	"context"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/acp118"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 	payload2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/payload"
 
@@ -27,6 +28,8 @@ type Backend interface {
 	// TODO: After E-Upgrade, the backend no longer needs to store the mapping from messageHash
 	// to unsignedMessage (and this method can be removed).
 	GetMessage(messageHash ids.ID) (*warp.UnsignedMessage, error)
+
+	acp118.Verifier
 }
 
 // backend implements Backend, keeps track of warp messages, and generates message signatures.

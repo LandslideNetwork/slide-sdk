@@ -10,6 +10,7 @@ import (
 	appsenderpb "github.com/landslidenetwork/slide-sdk/proto/appsender"
 	warppb "github.com/landslidenetwork/slide-sdk/proto/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/acp118"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	warputils "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
@@ -667,9 +668,15 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 
 	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, signatureGetter, rpcClients, requirePrimaryNetworkSigners)
 
+	//// We allow all peers to request warp messaging signatures
+	//signatureRequestVerifier := signatureRequestVerifier{
+	//	stateLock: stateLock,
+	//	state:     state,
+	//}
 	// Allow signing of all warp messages. This is not typically safe, but is
 	// allowed for this example.
-	acp118Handler := warp.NewHandler(
+	acp118Handler := acp118.NewHandler(
+		vm.warpBackend,
 		vm.warpSignerClient,
 	)
 	if err := p2pNetwork.AddHandler(p2p.SignatureRequestHandlerID, acp118Handler); err != nil {

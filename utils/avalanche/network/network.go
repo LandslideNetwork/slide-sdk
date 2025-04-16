@@ -726,7 +726,7 @@ func (n *network) track(ip *ips.ClaimedIPPort, trackAllSubnets bool) error {
 //     the subnets based on its validator status.
 func (n *network) getPeers(
 	nodeIDs set.Set[ids.NodeID],
-// subnetID ids.ID,
+	// subnetID ids.ID,
 	allower subnets.Allower,
 ) []peer.Peer {
 	peers := make([]peer.Peer, 0, nodeIDs.Len())
@@ -1246,6 +1246,7 @@ func (n *network) pullGossipPeerLists() {
 	}
 }
 
+//lint:ignore U1000 will be used as getter to implement network infrastructure
 func (n *network) getLastReceived() (time.Time, bool) {
 	lastReceived := atomic.LoadInt64(&n.peerConfig.LastReceived)
 	if lastReceived == 0 {

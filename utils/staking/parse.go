@@ -142,6 +142,7 @@ func parsePublicKey(oid asn1.ObjectIdentifier, publicKey asn1.BitString) (crypto
 		return pub, nil
 	case oid.Equal(oidPublicKeyECDSA):
 		namedCurve := elliptic.P256()
+		//lint:ignore SA1019 the library imported from avalanche
 		x, y := elliptic.Unmarshal(namedCurve, der)
 		if x == nil {
 			return nil, ErrFailedUnmarshallingEllipticCurvePoint

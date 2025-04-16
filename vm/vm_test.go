@@ -5,18 +5,14 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/engine/enginetest"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/codec"
 	"github.com/landslidenetwork/slide-sdk/utils/codec/linearcodec"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	evmmessage "github.com/landslidenetwork/slide-sdk/utils/message"
 	"github.com/landslidenetwork/slide-sdk/utils/version"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"math"
@@ -165,7 +161,9 @@ func newKvApp(t *testing.T, vmdb, appdb dbm.DB) (vmpb.VMServer, *enginetest.Send
 	if err != nil {
 		t.Fatalf("Failed to marshal vm config to json: %v", err)
 	}
-	ctx := context.WithValue(context.Background(), "appSender", appSender)
+	type appSenderKey string
+	key := appSenderKey("appSender")
+	ctx := context.WithValue(context.Background(), key, appSender)
 	initRes, err := vm.Initialize(ctx, &vmpb.InitializeRequest{
 		DbServerAddr: "inmemory",
 		GenesisBytes: kvstorevmGenesis,
@@ -194,20 +192,6 @@ func NewFreshKvApp(t *testing.T) (vmpb.VMServer, *enginetest.Sender) {
 	return newKvApp(t, vmdb, appdb)
 }
 
-func newMessageCreator(t *testing.T) message.Creator {
-	t.Helper()
-
-	mc, err := message.NewCreator(
-		log.NewNopLogger(),
-		prometheus.NewRegistry(),
-		constants.DefaultNetworkCompressionType,
-		10*time.Second,
-	)
-	require.NoError(t, err)
-
-	return mc
-}
-
 func buildCodec(t *testing.T, types ...interface{}) codec.Manager {
 	lc := linearcodec.NewDefault()
 	for _, typ := range types {
@@ -217,12 +201,6 @@ func buildCodec(t *testing.T, types ...interface{}) codec.Manager {
 	//assert.NoError(t, codecManager.Register(message.Version, c))
 	codecManager := codec.NewManager(math.MaxInt, lc)
 	return codecManager
-}
-
-// marshalStruct is a helper method used to marshal an object as `interface{}`
-// so that the codec is able to include the TypeID in the resulting bytes
-func marshalStruct(codec codec.Manager, obj interface{}) ([]byte, error) {
-	return codec.Marshal(&obj)
 }
 
 //// GenesisVM creates a VM instance with the genesis test bytes and returns

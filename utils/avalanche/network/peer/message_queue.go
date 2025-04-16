@@ -12,8 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const initialQueueSize = 64
-
+// const initialQueueSize = 64
 var (
 	_ MessageQueue = (*blockingMessageQueue)(nil)
 )
