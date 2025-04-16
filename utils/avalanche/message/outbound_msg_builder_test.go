@@ -4,9 +4,10 @@
 package message
 
 import (
-	"github.com/cometbft/cometbft/libs/log"
 	"testing"
 	"time"
+
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"

@@ -4,14 +4,14 @@
 package bloom
 
 //
-//import (
+// import (
 //	"math"
 //	"testing"
 //
 //	"github.com/stretchr/testify/require"
-//)
+// )
 //
-//func NewMaliciousFilter(numHashes, numEntries int) *Filter {
+// func NewMaliciousFilter(numHashes, numEntries int) *Filter {
 //	f := &Filter{
 //		numBits:   uint64(numEntries * bitsPerByte),
 //		hashSeeds: make([]uint64, numHashes),
@@ -22,9 +22,9 @@ package bloom
 //		f.entries[i] = math.MaxUint8
 //	}
 //	return f
-//}
+// }
 //
-//func TestParseErrors(t *testing.T) {
+// func TestParseErrors(t *testing.T) {
 //	tests := []struct {
 //		bytes []byte
 //		err   error
@@ -58,9 +58,9 @@ package bloom
 //			require.ErrorIs(t, err, test.err)
 //		})
 //	}
-//}
+// }
 //
-//func BenchmarkParse(b *testing.B) {
+// func BenchmarkParse(b *testing.B) {
 //	f, err := New(OptimalParameters(10_000, .01))
 //	require.NoError(b, err)
 //	bytes := f.Marshal()
@@ -69,18 +69,18 @@ package bloom
 //	for i := 0; i < b.N; i++ {
 //		_, _ = Parse(bytes)
 //	}
-//}
+// }
 //
-//func BenchmarkContains(b *testing.B) {
+// func BenchmarkContains(b *testing.B) {
 //	f := NewMaliciousFilter(maxHashes, 1)
 //
 //	b.ResetTimer()
 //	for i := 0; i < b.N; i++ {
 //		f.Contains(1)
 //	}
-//}
+// }
 //
-//func FuzzParseThenMarshal(f *testing.F) {
+// func FuzzParseThenMarshal(f *testing.F) {
 //	f.Fuzz(func(t *testing.T, bytes []byte) {
 //		f, err := Parse(bytes)
 //		if err != nil {
@@ -90,9 +90,9 @@ package bloom
 //		marshalledBytes := marshal(f.hashSeeds, f.entries)
 //		require.Equal(t, bytes, marshalledBytes)
 //	})
-//}
+// }
 //
-//func FuzzMarshalThenParse(f *testing.F) {
+// func FuzzMarshalThenParse(f *testing.F) {
 //	f.Fuzz(func(t *testing.T, numHashes int, entries []byte) {
 //		require := require.New(t)
 //
@@ -110,4 +110,4 @@ package bloom
 //		require.Equal(hashSeeds, rf.hashSeeds)
 //		require.Equal(entries, rf.entries)
 //	})
-//}
+// }

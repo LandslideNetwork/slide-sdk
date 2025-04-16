@@ -4,8 +4,9 @@
 package network
 
 import (
-	"github.com/cometbft/cometbft/libs/log"
 	"testing"
+
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"

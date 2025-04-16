@@ -5,6 +5,7 @@ package router
 
 import (
 	"context"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"

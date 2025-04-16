@@ -5,11 +5,12 @@ package main
 
 import (
 	"context"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/payload"
 	"log"
 	"net/netip"
 	"time"
+
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/payload"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/protobuf/proto"

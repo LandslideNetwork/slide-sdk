@@ -5,6 +5,7 @@ package vm
 
 import (
 	"context"
+
 	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/landslidenetwork/slide-sdk/utils/codec"

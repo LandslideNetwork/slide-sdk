@@ -5,6 +5,7 @@ package uptime
 
 import (
 	"errors"
+
 	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/landslidenetwork/slide-sdk/utils/evm/validators/uptime/interfaces"

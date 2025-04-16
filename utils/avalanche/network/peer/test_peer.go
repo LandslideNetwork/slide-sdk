@@ -6,11 +6,12 @@ package peer
 import (
 	"context"
 	"crypto"
-	tmlog "github.com/cometbft/cometbft/libs/log"
 	"log"
 	"net"
 	"net/netip"
 	"time"
+
+	tmlog "github.com/cometbft/cometbft/libs/log"
 
 	"github.com/prometheus/client_golang/prometheus"
 

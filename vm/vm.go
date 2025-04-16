@@ -6,6 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	http2 "net/http"
+	"os"
+	"slices"
+	"sync"
+	"time"
+
 	"github.com/landslidenetwork/slide-sdk/grpcutils/p2psender"
 	appsenderpb "github.com/landslidenetwork/slide-sdk/proto/appsender"
 	warppb "github.com/landslidenetwork/slide-sdk/proto/warp"
@@ -20,11 +26,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/evm/validators/interfaces"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/aggregator"
 	"github.com/landslidenetwork/slide-sdk/utils/message"
-	http2 "net/http"
-	"os"
-	"slices"
-	"sync"
-	"time"
 
 	"github.com/landslidenetwork/slide-sdk/grpcutils/gvalidators"
 
@@ -252,7 +253,7 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 	} else {
 		vm.logger.Info("Server Address initial:", req.ServerAddr)
 		addrData := []byte(req.ServerAddr)
-		err := os.WriteFile("/tmp/vm_server_address", addrData, 0644)
+		err := os.WriteFile("/tmp/vm_server_address", addrData, 0600)
 		if err != nil {
 			vm.logger.Error("failed to write server address to file", "err", err)
 			return nil, err

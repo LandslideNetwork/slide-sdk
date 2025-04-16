@@ -5,6 +5,9 @@ package vm
 import (
 	"context"
 	_ "embed"
+	"testing"
+	"time"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	vmpb "github.com/landslidenetwork/slide-sdk/proto/vm"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
@@ -14,8 +17,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/message"
 	"github.com/landslidenetwork/slide-sdk/warp"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 //

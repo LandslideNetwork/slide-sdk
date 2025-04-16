@@ -42,7 +42,7 @@ func TestNewErrors(t *testing.T) {
 }
 
 //
-//func TestNormalUsage(t *testing.T) {
+// func TestNormalUsage(t *testing.T) {
 //	require := require.New(t)
 //
 //	toAdd := make([]uint64, 1024)
@@ -73,7 +73,7 @@ func TestNewErrors(t *testing.T) {
 //
 //	parsedFilterBytes := parsedFilter.Marshal()
 //	require.Equal(filterBytes, parsedFilterBytes)
-//}
+// }
 
 func BenchmarkAdd(b *testing.B) {
 	f, err := New(8, 16*units.KiB)
@@ -86,7 +86,7 @@ func BenchmarkAdd(b *testing.B) {
 }
 
 //
-//func BenchmarkMarshal(b *testing.B) {
+// func BenchmarkMarshal(b *testing.B) {
 //	f, err := New(OptimalParameters(10_000, .01))
 //	require.NoError(b, err)
 //
@@ -94,4 +94,4 @@ func BenchmarkAdd(b *testing.B) {
 //	for i := 0; i < b.N; i++ {
 //		f.Marshal()
 //	}
-//}
+// }

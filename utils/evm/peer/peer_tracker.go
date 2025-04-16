@@ -4,16 +4,17 @@
 package peer
 
 import (
+	"math"
+	"math/rand"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/version"
 	"github.com/rcrowley/go-metrics"
-	"math"
-	"math/rand"
-	//"github.com/ethereum/go-ethereum/log"
+	// "github.com/ethereum/go-ethereum/log"
 	//
-	//"github.com/ava-labs/subnets-evm/metrics"
+	// "github.com/ava-labs/subnets-evm/metrics"
 )
 
 const (

@@ -13,16 +13,17 @@ import (
 	"encoding/pem"
 	"fmt"
 	"math/big"
-	//"os"
-	//"path/filepath"
+
+	// "os"
+	// "path/filepath"
 	"time"
-	//"github.com/ava-labs/avalanchego/utils/perms"
+	// "github.com/ava-labs/avalanchego/utils/perms"
 )
 
 //// InitNodeStakingKeyPair generates a self-signed TLS key/cert pair to use in
 //// staking. The key and files will be placed at [keyPath] and [certPath],
 //// respectively. If there is already a file at [keyPath], returns nil.
-//func InitNodeStakingKeyPair(keyPath, certPath string) error {
+// func InitNodeStakingKeyPair(keyPath, certPath string) error {
 //	// If there is already a file at [keyPath], do nothing
 //	if _, err := os.Stat(keyPath); !os.IsNotExist(err) {
 //		return nil
@@ -71,9 +72,9 @@ import (
 //		return fmt.Errorf("couldn't change permissions on key: %w", err)
 //	}
 //	return nil
-//}
+// }
 //
-//func LoadTLSCertFromBytes(keyBytes, certBytes []byte) (*tls.Certificate, error) {
+// func LoadTLSCertFromBytes(keyBytes, certBytes []byte) (*tls.Certificate, error) {
 //	cert, err := tls.X509KeyPair(certBytes, keyBytes)
 //	if err != nil {
 //		return nil, fmt.Errorf("failed creating cert: %w", err)
@@ -84,9 +85,9 @@ import (
 //		return nil, fmt.Errorf("failed parsing cert: %w", err)
 //	}
 //	return &cert, nil
-//}
+// }
 //
-//func LoadTLSCertFromFiles(keyPath, certPath string) (*tls.Certificate, error) {
+// func LoadTLSCertFromFiles(keyPath, certPath string) (*tls.Certificate, error) {
 //	cert, err := tls.LoadX509KeyPair(certPath, keyPath)
 //	if err != nil {
 //		return nil, err
@@ -96,7 +97,7 @@ import (
 //		return nil, fmt.Errorf("failed parsing cert: %w", err)
 //	}
 //	return &cert, nil
-//}
+// }
 
 func NewTLSCert() (*tls.Certificate, error) {
 	certBytes, keyBytes, err := NewCertAndKeyBytes()

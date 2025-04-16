@@ -7,13 +7,14 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"sync"
+	"time"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/prometheus/client_golang/prometheus"
-	"sync"
-	"time"
 )
 
 var (
@@ -95,15 +96,15 @@ func (n *Network) AppGossip(ctx context.Context, nodeID ids.NodeID, msg []byte) 
 	return n.router.AppGossip(ctx, nodeID, msg)
 }
 
-//func (n *Network) Connected(_ context.Context, nodeID ids.NodeID, _ *version.Application) error {
+// func (n *Network) Connected(_ context.Context, nodeID ids.NodeID, _ *version.Application) error {
 //	n.Peers.add(nodeID)
 //	return nil
-//}
+// }
 //
-//func (n *Network) Disconnected(_ context.Context, nodeID ids.NodeID) error {
+// func (n *Network) Disconnected(_ context.Context, nodeID ids.NodeID) error {
 //	n.Peers.remove(nodeID)
 //	return nil
-//}
+// }
 
 // AddHandler reserves an identifier for an application protocol
 func (n *Network) AddHandler(handlerID uint64, handler Handler) error {

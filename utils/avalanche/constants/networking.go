@@ -1,8 +1,9 @@
 package constants
 
 import (
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/compression"
 	"time"
+
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/compression"
 )
 
 const (

@@ -4,13 +4,14 @@
 package validators
 
 import (
+	"math"
+	"testing"
+
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	safemath "github.com/landslidenetwork/slide-sdk/utils/math"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/stretchr/testify/require"
-	"math"
-	"testing"
 )
 
 var _ SetCallbackListener = (*setCallbackListener)(nil)

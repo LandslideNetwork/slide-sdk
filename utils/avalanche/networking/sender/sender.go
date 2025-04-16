@@ -5,6 +5,8 @@ package sender
 
 import (
 	"context"
+	"time"
+
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
@@ -13,7 +15,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/subnets"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
-	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"

@@ -5,8 +5,9 @@ package state
 
 import (
 	"fmt"
-	dbm "github.com/cometbft/cometbft-db"
 	"time"
+
+	dbm "github.com/cometbft/cometbft-db"
 
 	"github.com/landslidenetwork/slide-sdk/database"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"

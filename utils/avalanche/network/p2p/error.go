@@ -26,8 +26,8 @@ var (
 	}
 	//// ErrThrottled should be used to indicate that a request failed due to the
 	//// requesting peer exceeding a rate limit
-	//ErrThrottled = &common.AppError{
+	// ErrThrottled = &common.AppError{
 	//	Code:    -4,
 	//	Message: "throttled",
-	//}
+	// }
 )

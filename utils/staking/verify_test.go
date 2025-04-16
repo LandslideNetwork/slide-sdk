@@ -4,7 +4,7 @@
 package staking
 
 //
-//import (
+// import (
 //	"crypto"
 //	"crypto/rand"
 //	"testing"
@@ -12,9 +12,9 @@ package staking
 //	"github.com/stretchr/testify/require"
 //
 //	"github.com/landslidenetwork/slide-sdk/utils/hashing"
-//)
+// )
 //
-//func BenchmarkSign(b *testing.B) {
+// func BenchmarkSign(b *testing.B) {
 //	tlsCert, err := NewTLSCert()
 //	require.NoError(b, err)
 //
@@ -27,9 +27,9 @@ package staking
 //		_, err := signer.Sign(rand.Reader, hash, crypto.SHA256)
 //		require.NoError(b, err)
 //	}
-//}
+// }
 //
-//func BenchmarkVerify(b *testing.B) {
+// func BenchmarkVerify(b *testing.B) {
 //	tlsCert, err := NewTLSCert()
 //	require.NoError(b, err)
 //
@@ -51,4 +51,4 @@ package staking
 //		err := CheckSignature(cert, msg, signature)
 //		require.NoError(b, err)
 //	}
-//}
+// }

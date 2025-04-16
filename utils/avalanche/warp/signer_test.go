@@ -4,10 +4,11 @@
 package warp_test
 
 import (
+	"testing"
+
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/signertest"
-	"testing"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 

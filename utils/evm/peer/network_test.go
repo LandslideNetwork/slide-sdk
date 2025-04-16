@@ -6,12 +6,13 @@ package peer
 import (
 	"context"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	"math"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"

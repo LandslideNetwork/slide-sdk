@@ -19,7 +19,7 @@ type Config struct {
 	// AllowedNodes is the set of node IDs that are explicitly allowed to connect to this Subnet when
 	// ValidatorOnly is enabled.
 	AllowedNodes set.Set[ids.NodeID] `json:"allowedNodes"        yaml:"allowedNodes"`
-	//ConsensusParameters snowball.Parameters `json:"consensusParameters" yaml:"consensusParameters"`
+	// ConsensusParameters snowball.Parameters `json:"consensusParameters" yaml:"consensusParameters"`
 
 	// ProposerMinBlockDelay is the minimum delay this node will enforce when
 	// building a snowman++ block.
@@ -47,9 +47,9 @@ type Config struct {
 }
 
 func (c *Config) Valid() error {
-	//if err := c.ConsensusParameters.Verify(); err != nil {
+	// if err := c.ConsensusParameters.Verify(); err != nil {
 	//	return fmt.Errorf("consensus %w", err)
-	//}
+	// }
 	if !c.ValidatorOnly && c.AllowedNodes.Len() > 0 {
 		return errAllowedNodesWhenNotValidatorOnly
 	}

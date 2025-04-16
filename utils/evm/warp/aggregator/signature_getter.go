@@ -6,10 +6,11 @@ package aggregator
 import (
 	"context"
 	"fmt"
+	"time"
+
 	avalancheWarp "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 	payload2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/payload"
 	"github.com/landslidenetwork/slide-sdk/utils/message"
-	"time"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"

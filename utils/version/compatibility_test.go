@@ -3,15 +3,15 @@
 
 package version
 
-//import (
+// import (
 //	"fmt"
 //	"testing"
 //	"time"
 //
 //	"github.com/stretchr/testify/require"
-//)
+// )
 //
-//func TestCompatibility(t *testing.T) {
+// func TestCompatibility(t *testing.T) {
 //	v := &Application{
 //		Name:  Client,
 //		Major: 1,
@@ -112,4 +112,4 @@ package version
 //			require.ErrorIs(t, err, test.expectedErr)
 //		})
 //	}
-//}
+// }

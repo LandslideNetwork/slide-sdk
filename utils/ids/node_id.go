@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+
 	"github.com/landslidenetwork/slide-sdk/utils/hashing"
 	"github.com/landslidenetwork/slide-sdk/utils/staking"
 

@@ -6,11 +6,12 @@ package validators
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
+
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	validators "github.com/landslidenetwork/slide-sdk/utils/evm/validators/state"
-	"sync"
-	"time"
 
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	avalancheuptime "github.com/landslidenetwork/slide-sdk/utils/avalanche/uptime"

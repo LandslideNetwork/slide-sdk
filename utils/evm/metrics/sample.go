@@ -135,7 +135,7 @@ func (s *ExpDecaySample) update(t time.Time, v int64) {
 		s.t0 = t
 		s.t1 = s.t0.Add(rescaleThreshold)
 		for _, v := range values {
-			v.k = v.k * math.Exp(-s.alpha*s.t0.Sub(t0).Seconds())
+			v.k *= math.Exp(-s.alpha * s.t0.Sub(t0).Seconds())
 			s.values.Push(v)
 		}
 	}
@@ -169,11 +169,12 @@ func CalculatePercentiles(values []int64, ps []float64) []float64 {
 	for i, p := range ps {
 		pos := p * float64(size+1)
 
-		if pos < 1.0 {
+		switch {
+		case pos < 1.0:
 			scores[i] = float64(values[0])
-		} else if pos >= float64(size) {
+		case pos >= float64(size):
 			scores[i] = float64(values[size-1])
-		} else {
+		default:
 			lower := float64(values[int(pos)-1])
 			upper := float64(values[int(pos)])
 			scores[i] = lower + (pos-math.Floor(pos))*(upper-lower)

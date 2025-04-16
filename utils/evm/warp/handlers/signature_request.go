@@ -5,9 +5,10 @@ package handlers
 
 import (
 	"context"
+	"time"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/message"
-	"time"
 
 	"github.com/landslidenetwork/slide-sdk/utils/codec"
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"

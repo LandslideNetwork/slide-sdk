@@ -5,9 +5,10 @@ package p2p
 
 import (
 	"context"
-	"github.com/cometbft/cometbft/libs/log"
 	"testing"
 	"time"
+
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/stretchr/testify/require"
 

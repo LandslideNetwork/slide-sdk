@@ -3,10 +3,10 @@
 
 package sender_test
 
-//import (
+// import (
 //	"context"
 //	"github.com/cometbft/cometbft/libs/log"
-//	"math/rand"
+//	"crypto/rand"
 //	"sync"
 //	"testing"
 //	"time"

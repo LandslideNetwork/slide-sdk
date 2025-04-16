@@ -4,10 +4,11 @@
 package message
 
 import (
+	"time"
+
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	"time"
 )
 
 var _ InboundMsgBuilder = (*inMsgBuilder)(nil)

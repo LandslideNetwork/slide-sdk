@@ -6,6 +6,11 @@ package network
 import (
 	"context"
 	"crypto"
+	"net/netip"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
@@ -26,10 +31,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/version"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
-	"net/netip"
-	"sync"
-	"testing"
-	"time"
 )
 
 const (

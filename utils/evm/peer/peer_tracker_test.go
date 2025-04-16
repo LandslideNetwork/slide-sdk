@@ -4,8 +4,9 @@
 package peer
 
 import (
-	"github.com/cometbft/cometbft/libs/log"
 	"testing"
+
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/stretchr/testify/require"

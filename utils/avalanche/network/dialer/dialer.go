@@ -6,10 +6,11 @@ package dialer
 import (
 	"context"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	"net"
 	"net/netip"
 	"time"
+
+	"github.com/cometbft/cometbft/libs/log"
 
 	"go.uber.org/zap"
 )

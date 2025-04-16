@@ -6,15 +6,17 @@ package message
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	"google.golang.org/protobuf/proto"
-	"time"
 
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/compression"
 	"github.com/prometheus/client_golang/prometheus"
-	//"github.com/landslidenetwork/slide-sdk/utils/constants"
+
+	// "github.com/landslidenetwork/slide-sdk/utils/constants"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 

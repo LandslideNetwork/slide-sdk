@@ -4,9 +4,10 @@
 package timeout
 
 import (
-	"github.com/stretchr/testify/require"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/benchlist"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
@@ -19,20 +20,20 @@ func TestManagerFire(t *testing.T) {
 	)
 	require.NoError(t, err)
 	t.Logf("%t", manager.IsBenched(ids.EmptyNodeID))
-	//TODO: implement
-	//go manager.Dispatch()
-	//defer manager.Stop()
+	// TODO: implement
+	// go manager.Dispatch()
+	// defer manager.Stop()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
-	//manager.RegisterRequest(
+	// manager.RegisterRequest(
 	//	ids.EmptyNodeID,
 	//	ids.Empty,
 	//	true,
 	//	ids.RequestID{},
 	//	wg.Done,
-	//)
+	// )
 
 	wg.Wait()
 }

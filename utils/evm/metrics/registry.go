@@ -151,18 +151,18 @@ func (r *StandardRegistry) GetAll() map[string]map[string]interface{} {
 		switch metric := i.(type) {
 		case Counter:
 			values["count"] = metric.Snapshot().Count()
-		//case CounterFloat64:
-		//	values["count"] = metric.Snapshot().Count()
-		//case Gauge:
-		//	values["value"] = metric.Snapshot().Value()
-		//case GaugeFloat64:
-		//	values["value"] = metric.Snapshot().Value()
-		//case Healthcheck:
-		//	values["error"] = nil
-		//	metric.Check()
-		//	if err := metric.Error(); nil != err {
-		//		values["error"] = metric.Error().Error()
-		//	}
+		//	case CounterFloat64:
+		//		values["count"] = metric.Snapshot().Count()
+		case Gauge:
+			values["value"] = metric.Snapshot().Value()
+		//	case GaugeFloat64:
+		//		values["value"] = metric.Snapshot().Value()
+		case Healthcheck:
+			values["error"] = nil
+			metric.Check()
+			if err := metric.Error(); nil != err {
+				values["error"] = metric.Error().Error()
+			}
 		case Histogram:
 			h := metric.Snapshot()
 			ps := h.Percentiles([]float64{0.5, 0.75, 0.95, 0.99, 0.999})

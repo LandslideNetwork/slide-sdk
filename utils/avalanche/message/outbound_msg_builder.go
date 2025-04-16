@@ -4,9 +4,10 @@
 package message
 
 import (
-	"github.com/landslidenetwork/slide-sdk/utils/ips"
 	"net/netip"
 	"time"
+
+	"github.com/landslidenetwork/slide-sdk/utils/ips"
 
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/compression"

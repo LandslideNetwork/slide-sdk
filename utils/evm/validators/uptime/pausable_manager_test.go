@@ -3,7 +3,7 @@
 
 package uptime
 
-//import (
+// import (
 //	"testing"
 //	"time"
 //
@@ -12,9 +12,9 @@ package uptime
 //	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 //	"github.com/landslidenetwork/slide-sdk/utils/evm/validators/uptime/interfaces"
 //	"github.com/stretchr/testify/require"
-//)
+// )
 //
-//func TestPausableManager(t *testing.T) {
+// func TestPausableManager(t *testing.T) {
 //	vID := ids.GenerateTestID()
 //	nodeID0 := ids.GenerateTestNodeID()
 //	startTime := time.Now()
@@ -298,26 +298,26 @@ package uptime
 //			test.testFunc(t, up, clk, s)
 //		})
 //	}
-//}
+// }
 //
-//func setupTestEnv(nodeID ids.NodeID, startTime time.Time) (interfaces.PausableManager, *mockable.Clock, uptime.State) {
+// func setupTestEnv(nodeID ids.NodeID, startTime time.Time) (interfaces.PausableManager, *mockable.Clock, uptime.State) {
 //	clk := mockable.Clock{}
 //	clk.Set(startTime)
 //	s := uptime.NewTestState()
 //	s.AddNode(nodeID, startTime)
 //	up := NewPausableManager(uptime.NewManager(s, &clk))
 //	return up, &clk, s
-//}
+// }
 //
-//func addTime(clk *mockable.Clock, duration time.Duration) time.Time {
+// func addTime(clk *mockable.Clock, duration time.Duration) time.Time {
 //	clk.Set(clk.Time().Add(duration))
 //	return clk.Time()
-//}
+// }
 //
-//func checkUptime(t *testing.T, up interfaces.PausableManager, nodeID ids.NodeID, expectedUptime time.Duration, expectedLastUpdate time.Time) {
+// func checkUptime(t *testing.T, up interfaces.PausableManager, nodeID ids.NodeID, expectedUptime time.Duration, expectedLastUpdate time.Time) {
 //	t.Helper()
 //	uptime, lastUpdated, err := up.CalculateUptime(nodeID)
 //	require.NoError(t, err)
 //	require.Equal(t, expectedLastUpdate.Unix(), lastUpdated.Unix())
 //	require.Equal(t, expectedUptime, uptime)
-//}
+// }

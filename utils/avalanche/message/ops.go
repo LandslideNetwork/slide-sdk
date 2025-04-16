@@ -6,6 +6,7 @@ package message
 import (
 	"errors"
 	"fmt"
+
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 )

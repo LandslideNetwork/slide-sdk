@@ -4,9 +4,10 @@
 package message
 
 import (
-	"github.com/cometbft/cometbft/libs/log"
 	"testing"
 	"time"
+
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
@@ -35,14 +36,14 @@ func TestInboundMsgBuilder(t *testing.T) {
 		requestID uint32 = 12345
 		deadline         = time.Hour
 		nodeID           = ids.GenerateTestNodeID()
-		//summary                    = []byte{9, 8, 7}
+		// summary                    = []byte{9, 8, 7}
 		appBytes = []byte{1, 3, 3, 7}
-		//container                  = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
-		//containerIDs               = []ids.ID{ids.GenerateTestID(), ids.GenerateTestID()}
-		//requestedHeight     uint64 = 999
-		//acceptedContainerID        = ids.GenerateTestID()
-		//summaryIDs                 = []ids.ID{ids.GenerateTestID(), ids.GenerateTestID()}
-		//heights                    = []uint64{1000, 2000}
+		// container                  = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
+		// containerIDs               = []ids.ID{ids.GenerateTestID(), ids.GenerateTestID()}
+		// requestedHeight     uint64 = 999
+		// acceptedContainerID        = ids.GenerateTestID()
+		// summaryIDs                 = []ids.ID{ids.GenerateTestID(), ids.GenerateTestID()}
+		// heights                    = []uint64{1000, 2000}
 	)
 
 	t.Run(
@@ -72,8 +73,8 @@ func TestInboundMsgBuilder(t *testing.T) {
 		},
 	)
 
-	//TODO: implement
-	//t.Run(
+	// TODO: implement
+	// t.Run(
 	//	"InboundAppResponse",
 	//	func(t *testing.T) {
 	//		require := require.New(t)
@@ -94,7 +95,7 @@ func TestInboundMsgBuilder(t *testing.T) {
 	//		require.Equal(requestID, innerMsg.RequestId)
 	//		require.Equal(appBytes, innerMsg.AppBytes)
 	//	},
-	//)
+	// )
 }
 
 func TestAppError(t *testing.T) {

@@ -5,6 +5,13 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"math"
+	"net"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/engine/enginetest"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
@@ -15,12 +22,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/version"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"math"
-	"net"
-	"sync"
-	"sync/atomic"
-	"testing"
-	"time"
 
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/abci/example/kvstore"
@@ -361,7 +362,7 @@ func TestRequestRequestsRoutingAndResponse(t *testing.T) {
 	//	},
 	//}
 
-	//codecManager := buildCodec(t, sdk.SignatureRequest{})
+	//codecManager := buildCodec(t, sdk.MessageSignatureRequest{})
 	//p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	//require.NoError(t, err)
 	//net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 16)

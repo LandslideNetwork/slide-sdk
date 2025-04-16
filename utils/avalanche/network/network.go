@@ -7,6 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
+	"net"
+	"net/netip"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
@@ -25,12 +32,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/wrappers"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
-	"math"
-	"net"
-	"net/netip"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 var (

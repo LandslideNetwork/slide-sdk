@@ -5,9 +5,10 @@ package peer
 
 import (
 	"context"
+	"sync"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
-	"sync"
 
 	"go.uber.org/zap"
 )

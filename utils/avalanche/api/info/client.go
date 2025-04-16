@@ -5,6 +5,7 @@ package info
 
 import (
 	"context"
+
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/json"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/rpc"
 )

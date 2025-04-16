@@ -5,11 +5,12 @@ package dialer
 
 import (
 	"context"
-	"github.com/cometbft/cometbft/libs/log"
 	"net"
 	"net/netip"
 	"testing"
 	"time"
+
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/stretchr/testify/require"
 )

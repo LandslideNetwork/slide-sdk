@@ -15,24 +15,24 @@ type Allower interface {
 // chains in the subnets are currently bootstrapping, the subnets is considered
 // bootstrapped.
 type Subnet interface {
-	//common.BootstrapTracker
+	// common.BootstrapTracker
 	//
 	//// AddChain adds a chain to this Subnet
-	//AddChain(chainID ids.ID) bool
+	// AddChain(chainID ids.ID) bool
 	//
 	//// Config returns config of this Subnet
-	//Config() Config
+	// Config() Config
 
 	Allower
 }
 
 type subnet struct {
-	//lock            sync.RWMutex
-	//bootstrapping   set.Set[ids.ID]
-	//bootstrapped    set.Set[ids.ID]
+	// lock            sync.RWMutex
+	// bootstrapping   set.Set[ids.ID]
+	// bootstrapped    set.Set[ids.ID]
 	config   Config
 	myNodeID ids.NodeID
-	//bootstrapSignal common.PreemptionSignal
+	// bootstrapSignal common.PreemptionSignal
 }
 
 func New(myNodeID ids.NodeID, config Config) Subnet {
@@ -42,18 +42,18 @@ func New(myNodeID ids.NodeID, config Config) Subnet {
 	}
 }
 
-//func (s *subnets) AllBootstrapped() <-chan struct{} {
+// func (s *subnets) AllBootstrapped() <-chan struct{} {
 //	return s.bootstrapSignal.Listen()
-//}
+// }
 //
-//func (s *subnets) IsBootstrapped() bool {
+// func (s *subnets) IsBootstrapped() bool {
 //	s.lock.RLock()
 //	defer s.lock.RUnlock()
 //
 //	return s.bootstrapping.Len() == 0
-//}
+// }
 //
-//func (s *subnets) Bootstrapped(chainID ids.ID) {
+// func (s *subnets) Bootstrapped(chainID ids.ID) {
 //	s.lock.Lock()
 //	defer s.lock.Unlock()
 //
@@ -64,9 +64,9 @@ func New(myNodeID ids.NodeID, config Config) Subnet {
 //	}
 //
 //	s.bootstrapSignal.Preempt()
-//}
+// }
 //
-//func (s *subnets) AddChain(chainID ids.ID) bool {
+// func (s *subnets) AddChain(chainID ids.ID) bool {
 //	s.lock.Lock()
 //	defer s.lock.Unlock()
 //
@@ -76,7 +76,7 @@ func New(myNodeID ids.NodeID, config Config) Subnet {
 //
 //	s.bootstrapping.Add(chainID)
 //	return true
-//}
+// }
 
 func (s *subnet) Config() Config {
 	return s.config

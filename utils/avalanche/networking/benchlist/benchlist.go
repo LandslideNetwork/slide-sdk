@@ -4,15 +4,16 @@
 package benchlist
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
-	"math/rand"
 
 	"sync"
 	"time"

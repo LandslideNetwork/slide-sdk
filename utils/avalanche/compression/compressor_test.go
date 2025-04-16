@@ -5,10 +5,11 @@ package compression
 
 import (
 	"fmt"
-	bftrand "github.com/cometbft/cometbft/libs/rand"
 	"math"
 	"runtime"
 	"testing"
+
+	bftrand "github.com/cometbft/cometbft/libs/rand"
 
 	"github.com/stretchr/testify/require"
 

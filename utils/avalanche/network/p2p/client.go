@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"context"
+
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 

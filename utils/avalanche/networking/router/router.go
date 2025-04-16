@@ -5,6 +5,7 @@ package router
 
 import (
 	"context"
+
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/benchlist"

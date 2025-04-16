@@ -5,15 +5,16 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
-	"strconv"
-	"sync"
-	"time"
 )
 
 var (

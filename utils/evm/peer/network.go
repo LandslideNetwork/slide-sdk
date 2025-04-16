@@ -7,6 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
@@ -17,8 +20,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/message"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"golang.org/x/sync/semaphore"
-	"sync"
-	"time"
 )
 
 //import (

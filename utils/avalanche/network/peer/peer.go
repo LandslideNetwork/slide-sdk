@@ -7,6 +7,13 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
+	"math"
+	"net/netip"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/landslidenetwork/slide-sdk/proto/p2p"
 	"github.com/landslidenetwork/slide-sdk/utils"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
@@ -18,17 +25,12 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/staking"
 	"github.com/landslidenetwork/slide-sdk/utils/version"
 	"github.com/landslidenetwork/slide-sdk/utils/wrappers"
-	"io"
-	"math"
-	"net/netip"
-	"sync"
-	"sync/atomic"
-	"time"
 
 	//"bufio"
 	"context"
-	"go.uber.org/zap"
 	"net"
+
+	"go.uber.org/zap"
 
 	//"errors"
 	//"io"

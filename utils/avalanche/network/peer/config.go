@@ -4,6 +4,8 @@
 package peer
 
 import (
+	"time"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/router"
@@ -13,7 +15,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/version"
-	"time"
 )
 
 type Config struct {

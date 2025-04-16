@@ -6,6 +6,8 @@ package network
 import (
 	"crypto/rand"
 	"errors"
+	"sync"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
 	"github.com/landslidenetwork/slide-sdk/utils/bloom"
@@ -17,7 +19,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
-	"sync"
 )
 
 const (
