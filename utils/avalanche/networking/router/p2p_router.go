@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
-//import (
+// import (
 //	"context"
 //	"errors"
 //	"fmt"
@@ -39,31 +39,31 @@ import (
 //	"github.com/ava-labs/avalanchego/utils/set"
 //	"github.com/ava-labs/avalanchego/utils/timer/mockable"
 //	"github.com/ava-labs/avalanchego/version"
-//)
+// )
 //
-//var (
+// var (
 //	errUnknownChain  = errors.New("received message for unknown chain")
 //	errUnallowedNode = errors.New("received message from non-allowed node")
 //	errClosing       = errors.New("router is closing")
 //
 //	_ Router              = (*P2PRouter)(nil)
 //	_ benchlist.Benchable = (*P2PRouter)(nil)
-//)
+// )
 //
-//type requestEntry struct {
+// type requestEntry struct {
 //	// When this request was registered
 //	time time.Time
 //	// The type of request that was made
 //	op message.Op
 //	// The engine type of the request that was made
 //	engineType p2p.EngineType
-//}
+// }
 //
-//type peer struct {
+// type peer struct {
 //	version *version.Application
 //	// The subnets that this peer is currently tracking
 //	trackedSubnets set.Set[ids.ID]
-//}
+// }
 
 // P2PRouter routes incoming messages from the validator network
 // to the consensus engines that the messages are intended for.
@@ -225,8 +225,8 @@ func (r *P2PRouter) HandleInbound(ctx context.Context, msg message.InboundMessag
 		zap.Stringer("messageOp", op),
 		zap.Stringer("message", m),
 	)
-	//chainID, err := message.GetChainID(m)
-	//if err != nil {
+	// chainID, err := message.GetChainID(m)
+	// if err != nil {
 	//	r.log.Debug("dropping message with invalid field",
 	//		zap.Stringer("nodeID", nodeID),
 	//		zap.Stringer("messageOp", op),
@@ -236,10 +236,10 @@ func (r *P2PRouter) HandleInbound(ctx context.Context, msg message.InboundMessag
 	//
 	//	msg.OnFinishedHandling()
 	//	return
-	//}
+	// }
 
-	//requestID, ok := message.GetRequestID(m)
-	//if !ok {
+	// requestID, ok := message.GetRequestID(m)
+	// if !ok {
 	//	r.log.Debug("dropping message with invalid field",
 	//		zap.Stringer("nodeID", nodeID),
 	//		zap.Stringer("messageOp", op),
@@ -629,7 +629,7 @@ func (r *P2PRouter) Unbenched(chainID ids.ID, nodeID ids.NodeID) {
 //// HealthCheck returns results of router health checks. Returns:
 //// 1) Information about health check results
 //// 2) An error if the health check reports unhealthy
-//func (r *P2PRouter) HealthCheck(context.Context) (interface{}, error) {
+// func (r *P2PRouter) HealthCheck(context.Context) (interface{}, error) {
 //	cr.lock.Lock()
 //	defer cr.lock.Unlock()
 //
@@ -664,11 +664,11 @@ func (r *P2PRouter) Unbenched(chainID ids.ID, nodeID ids.NodeID) {
 //		return details, fmt.Errorf("the router is not healthy reason: %s", strings.Join(errorReasons, ", "))
 //	}
 //	return details, nil
-//}
+// }
 //
 //// RemoveChain removes the specified chain so that incoming
 //// messages can't be routed to it
-//func (r *P2PRouter) removeChain(ctx context.Context, chainID ids.ID) {
+// func (r *P2PRouter) removeChain(ctx context.Context, chainID ids.ID) {
 //	cr.lock.Lock()
 //	chain, exists := cr.chainHandlers[chainID]
 //	if !exists {
@@ -702,14 +702,14 @@ func (r *P2PRouter) Unbenched(chainID ids.ID, nodeID ids.NodeID) {
 //	if cr.onFatal != nil && cr.criticalChains.Contains(chainID) {
 //		go cr.onFatal(1)
 //	}
-//}
+// }
 //
-//func (r *P2PRouter) clearRequest(
+// func (r *P2PRouter) clearRequest(
 //	op message.Op,
 //	nodeID ids.NodeID,
 //	chainID ids.ID,
 //	requestID uint32,
-//) (ids.RequestID, *requestEntry) {
+// ) (ids.RequestID, *requestEntry) {
 //	// Create the request ID of the request we sent that this message is (allegedly) in response to.
 //	uniqueRequestID := ids.RequestID{
 //		NodeID:    nodeID,
@@ -726,4 +726,4 @@ func (r *P2PRouter) Unbenched(chainID ids.ID, nodeID ids.NodeID) {
 //	cr.timedRequests.Delete(uniqueRequestID)
 //	cr.metrics.outstandingRequests.Set(float64(cr.timedRequests.Len()))
 //	return uniqueRequestID, &request
-//}
+// }

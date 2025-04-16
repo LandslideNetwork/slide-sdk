@@ -3,7 +3,7 @@
 
 package acp118
 
-//import (
+// import (
 //	"context"
 //	"testing"
 //
@@ -20,11 +20,11 @@ package acp118
 //	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 //	"github.com/landslidenetwork/slide-sdk/utils/ids"
 //	"github.com/landslidenetwork/slide-sdk/utils/set"
-//)
+// )
 //
-//var _ Verifier = (*testVerifier)(nil)
+// var _ Verifier = (*testVerifier)(nil)
 //
-//func TestHandler(t *testing.T) {
+// func TestHandler(t *testing.T) {
 //	tests := []struct {
 //		name         string
 //		cacher       cache.Cacher[ids.ID, []byte]
@@ -141,22 +141,22 @@ package acp118
 //			}
 //		})
 //	}
-//}
+// }
 //
 //// The zero value of testVerifier allows signing
-//type testVerifier struct {
+// type testVerifier struct {
 //	Errs []*common.AppError
-//}
+// }
 //
-//func (t *testVerifier) Verify(
+// func (t *testVerifier) Verify(
 //	context.Context,
 //	*warp.UnsignedMessage,
 //	[]byte,
-//) *common.AppError {
+// ) *common.AppError {
 //	if len(t.Errs) == 0 {
 //		return nil
 //	}
 //	err := t.Errs[0]
 //	t.Errs = t.Errs[1:]
 //	return err
-//}
+// }

@@ -3,7 +3,7 @@
 
 package state
 
-//import (
+// import (
 //	"testing"
 //	"time"
 //
@@ -16,9 +16,9 @@ package state
 //	"github.com/ava-labs/avalanchego/ids"
 //	"github.com/ava-labs/avalanchego/utils/wrappers"
 //	"github.com/ava-labs/subnet-evm/plugin/evm/validators/state/interfaces"
-//)
+// )
 //
-//func TestState(t *testing.T) {
+// func TestState(t *testing.T) {
 //	require := require.New(t)
 //	db := memdb.New()
 //	state, err := NewState(db)
@@ -111,9 +111,9 @@ package state
 //	// get deleted uptime
 //	_, _, err = state.GetUptime(nodeID)
 //	require.ErrorIs(err, database.ErrNotFound)
-//}
+// }
 //
-//func TestWriteValidator(t *testing.T) {
+// func TestWriteValidator(t *testing.T) {
 //	require := require.New(t)
 //	db := memdb.New()
 //	state, err := NewState(db)
@@ -160,9 +160,9 @@ package state
 //	// write state, should reflect to DB
 //	require.NoError(state.WriteState())
 //	require.False(db.Has(vID[:]))
-//}
+// }
 //
-//func TestParseValidator(t *testing.T) {
+// func TestParseValidator(t *testing.T) {
 //	testNodeID, err := ids.NodeIDFromString("NodeID-CaBYJ9kzHvrQFiYWowMkJGAQKGMJqZoat")
 //	require.NoError(t, err)
 //	type test struct {
@@ -273,9 +273,9 @@ package state
 //			require.Equal(tt.expected, &data)
 //		})
 //	}
-//}
+// }
 //
-//func TestStateListener(t *testing.T) {
+// func TestStateListener(t *testing.T) {
 //	require := require.New(t)
 //	db := memdb.New()
 //	state, err := NewState(db)
@@ -329,4 +329,4 @@ package state
 //	// remove validator
 //	mockListener.EXPECT().OnValidatorRemoved(expectedvID, expectedNodeID)
 //	require.NoError(state.DeleteValidator(expectedvID))
-//}
+// }

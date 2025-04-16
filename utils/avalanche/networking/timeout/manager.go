@@ -138,7 +138,7 @@ func (m *manager) IsBenched(nodeID ids.NodeID) bool {
 //	measureLatency bool,
 //	requestID ids.RequestID,
 //	timeoutHandler func(),
-//) {
+// ) {
 //	newTimeoutHandler := func() {
 //		if requestID.Op != byte(message.AppResponseOp) {
 //			// If the request timed out and wasn't an AppRequest, tell the

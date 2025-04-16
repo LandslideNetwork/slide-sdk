@@ -46,9 +46,9 @@ package sender_test
 //	. "github.com/landslidenetwork/slide-sdk/utils/avalanche/networking/sender"
 //)
 //
-//const testThreadPoolSize = 2
+// const testThreadPoolSize = 2
 //
-//func TestTimeout(t *testing.T) {
+// func TestTimeout(t *testing.T) {
 //	require := require.New(t)
 //
 //	vdrs := validators.NewManager()
@@ -232,9 +232,9 @@ package sender_test
 //
 //	require.Equal(vdrIDs, failedVDRs)
 //	require.Equal(chains, failedChains)
-//}
+// }
 //
-//func TestReliableMessages(t *testing.T) {
+// func TestReliableMessages(t *testing.T) {
 //	require := require.New(t)
 //
 //	vdrs := validators.NewManager()
@@ -819,9 +819,9 @@ package sender_test
 //			<-calledHandleInbound
 //		})
 //	}
-//}
+// }
 //
-//func TestSender_Bootstrap_Responses(t *testing.T) {
+// func TestSender_Bootstrap_Responses(t *testing.T) {
 //	var (
 //		destinationNodeID = ids.GenerateTestNodeID()
 //		deadline          = time.Second
@@ -1018,9 +1018,9 @@ package sender_test
 //			tt.sendF(require, sender, destinationNodeID)
 //		})
 //	}
-//}
+// }
 //
-//func TestSender_Single_Request(t *testing.T) {
+// func TestSender_Single_Request(t *testing.T) {
 //	var (
 //		destinationNodeID = ids.GenerateTestNodeID()
 //		deadline          = time.Second
@@ -1279,4 +1279,4 @@ package sender_test
 //			}
 //		})
 //	}
-//}
+// }

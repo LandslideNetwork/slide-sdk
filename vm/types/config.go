@@ -26,14 +26,13 @@ type (
 
 	// VMConfig contains the configuration of the VM.
 	VMConfig struct {
-		NetworkName               string          `json:"network_name"`
-		TimeoutBroadcastTxCommit  uint16          `json:"timeout_broadcast_tx_commit"`
-		ConsensusParams           ConsensusParams `json:"consensus_params"`
-		MaxSubscriptionClients    int             `json:"max_subscription_clients"`
-		MaxSubscriptionsPerClient int             `json:"max_subscriptions_per_client"`
-		//BLSSecretKey              []byte            `json:"bls_secret_key"`
-		AddressBook     map[string]string `json:"address_book"`
-		P2PAllowedNodes []string          `json:"p2p_allowed_nodes"`
+		NetworkName               string            `json:"network_name"`
+		TimeoutBroadcastTxCommit  uint16            `json:"timeout_broadcast_tx_commit"`
+		ConsensusParams           ConsensusParams   `json:"consensus_params"`
+		MaxSubscriptionClients    int               `json:"max_subscription_clients"`
+		MaxSubscriptionsPerClient int               `json:"max_subscriptions_per_client"`
+		AddressBook               map[string]string `json:"address_book"`
+		P2PAllowedNodes           []string          `json:"p2p_allowed_nodes"`
 	}
 
 	// ConsensusParams contains consensus critical parameters that determine the

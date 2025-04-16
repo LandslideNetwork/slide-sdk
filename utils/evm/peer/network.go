@@ -22,7 +22,7 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-//import (
+// import (
 //	"context"
 //	"errors"
 //	"fmt"
@@ -44,7 +44,7 @@ import (
 //
 //	"github.com/ava-labs/subnets-evm/peer/stats"
 //	"github.com/ava-labs/subnets-evm/plugin/evm/message"
-//)
+// )
 
 // Minimum amount of time to handle a request
 const minRequestHandlingDuration = 100 * time.Millisecond
@@ -58,14 +58,14 @@ var (
 )
 
 type Network interface {
-	//validators.Connector
+	// validators.Connector
 	common.AppHandler
 
 	//// SendAppRequestAny synchronously sends request to an arbitrary peer with a
 	//// node version greater than or equal to minVersion.
 	//// Returns the ID of the chosen peer, and an error if the request could not
 	//// be sent to a peer with the desired [minVersion].
-	//SendAppRequestAny(ctx context.Context, minVersion *version.Application, message []byte, handler message.ResponseHandler) (ids.NodeID, error)
+	// SendAppRequestAny(ctx context.Context, minVersion *version.Application, message []byte, handler message.ResponseHandler) (ids.NodeID, error)
 
 	// SendAppRequest sends message to given nodeID, notifying handler when there's a response or timeout
 	SendAppRequest(ctx context.Context, nodeID ids.NodeID, message []byte, handler message.ResponseHandler) error
@@ -73,25 +73,25 @@ type Network interface {
 	//// Shutdown stops all peer channel listeners and marks the node to have stopped
 	//// n.Start() can be called again but the peers will have to be reconnected
 	//// by calling OnPeerConnected for each peer
-	//Shutdown()
+	// Shutdown()
 	//
 	//// SetGossipHandler sets the provided gossip handler as the gossip handler
-	//SetGossipHandler(handler message.GossipHandler)
+	// SetGossipHandler(handler message.GossipHandler)
 
 	// SetRequestHandler sets the provided request handler as the request handler
 	SetRequestHandler(handler message.RequestHandler)
 
 	//// Size returns the size of the network in number of connected peers
-	//Size() uint32
+	// Size() uint32
 	//
 	//// TrackBandwidth should be called for each valid request with the bandwidth
 	//// (length of response divided by request time), and with 0 if the response is invalid.
-	//TrackBandwidth(nodeID ids.NodeID, bandwidth float64)
+	// TrackBandwidth(nodeID ids.NodeID, bandwidth float64)
 	//
 	//// NewClient returns a client to send messages with for the given protocol
-	//NewClient(protocol uint64, options ...p2p.ClientOption) *p2p.Client
+	// NewClient(protocol uint64, options ...p2p.ClientOption) *p2p.Client
 	//// AddHandler registers a server handler for an application protocol
-	//AddHandler(protocol uint64, handler p2p.Handler) error
+	// AddHandler(protocol uint64, handler p2p.Handler) error
 }
 
 // network is an implementation of Network that processes message requests for
@@ -99,7 +99,7 @@ type Network interface {
 type network struct {
 	lock sync.RWMutex // lock for mutating state of this Network struct
 	log  log.Logger
-	//self                       ids.NodeID                         // NodeID of this node
+	// self                       ids.NodeID                         // NodeID of this node
 	requestIDGen               uint32                             // requestID counter used to track outbound requests
 	outstandingRequestHandlers map[uint32]message.ResponseHandler // maps avalanchego requestID => message.ResponseHandler
 	activeAppRequests          *semaphore.Weighted                // controls maximum number of active outbound requests
@@ -130,7 +130,7 @@ func NewNetwork(p2pNetwork *p2p.Network, appSender common.AppSender, log log.Log
 		log:       log,
 		appSender: appSender,
 		codec:     codec,
-		//self:                       self,
+		// self:                       self,
 		outstandingRequestHandlers: make(map[uint32]message.ResponseHandler),
 		activeAppRequests:          semaphore.NewWeighted(maxActiveAppRequests),
 		p2pNetwork:                 p2pNetwork,
@@ -146,7 +146,7 @@ func NewNetwork(p2pNetwork *p2p.Network, appSender common.AppSender, log log.Log
 //// the request will be sent to any peer regardless of their version.
 //// Returns the ID of the chosen peer, and an error if the request could not
 //// be sent to a peer with the desired [minVersion].
-//func (n *network) SendAppRequestAny(ctx context.Context, minVersion *version.Application, request []byte, handler message.ResponseHandler) (ids.NodeID, error) {
+// func (n *network) SendAppRequestAny(ctx context.Context, minVersion *version.Application, request []byte, handler message.ResponseHandler) (ids.NodeID, error) {
 //	// If the context was cancelled, we can skip sending this request.
 //	if err := ctx.Err(); err != nil {
 //		return ids.EmptyNodeID, err
@@ -165,7 +165,7 @@ func NewNetwork(p2pNetwork *p2p.Network, appSender common.AppSender, log log.Log
 //
 //	n.activeAppRequests.Release(1)
 //	return ids.EmptyNodeID, fmt.Errorf("no peers found matching version %s out of %d peers", minVersion, n.peers.Size())
-//}
+// }
 
 // SendAppRequest sends request message bytes to specified nodeID, notifying the responseHandler on response or failure
 func (n *network) SendAppRequest(ctx context.Context, nodeID ids.NodeID, request []byte, responseHandler message.ResponseHandler) error {
@@ -380,7 +380,7 @@ func (n *network) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes 
 }
 
 //// Connected adds the given nodeID to the peer list so that it can receive messages
-//func (n *network) Connected(ctx context.Context, nodeID ids.NodeID, nodeVersion *version.Application) error {
+// func (n *network) Connected(ctx context.Context, nodeID ids.NodeID, nodeVersion *version.Application) error {
 //	log.Debug("adding new peer", "nodeID", nodeID)
 //
 //	n.lock.Lock()
@@ -396,10 +396,10 @@ func (n *network) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes 
 //	}
 //
 //	return n.p2pNetwork.Connected(ctx, nodeID, nodeVersion)
-//}
+// }
 //
 //// Disconnected removes given [nodeID] from the peer list
-//func (n *network) Disconnected(ctx context.Context, nodeID ids.NodeID) error {
+// func (n *network) Disconnected(ctx context.Context, nodeID ids.NodeID) error {
 //	log.Debug("disconnecting peer", "nodeID", nodeID)
 //	n.lock.Lock()
 //	defer n.lock.Unlock()
@@ -414,10 +414,10 @@ func (n *network) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes 
 //	}
 //
 //	return n.p2pNetwork.Disconnected(ctx, nodeID)
-//}
+// }
 //
 //// Shutdown disconnects all peers
-//func (n *network) Shutdown() {
+// func (n *network) Shutdown() {
 //	n.lock.Lock()
 //	defer n.lock.Unlock()
 //
@@ -429,7 +429,7 @@ func (n *network) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes 
 //
 //	n.peers = NewPeerTracker() // reset peers
 //	n.closed.Set(true)         // mark network as closed
-//}
+// }
 
 func (n *network) SetGossipHandler(handler message.GossipHandler) {
 	n.lock.Lock()
@@ -445,27 +445,27 @@ func (n *network) SetRequestHandler(handler message.RequestHandler) {
 	n.appRequestHandler = handler
 }
 
-//func (n *network) Size() uint32 {
+// func (n *network) Size() uint32 {
 //	n.lock.RLock()
 //	defer n.lock.RUnlock()
 //
 //	return uint32(n.peers.Size())
-//}
+// }
 //
-//func (n *network) TrackBandwidth(nodeID ids.NodeID, bandwidth float64) {
+// func (n *network) TrackBandwidth(nodeID ids.NodeID, bandwidth float64) {
 //	n.lock.Lock()
 //	defer n.lock.Unlock()
 //
 //	n.peers.TrackBandwidth(nodeID, bandwidth)
-//}
+// }
 //
-//func (n *network) NewClient(protocol uint64, options ...p2p.ClientOption) *p2p.Client {
+// func (n *network) NewClient(protocol uint64, options ...p2p.ClientOption) *p2p.Client {
 //	return n.p2pNetwork.NewClient(protocol, options...)
-//}
+// }
 //
-//func (n *network) AddHandler(protocol uint64, handler p2p.Handler) error {
+// func (n *network) AddHandler(protocol uint64, handler p2p.Handler) error {
 //	return n.p2pNetwork.AddHandler(protocol, handler)
-//}
+// }
 
 // invariant: peer/network must use explicitly even request ids.
 // for this reason, [n.requestID] is initialized as zero and incremented by 2.
