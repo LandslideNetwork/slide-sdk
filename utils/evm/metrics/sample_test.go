@@ -1,8 +1,8 @@
 package metrics
 
 import (
-	"crypto/rand"
 	"math"
+	"math/rand"
 	"runtime"
 	"testing"
 	"time"

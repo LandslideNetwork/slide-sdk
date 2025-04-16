@@ -4,9 +4,9 @@
 package benchlist
 
 import (
-	"crypto/rand"
 	"errors"
 	"fmt"
+	"math/rand"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
