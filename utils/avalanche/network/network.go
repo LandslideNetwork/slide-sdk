@@ -1255,6 +1255,7 @@ func (n *network) getLastReceived() (time.Time, bool) {
 	return time.Unix(lastReceived, 0), true
 }
 
+//lint:ignore U1000 will be used as getter to implement network infrastructure
 func (n *network) getLastSent() (time.Time, bool) {
 	lastSent := atomic.LoadInt64(&n.peerConfig.LastSent)
 	if lastSent == 0 {
