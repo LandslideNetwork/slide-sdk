@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	//lint:ignore SA1019 avalanche deprecated dependency
 	"io"
 
+	//lint:ignore SA1019 avalanche deprecated dependency
 	"golang.org/x/crypto/ripemd160"
 )
 
