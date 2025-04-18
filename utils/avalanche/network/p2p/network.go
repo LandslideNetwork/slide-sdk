@@ -18,13 +18,10 @@ import (
 )
 
 var (
-	//	_ validators.Connector = (*Network)(nil)
-	_ common.AppHandler = (*Network)(nil)
-	//	_ NodeSampler          = (*peerSampler)(nil)
-	//
-	opLabel      = "op"
-	handlerLabel = "handlerID"
-	labelNames   = []string{opLabel, handlerLabel}
+	_            common.AppHandler = (*Network)(nil)
+	opLabel                        = "op"
+	handlerLabel                   = "handlerID"
+	labelNames                     = []string{opLabel, handlerLabel}
 )
 
 // NewNetwork returns an instance of Network
@@ -95,16 +92,6 @@ func (n *Network) AppRequestFailed(ctx context.Context, nodeID ids.NodeID, reque
 func (n *Network) AppGossip(ctx context.Context, nodeID ids.NodeID, msg []byte) error {
 	return n.router.AppGossip(ctx, nodeID, msg)
 }
-
-// func (n *Network) Connected(_ context.Context, nodeID ids.NodeID, _ *version.Application) error {
-//	n.Peers.add(nodeID)
-//	return nil
-// }
-//
-// func (n *Network) Disconnected(_ context.Context, nodeID ids.NodeID) error {
-//	n.Peers.remove(nodeID)
-//	return nil
-// }
 
 // AddHandler reserves an identifier for an application protocol
 func (n *Network) AddHandler(handlerID uint64, handler Handler) error {

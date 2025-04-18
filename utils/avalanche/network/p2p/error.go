@@ -24,10 +24,4 @@ var (
 		Code:    -3,
 		Message: "not a validator",
 	}
-	//// ErrThrottled should be used to indicate that a request failed due to the
-	//// requesting peer exceeding a rate limit
-	// ErrThrottled = &common.AppError{
-	//	Code:    -4,
-	//	Message: "throttled",
-	// }
 )

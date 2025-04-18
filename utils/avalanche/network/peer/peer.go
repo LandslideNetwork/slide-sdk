@@ -381,7 +381,7 @@ func (p *peer) readMessages() {
 			return
 		}
 
-		//TODO: investigate onFinishedHandling
+		// TODO: investigate onFinishedHandling
 		onFinishedHandling := func() {}
 
 		// Time out and close connection if we can't read message
@@ -403,14 +403,6 @@ func (p *peer) readMessages() {
 			)
 			return
 		}
-
-		//// Track the time it takes from now until the time the message is
-		//// handled (in the event this message is handled at the network level)
-		//// or the time the message is handed to the router (in the event this
-		//// message is not handled at the network level.)
-		//// [p.CPUTracker.StopProcessing] must be called when this loop iteration is
-		//// finished.
-		//p.ResourceTracker.StartProcessing(p.id, p.Clock.Time())
 
 		p.Log.Debug("parsing message",
 			zap.Stringer("nodeID", p.id),
@@ -709,7 +701,7 @@ func (p *peer) handle(msg message.InboundMessage) {
 		return
 	}
 
-	//TODO: implement app-level processing
+	// TODO: implement app-level processing
 	// Consensus and app-level messages
 	p.Router.HandleInbound(context.Background(), msg)
 }

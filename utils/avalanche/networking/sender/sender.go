@@ -157,7 +157,6 @@ func (s *P2PAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.N
 			},
 			s.SubnetID,
 			s.allower,
-			//s.subnets,
 		)
 	} else {
 		s.logger.Error("failed to build message",
@@ -194,17 +193,17 @@ func (s *P2PAppSender) SendAppRequest(ctx context.Context, nodeIDs set.Set[ids.N
 }
 
 func (s *P2PAppSender) SendAppResponse(ctx context.Context, nodeID ids.NodeID, requestID uint32, appResponseBytes []byte) error {
-	//TODO implement me
+	// TODO implement me
 	s.logger.Debug("P2PAppSender SendAppResponse call")
 	panic("implement me")
 }
 
 func (s *P2PAppSender) SendAppError(ctx context.Context, nodeID ids.NodeID, requestID uint32, errorCode int32, errorMessage string) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *P2PAppSender) SendAppGossip(ctx context.Context, config common.SendConfig, appGossipBytes []byte) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }

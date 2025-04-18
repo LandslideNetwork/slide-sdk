@@ -270,8 +270,6 @@ func (n *network) Connected(nodeID ids.NodeID) {
 	trackedSubnets := peer.TrackedSubnets()
 	n.ipTracker.Connected(newIP, trackedSubnets)
 
-	//n.metrics.markConnected(peer)
-
 	peerVersion := peer.Version()
 	n.router.Connected(nodeID, peerVersion, constants.PrimaryNetworkID)
 	for subnetID := range n.peerConfig.MySubnets {
@@ -388,8 +386,7 @@ func (n *network) Peers(
 // to this node.
 func (n *network) Dispatch() error {
 	go n.runTimers() // Periodically perform operations
-	//go n.inboundConnUpgradeThrottler.Dispatch()
-	for { // Continuously accept new connections
+	for {            // Continuously accept new connections
 		if n.onCloseCtx.Err() != nil {
 			break
 		}
@@ -400,7 +397,6 @@ func (n *network) Dispatch() error {
 			// Sleep for a small amount of time to try to wait for the
 			// error to go away.
 			time.Sleep(time.Millisecond)
-			//n.metrics.acceptFailed.Inc()
 			continue
 		}
 
@@ -422,17 +418,6 @@ func (n *network) Dispatch() error {
 				return
 			}
 
-			//if !n.inboundConnUpgradeThrottler.ShouldUpgrade(ip) {
-			//	n.peerConfig.Log.Info("failed to upgrade connection",
-			//		zap.String("reason", "rate-limiting"),
-			//		zap.Stringer("peerIP", ip),
-			//	)
-			//	n.metrics.inboundConnRateLimited.Inc()
-			//	_ = conn.Close()
-			//	return
-			//}
-			//n.metrics.inboundConnAllowed.Inc()
-
 			n.peerConfig.Log.Debug("starting to upgrade connection",
 				zap.String("direction", "inbound"),
 				zap.Stringer("peerIP", ip),
@@ -446,7 +431,6 @@ func (n *network) Dispatch() error {
 			}
 		}()
 	}
-	//n.inboundConnUpgradeThrottler.Stop()
 	n.StartClose()
 
 	n.peersLock.RLock()

@@ -36,14 +36,7 @@ func TestInboundMsgBuilder(t *testing.T) {
 		requestID uint32 = 12345
 		deadline         = time.Hour
 		nodeID           = ids.GenerateTestNodeID()
-		// summary                    = []byte{9, 8, 7}
-		appBytes = []byte{1, 3, 3, 7}
-		// container                  = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
-		// containerIDs               = []ids.ID{ids.GenerateTestID(), ids.GenerateTestID()}
-		// requestedHeight     uint64 = 999
-		// acceptedContainerID        = ids.GenerateTestID()
-		// summaryIDs                 = []ids.ID{ids.GenerateTestID(), ids.GenerateTestID()}
-		// heights                    = []uint64{1000, 2000}
+		appBytes         = []byte{1, 3, 3, 7}
 	)
 
 	t.Run(
@@ -72,30 +65,6 @@ func TestInboundMsgBuilder(t *testing.T) {
 			require.Equal(appBytes, innerMsg.AppBytes)
 		},
 	)
-
-	// TODO: implement
-	// t.Run(
-	//	"InboundAppResponse",
-	//	func(t *testing.T) {
-	//		require := require.New(t)
-	//
-	//		msg := InboundAppResponse(
-	//			chainID,
-	//			requestID,
-	//			appBytes,
-	//			nodeID,
-	//		)
-	//
-	//		require.Equal(AppResponseOp, msg.Op())
-	//		require.Equal(nodeID, msg.NodeID())
-	//		require.Equal(mockable.MaxTime, msg.Expiration())
-	//		require.IsType(&p2p.AppResponse{}, msg.Message())
-	//		innerMsg := msg.Message().(*p2p.AppResponse)
-	//		require.Equal(chainID[:], innerMsg.ChainId)
-	//		require.Equal(requestID, innerMsg.RequestId)
-	//		require.Equal(appBytes, innerMsg.AppBytes)
-	//	},
-	// )
 }
 
 func TestAppError(t *testing.T) {

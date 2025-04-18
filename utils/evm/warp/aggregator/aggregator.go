@@ -96,7 +96,7 @@ func (a *Aggregator) AggregateSignatures(ctx context.Context, unsignedMessage *w
 					"nodeID", nodeID,
 					"index", i,
 					"msgID", unsignedMessage.ID(),
-					//TODO: remove!! WARNING,
+					// TODO: remove!! WARNING,
 					"signature", signature,
 					"pubKey", validator.PublicKey,
 				)

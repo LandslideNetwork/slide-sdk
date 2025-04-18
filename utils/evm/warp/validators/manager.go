@@ -3,7 +3,7 @@
 
 package validators
 
-//TODO: get rid of validator manager. we can use validator set directly
+// TODO: get rid of validator manager. we can use validator set directly
 
 import (
 	"errors"

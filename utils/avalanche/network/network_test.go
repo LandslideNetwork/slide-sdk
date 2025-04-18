@@ -61,100 +61,23 @@ var (
 		MaxReconnectDelay:     time.Hour,
 		InitialReconnectDelay: time.Second,
 	}
-	//defaultThrottlerConfig = ThrottlerConfig{
-	//	InboundConnUpgradeThrottlerConfig: throttling.InboundConnUpgradeThrottlerConfig{
-	//		UpgradeCooldown:        time.Second,
-	//		MaxRecentConnsUpgraded: 100,
-	//	},
-	//	InboundMsgThrottlerConfig: throttling.InboundMsgThrottlerConfig{
-	//		MsgByteThrottlerConfig: throttling.MsgByteThrottlerConfig{
-	//			VdrAllocSize:        1 * units.GiB,
-	//			AtLargeAllocSize:    1 * units.GiB,
-	//			NodeMaxAtLargeBytes: constants.DefaultMaxMessageSize,
-	//		},
-	//		BandwidthThrottlerConfig: throttling.BandwidthThrottlerConfig{
-	//			RefillRate:   units.MiB,
-	//			MaxBurstSize: constants.DefaultMaxMessageSize,
-	//		},
-	//		CPUThrottlerConfig: throttling.SystemThrottlerConfig{
-	//			MaxRecheckDelay: 50 * time.Millisecond,
-	//		},
-	//		MaxProcessingMsgsPerNode: 100,
-	//		DiskThrottlerConfig: throttling.SystemThrottlerConfig{
-	//			MaxRecheckDelay: 50 * time.Millisecond,
-	//		},
-	//	},
-	//	OutboundMsgThrottlerConfig: throttling.MsgByteThrottlerConfig{
-	//		VdrAllocSize:        1 * units.GiB,
-	//		AtLargeAllocSize:    1 * units.GiB,
-	//		NodeMaxAtLargeBytes: constants.DefaultMaxMessageSize,
-	//	},
-	//	MaxInboundConnsPerSec: 100,
-	//}
-	//defaultDialerConfig = dialer.Config{
-	//	ThrottleRps:       100,
-	//	ConnectionTimeout: time.Second,
-	//}
 
 	defaultConfig = Config{
 		HealthConfig:         defaultHealthConfig,
 		PeerListGossipConfig: defaultPeerListGossipConfig,
 		TimeoutConfig:        defaultTimeoutConfig,
 		DelayConfig:          defaultDelayConfig,
-		//ThrottlerConfig:      defaultThrottlerConfig,
-		//
-		//DialerConfig: defaultDialerConfig,
-		//
-		//NetworkID:          49463,
-		MaxClockDifference: time.Minute,
-		PingFrequency:      DefaultPingFrequency,
-		AllowPrivateIPs:    true,
-
-		//CompressionType: constants.DefaultNetworkCompressionType,
+		MaxClockDifference:   time.Minute,
+		PingFrequency:        DefaultPingFrequency,
+		AllowPrivateIPs:      true,
 
 		UptimeCalculator:  uptime.NewManager(uptime.NewTestState(), &mockable.Clock{}),
 		UptimeMetricFreq:  30 * time.Second,
 		UptimeRequirement: .8,
 
 		RequireValidatorToConnect: false,
-
-		//MaximumInboundMessageTimeout: 30 * time.Second,
-		//ResourceTracker:              newDefaultResourceTracker(),
-		//CPUTargeter:                  nil, // Set in init
-		//DiskTargeter:                 nil, // Set in init
 	}
 )
-
-func init() {
-	//defaultConfig.CPUTargeter = newDefaultTargeter(defaultConfig.ResourceTracker.CPUTracker())
-	//defaultConfig.DiskTargeter = newDefaultTargeter(defaultConfig.ResourceTracker.DiskTracker())
-}
-
-//func newDefaultTargeter(t tracker.Tracker) tracker.Targeter {
-//	return tracker.NewTargeter(
-//		logging.NoLog{},
-//		&tracker.TargeterConfig{
-//			VdrAlloc:           10,
-//			MaxNonVdrUsage:     10,
-//			MaxNonVdrNodeUsage: 10,
-//		},
-//		validators.NewManager(),
-//		t,
-//	)
-//}
-//
-//func newDefaultResourceTracker() tracker.ResourceTracker {
-//	tracker, err := tracker.NewResourceTracker(
-//		prometheus.NewRegistry(),
-//		resource.NoUsage,
-//		meter.ContinuousFactory{},
-//		10*time.Second,
-//	)
-//	if err != nil {
-//		panic(err)
-//	}
-//	return tracker
-//}
 
 func newTestNetwork(t *testing.T, count int) (
 	*testDialer, []*testListener,
@@ -233,7 +156,6 @@ func newFullyConnectedTestNetwork(t *testing.T, handlers []router.InboundHandler
 
 		config := config
 
-		//config.Beacons = beacons
 		config.Validators = vdrs
 
 		var connected set.Set[ids.NodeID]
@@ -245,12 +167,6 @@ func newFullyConnectedTestNetwork(t *testing.T, handlers []router.InboundHandler
 			log.NewNopLogger(),
 			listeners[i],
 			dialer,
-			//upgrade.InitiallyActiveTime,
-			//msgCreator,
-			//registry,
-			//logging.NoLog{},
-			//listeners[i],
-			//dialer,
 			&testHandler{
 				InboundHandler: handlers[i],
 				ConnectedF: func(nodeID ids.NodeID, _ *version.Application, _ ids.ID) {
@@ -469,7 +385,6 @@ func TestTrackDoesNotDialPrivateIPs(t *testing.T) {
 
 		config := config
 
-		//config.Beacons = beacons
 		config.Validators = vdrs
 		config.AllowPrivateIPs = false
 
@@ -704,7 +619,6 @@ func TestAllowConnectionAsAValidator(t *testing.T) {
 
 		config := config
 
-		//config.Beacons = beacons
 		config.Validators = vdrs
 		config.RequireValidatorToConnect = true
 
@@ -767,7 +681,6 @@ func TestGetAllPeers(t *testing.T) {
 	// Create a non-validator peer
 	dialer, listeners, nonVdrNodeIDs, configs := newTestNetwork(t, 1)
 
-	//configs[0].Beacons = validators.NewManager()
 	configs[0].Validators = validators.NewManager()
 	nonValidatorNetwork, err := NewNetwork(
 		configs[0],

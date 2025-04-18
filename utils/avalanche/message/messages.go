@@ -16,7 +16,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/compression"
 	"github.com/prometheus/client_golang/prometheus"
 
-	// "github.com/landslidenetwork/slide-sdk/utils/constants"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 

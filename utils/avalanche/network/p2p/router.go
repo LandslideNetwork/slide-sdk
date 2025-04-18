@@ -73,7 +73,6 @@ func newRouter(
 		sender:   sender,
 		metrics:  metrics,
 		handlers: make(map[uint64]*responder),
-		//pendingAppRequests: make(map[uint32]pendingAppRequest),
 		// invariant: sdk uses odd-numbered requestIDs
 		requestID: 1,
 	}

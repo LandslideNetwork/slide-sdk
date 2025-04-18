@@ -144,15 +144,8 @@ func newKvApp(t *testing.T, vmdb, appdb dbm.DB) (vmpb.VMServer, *enginetest.Send
 		return kvstore.NewApplication(appdb), nil
 	}, WithOptClientConn(mockConn))
 	require.NotNil(t, vm)
-	//sk, err := bls.NewSecretKey()
-	//if err != nil {
-	//	t.Fatalf("Failed to generate secret key: %v", err)
-	//}
-	//skBytes := bls.SecretKeyToBytes(sk)
 	vmCfg := vmtypes.Config{}
 	vmCfg.VMConfig.SetDefaults()
-
-	//vmCfg.VMConfig.BLSSecretKey = skBytes
 
 	appSender := &enginetest.Sender{T: t}
 	appSender.CantSendAppGossip = true
@@ -199,68 +192,9 @@ func buildCodec(t *testing.T, types ...interface{}) codec.Manager {
 		assert.NoError(t, lc.RegisterType(typ))
 	}
 
-	//assert.NoError(t, codecManager.Register(message.Version, c))
 	codecManager := codec.NewManager(math.MaxInt, lc)
 	return codecManager
 }
-
-//// GenesisVM creates a VM instance with the genesis test bytes and returns
-//// the channel use to send messages to the engine, the VM, database manager,
-//// and sender.
-//// If [genesisJSON] is empty, defaults to using [genesisJSONLatest]
-//func GenesisVM(t *testing.T,
-//	finishBootstrapping bool,
-//	genesisJSON string,
-//	configJSON string,
-//	upgradeJSON string,
-//) (
-//	*LandslideVM,
-//	database.Database,
-//	*enginetest.Sender,
-//) {
-//	vm := &LandslideVM{}
-//	ctx, dbManager, genesisBytes, issuer, _ := setupGenesis(t, genesisJSON)
-//	appSender := &enginetest.Sender{T: t}
-//	appSender.CantSendAppGossip = true
-//	appSender.SendAppGossipF = func(context.Context, common.SendConfig, []byte) error { return nil }
-//	_, err := vm.Initialize(
-//		context.Background(),
-//		&vmpb.InitializeRequest{
-//			NetworkId:    0,
-//			SubnetId:     nil,
-//			ChainId:      nil,
-//			NodeId:       nil,
-//			PublicKey:    nil,
-//			XChainId:     nil,
-//			CChainId:     nil,
-//			AvaxAssetId:  nil,
-//			ChainDataDir: "",
-//			GenesisBytes: nil,
-//			UpgradeBytes: nil,
-//			ConfigBytes:  nil,
-//			DbServerAddr: "",
-//			ServerAddr:   "",
-//		},
-//		//ctx,
-//		//dbManager,
-//		//genesisBytes,
-//		//[]byte(upgradeJSON),
-//		//[]byte(configJSON),
-//		//issuer,
-//		//[]*commonEng.Fx{},
-//		//appSender,
-//	)
-//	require.NoError(t, err, "error initializing GenesisVM")
-//
-//	if finishBootstrapping {
-//		_, err = vm.SetState(context.Background(), &vmpb.SetStateRequest{State: vmpb.State_STATE_BOOTSTRAPPING})
-//		require.NoError(t, err)
-//		_, err = vm.SetState(context.Background(), &vmpb.SetStateRequest{State: vmpb.State_STATE_NORMAL_OP})
-//		require.NoError(t, err)
-//	}
-//
-//	return vm, dbManager, appSender
-//}
 
 func TestCreation(t *testing.T) {
 	vm := New(func(*AppCreatorOpts) (Application, error) {
@@ -328,61 +262,10 @@ func TestRequestRequestsRoutingAndResponse(t *testing.T) {
 	vm, _ := NewFreshKvApp(t)
 	vmLnd := vm.(*LandslideVM)
 	callNum := uint32(0)
-	//senderWg := &sync.WaitGroup{}
-	//var net Network
 	var lock sync.Mutex
 	contactedNodes := make(map[ids.NodeID]struct{})
-	//sender := testAppSender{
-	//	sendAppRequestFn: func(_ context.Context, nodes set.Set[ids.NodeID], requestID uint32, requestBytes []byte) error {
-	//		nodeID, _ := nodes.Pop()
-	//		lock.Lock()
-	//		contactedNodes[nodeID] = struct{}{}
-	//		lock.Unlock()
-	//		senderWg.Add(1)
-	//		go func() {
-	//			defer senderWg.Done()
-	//			//TODO: implement
-	//			//if err := net.AppRequest(context.Background(), nodeID, requestID, time.Now().Add(5*time.Second), requestBytes); err != nil {
-	//			//	panic(err)
-	//			//}
-	//		}()
-	//		return nil
-	//	},
-	//	sendAppResponseFn: func(nodeID ids.NodeID, requestID uint32, responseBytes []byte) error {
-	//		senderWg.Add(1)
-	//		go func() {
-	//			defer senderWg.Done()
-	//			//TODO: implement
-	//			//if err := net.AppResponse(context.Background(), nodeID, requestID, responseBytes); err != nil {
-	//			//	panic(err)
-	//			//}
-	//			atomic.AddUint32(&callNum, 1)
-	//		}()
-	//		return nil
-	//	},
-	//}
-
-	//codecManager := buildCodec(t, sdk.MessageSignatureRequest{})
-	//p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
-	//require.NoError(t, err)
-	//net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 16)
-	////TODO: implement if necessary
-	////net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
-	//client := peer.NewNetworkClient(vmLnd.Network)
-
-	//nodes := []ids.NodeID{
-	//	ids.GenerateTestNodeID(),
-	//	ids.GenerateTestNodeID(),
-	//	ids.GenerateTestNodeID(),
-	//	ids.GenerateTestNodeID(),
-	//	ids.GenerateTestNodeID(),
-	//}
-	//for _, nodeID := range nodes {
-	//	assert.NoError(t, net.Connected(context.Background(), nodeID, defaultPeerVersion))
-	//}
 
 	requestMessage := evmmessage.BlockSignatureRequest{BlockID: ids.GenerateTestID()}
-	//defer net.Shutdown()
 
 	totalRequests := 5000
 	numCallsPerRequest := 1 // on sending response
@@ -390,17 +273,8 @@ func TestRequestRequestsRoutingAndResponse(t *testing.T) {
 
 	requestWg := &sync.WaitGroup{}
 	requestWg.Add(totalCalls)
-	//nodeIdx := 0
-	////for i := 0; i < totalCalls; i++ {
-	////for i := 0; i == 0; i++ {
-	//	nodeIdx = (nodeIdx + 1) % (len(nodes))
-	//	nodeID := nodes[nodeIdx]
-	//go func(wg *sync.WaitGroup, nodeID ids.NodeID) {
-	//	defer wg.Done()
-	//requestBytes, err := evmmessage.RequestToBytes(evmmessage.Codec, requestMessage)
 	requestBytes, err := evmmessage.Codec.Marshal(requestMessage)
 	assert.NoError(t, err)
-	//nodeID, err := ids.ToNodeID(vmLnd.appOpts.NodeID)
 	nodeID := ids.GenerateTestNodeID()
 	responseBytes, err := vmLnd.p2pClient.SendAppRequest(context.Background(), nodeID, requestBytes)
 	assert.NoError(t, err)
@@ -414,17 +288,7 @@ func TestRequestRequestsRoutingAndResponse(t *testing.T) {
 	lock.Lock()
 	contactedNodes[nodeID] = struct{}{}
 	lock.Unlock()
-	//}(requestWg, nodeID)
-	//}
-	//
-	//requestWg.Wait()
-	//senderWg.Wait()
 	assert.Equal(t, totalCalls, int(atomic.LoadUint32(&callNum)))
-	//for _, nodeID := range nodes {
-	//	if _, exists := contactedNodes[nodeID]; !exists {
-	//		t.Fatalf("expected nodeID %s to be contacted but was not", nodeID)
-	//	}
-	//}
 
 	// ensure empty nodeID is not allowed
 	_, err = vmLnd.p2pClient.SendAppRequest(context.Background(), ids.EmptyNodeID, []byte("hello there"))
@@ -434,11 +298,6 @@ func TestRequestRequestsRoutingAndResponse(t *testing.T) {
 
 func TestP2PAppRequest(t *testing.T) {
 	vm, _ := NewFreshKvApp(t)
-
-	//mc := newMessageCreator(t)
-	//nodeId, err := ids.ToID([]byte(rand.Str(20)))
-	//require.NoError(t, err)
-	//outboundAppRequestMsg, err := mc.AppRequest(nodeId, 1, 5*time.Minute, []byte("content"))
 
 	codecManager := buildCodec(t, evmmessage.BlockSignatureRequest{})
 
@@ -469,74 +328,7 @@ func TestP2PAppRequest(t *testing.T) {
 	})
 	require.NoError(t, err)
 	t.Log(appRequestRes.String())
-	//require.Equal(t, appRequestRes.Height, uint64(2))
-	//
-	//_, err = vm.BlockAccept(context.Background(), &vmpb.BlockAcceptRequest{
-	//	Id: buildRes.GetId(),
-	//})
-	//require.NoError(t, err)
 }
-
-//func TestBlockSignatureRequestsToVM(t *testing.T) {
-//	vm, _ := NewFreshKvApp(t)
-//	vmLnd := vm.(*LandslideVM)
-//
-//	defer func() {
-//		_, err := vm.Shutdown(context.Background(), &emptypb.Empty{})
-//		require.NoError(t, err)
-//	}()
-//
-//	lastAcceptedID, err := vmLnd.GetBlockIDAtHeight(context.Background(), &vmpb.GetBlockIDAtHeightRequest{Height: uint64(vmLnd.state.LastBlockHeight)})
-//	require.NoError(t, err)
-//
-//	blkId, err := ids.ToID(lastAcceptedID.BlkId)
-//	require.NoError(t, err)
-//	signature, err := vmLnd.warpBackend.GetBlockSignature(blkId)
-//	require.NoError(t, err)
-//	var knownSignature [bls.SignatureLen]byte
-//	copy(knownSignature[:], signature)
-//
-//	tests := map[string]struct {
-//		blockID          ids.ID
-//		expectedResponse [bls.SignatureLen]byte
-//	}{
-//		"known": {
-//			blockID:          blkId,
-//			expectedResponse: knownSignature,
-//		},
-//		"unknown": {
-//			blockID:          ids.GenerateTestID(),
-//			expectedResponse: [bls.SignatureLen]byte{},
-//		},
-//	}
-//
-//	for name, test := range tests {
-//		calledSendAppResponseFn := false
-//		//appSender.SendAppResponseF = func(ctx context.Context, nodeID ids.NodeID, requestID uint32, responseBytes []byte) error {
-//		//	calledSendAppResponseFn = true
-//		//	var response evmmessage.SignatureResponse
-//		//	err := message.Codec.Unmarshal(responseBytes, &response)
-//		//	require.NoError(t, err)
-//		//	require.Equal(t, test.expectedResponse, response.Signature)
-//		//
-//		//	return nil
-//		//}
-//		t.Run(name, func(t *testing.T) {
-//			var signatureRequest evmmessage.Request = evmmessage.BlockSignatureRequest{
-//				BlockID: test.blockID,
-//			}
-//
-//			requestBytes, err := evmmessage.Codec.Marshal(&signatureRequest)
-//			require.NoError(t, err)
-//
-//			// Send the app request and make sure we called SendAppResponseFn
-//			deadline := time.Now().Add(60 * time.Second)
-//			err = vmLnd.Network.AppRequest(context.Background(), ids.GenerateTestNodeID(), 1, deadline, requestBytes)
-//			require.NoError(t, err)
-//			require.True(t, calledSendAppResponseFn)
-//		})
-//	}
-//}
 
 // TestShutdownWithoutInit tests VM Shutdown function. This function called without Initialize in Avalanchego Factory
 // https://github.com/ava-labs/avalanchego/blob/0c4efd743e1d737f4e8970d0e0ebf229ea44406c/vms/manager.go#L129

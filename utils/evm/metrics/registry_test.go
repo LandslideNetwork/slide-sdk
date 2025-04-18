@@ -67,9 +67,6 @@ func TestRegistryDuplicate(t *testing.T) {
 	if err := r.Register("foo", NewCounter()); nil != err {
 		t.Fatal(err)
 	}
-	// if err := r.Register("foo", NewGauge()); nil == err {
-	//	t.Fatal(err)
-	// }
 	i := 0
 	r.Each(func(name string, iface interface{}) {
 		i++
@@ -99,10 +96,6 @@ func TestRegistryGetOrRegister(t *testing.T) {
 
 	// First metric wins with GetOrRegister
 	_ = r.GetOrRegister("foo", NewCounter())
-	// m := r.GetOrRegister("foo", NewGauge())
-	// if _, ok := m.(Counter); !ok {
-	//	t.Fatal(m)
-	// }
 
 	i := 0
 	r.Each(func(name string, iface interface{}) {
@@ -124,11 +117,6 @@ func TestRegistryGetOrRegisterWithLazyInstantiation(t *testing.T) {
 
 	// First metric wins with GetOrRegister
 	_ = r.GetOrRegister("foo", NewCounter)
-	// m := r.GetOrRegister("foo", NewGauge)
-	// if _, ok := m.(Counter); !ok {
-	//	t.Fatal(m)
-	// }
-
 	i := 0
 	r.Each(func(name string, iface interface{}) {
 		i++

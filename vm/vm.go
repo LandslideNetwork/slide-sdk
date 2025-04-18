@@ -74,12 +74,8 @@ import (
 )
 
 const (
-	genesisChunkSize                     = 16 * 1024 * 1024 // 16
-	requirePrimaryNetworkSigners         = true
-	DefaultNetworkPeerListBloomResetFreq = time.Minute
-	DefaultP2PPingFrequency              = time.Second
-	// The network must be "tcp", "tcp4", "tcp6", "unix" or "unixpacket".
-	NetworkType = "tcp"
+	genesisChunkSize             = 16 * 1024 * 1024 // 16
+	requirePrimaryNetworkSigners = true
 )
 
 var (
@@ -490,30 +486,17 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		vm.logger.Info(fmt.Sprintf("failed to encode block with status ACCEPTED: %s", err))
 		return nil, fmt.Errorf("failed to encode block with status ACCEPTED: %w", err)
 	}
-	// vm.logger.Debug("initialize block", "bytes ", blockBytes)
-	//vm.logger.Info("vm initialization completed")
 
 	parentHash := block.ParentHash(blk)
 
 	vm.warpDB = dbm.NewPrefixDB(vm.database, dbPrefixWarp)
 	// TODO: implement bls secret key check
-	// if vm.config.BLSSecretKey == nil {
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	// }
 	chainID, err := ids.ToID(req.ChainId)
 	if err != nil {
 		vm.logger.Info(fmt.Sprintf("failed to parse chain ID: %s", err))
 		return nil, fmt.Errorf("failed to parse chain ID: %w", err)
 	}
 	vm.logger.Info("BLS Public KEY:", req.PublicKey)
-	//secretKey, err := bls.SecretKeyFromBytes(req.PublicKey)
-	//if err != nil {
-	//	vm.logger.Info(fmt.Sprintf("failed to parse BLS secret key: %s", err))
-	//	return nil, fmt.Errorf("failed to parse BLS secret key: %w", err)
-	//}
-	//vm.warpSigner = warputils.NewSigner(secretKey, req.NetworkId, chainID)
 
 	dbValidatorManager := dbm.NewPrefixDB(vm.database, dbPrefixValidatorManager)
 	vm.validatorsManager, err = evmvalidators.NewManager(dbValidatorManager, &mockable.Clock{})
@@ -539,109 +522,6 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 	}
 	//TODO: exclude rpcClients and AddressBook
 	rpcClients := make(map[ids.NodeID]warp.Client)
-	//for id, nodeURI := range vm.config.AddressBook {
-	//	nodeID, err := ids.ToNodeID([]byte(id))
-	//	if err != nil {
-	//		vm.logger.Info(fmt.Sprintf("failed to parse nodeID from AddressBook: %s", err))
-	//		return nil, err
-	//	}
-	//	rpcClient, err := warp.NewClient(nodeURI, string(req.ChainId))
-	//	if err != nil {
-	//		vm.logger.Info(fmt.Sprintf("failed to create warp client from AddressBook: %s", err))
-	//		return nil, err
-	//	}
-	//	rpcClients[nodeID] = rpcClient
-	//}
-
-	//nodeID, err := ids.ToNodeID(req.NodeId)
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	//p2pRouter := &router.P2PRouter{}
-	//validatorsManager := validators.NewManager()
-	//threshold := 5
-	//minimumFailingDuration := time.Second
-	//duration := 2 * time.Second
-	//maxPortion := math.Pi
-	//nwBenchlist, err := benchlist.NewBenchlist(p2pRouter, validatorsManager, threshold, minimumFailingDuration, duration, maxPortion, registerer)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//timeoutManager, err := timeout.NewManager(nwBenchlist)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//err = p2pRouter.Initialize(vm.logger, timeoutManager)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//maxMessageTimeout := time.Second
-	//msgCreator, err := message.NewCreator(vm.logger, registerer, compression.TypeZstd, maxMessageTimeout)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//// Passes messages from the snowman engines to the network
-	//
-	//var p2pConfig = &network2.Config{}
-	//listenAddress := net.JoinHostPort(n.Config.ListenHost, strconv.FormatUint(uint64(n.Config.ListenPort), 10))
-	//listener, err := net.Listen(NetworkType, listenAddress)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//dialer := dialer2.NewDialer(NetworkType, dialer2.Config{}, vm.logger)
-	//
-	//tlsCert, err := staking.NewTLSCert()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//cert, err := staking.ParseCertificate(tlsCert.Leaf.Raw)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//nodeID := ids.NodeIDFromCert(cert)
-	//
-	//blsKey, err := bls.NewSigner()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//p2pConfig = &defaultConfig
-	//p2pConfig.TLSConfig = peer.TLSConfig(*tlsCert, nil)
-	//p2pConfig.MyNodeID = nodeID
-	//p2pConfig.MyIPPort = utils.NewAtomic(ip)
-	//p2pConfig.TLSKey = tlsCert.PrivateKey.(crypto.Signer)
-	//p2pConfig.BLSKey = blsKey
-	//
-	//externalSender, err := network2.NewNetwork(p2pConfig, InitiallyP2PActiveTime, msgCreator, vm.logger, listener, dialer, p2pRouter)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//allowedNodes := set.Set[ids.NodeID]{}
-	//for _, nodeID := range vm.config.P2PAllowedNodes {
-	//	parsedNodeID, err := ids.NodeIDFromString(nodeID)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	allowedNodes.Add(parsedNodeID)
-	//}
-	//appSender := sender.New(chainID, subnetID, nodeID, vm.logger, timeoutManager, msgCreator, externalSender, p2pRouter, allowedNodes)
-
-	//TODO: implement
-	//appSenderClient := p2psender.NewClient(appsender.NewAppSenderClient(vm.clientConn))
-
-	//// Passes messages from the avalanche engines to the network
-	//avalancheMessageSender, err := sender.New(
-	//	ctx,
-	//	m.MsgCreator,
-	//	m.Net,
-	//	m.ManagerConfig.Router,
-	//	m.TimeoutManager,
-	//	p2ppb.EngineType_ENGINE_TYPE_AVALANCHE,
-	//	sb,
-	//	avalancheMetrics,
-	//)
 
 	var appSenderClient common.AppSender
 	appSenderClientIfc := ctx.Value("appSender")
@@ -669,11 +549,6 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 
 	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, signatureGetter, rpcClients, requirePrimaryNetworkSigners)
 
-	//// We allow all peers to request warp messaging signatures
-	//signatureRequestVerifier := signatureRequestVerifier{
-	//	stateLock: stateLock,
-	//	state:     state,
-	//}
 	// Allow signing of all warp messages. This is not typically safe, but is
 	// allowed for this example.
 	acp118Handler := acp118.NewHandler(
@@ -1146,7 +1021,6 @@ func (vm *LandslideVM) GetStateSummary(context.Context, *vmpb.GetStateSummaryReq
 
 func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyRequest) (*vmpb.BlockVerifyResponse, error) {
 	vm.logger.Info("BlockVerify")
-	// vm.logger.Debug("block verify", "bytes", req.Bytes)
 
 	blk, blkStatus, err := vmstate.DecodeBlockWithStatus(req.Bytes)
 	if err != nil {

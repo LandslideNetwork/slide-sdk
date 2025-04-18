@@ -17,7 +17,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/math"
 
-	// "github.com/landslidenetwork/slide-sdk/utils/sampler"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 )
 
@@ -31,10 +30,9 @@ var (
 // newSet returns a new, empty set of validators.
 func newSet(subnetID ids.ID, callbackListeners []ManagerCallbackListener) *vdrSet {
 	return &vdrSet{
-		subnetID:    subnetID,
-		vdrs:        make(map[ids.NodeID]*Validator),
-		totalWeight: new(big.Int),
-		// sampler:                  sampler.NewWeightedWithoutReplacement(),
+		subnetID:                 subnetID,
+		vdrs:                     make(map[ids.NodeID]*Validator),
+		totalWeight:              new(big.Int),
 		managerCallbackListeners: slices.Clone(callbackListeners),
 	}
 }
@@ -49,7 +47,6 @@ type vdrSet struct {
 	totalWeight *big.Int
 
 	samplerInitialized bool
-	// sampler            sampler.WeightedWithoutReplacement
 
 	managerCallbackListeners []ManagerCallbackListener
 	setCallbackListeners     []SetCallbackListener
@@ -254,22 +251,8 @@ func (s *vdrSet) Sample(size int) ([]ids.NodeID, error) {
 
 func (s *vdrSet) sample(size int) ([]ids.NodeID, error) {
 	// TODO: implement
-	// if !s.samplerInitialized {
-	//	if err := s.sampler.Initialize(s.weights); err != nil {
-	//		return nil, err
-	//	}
-	//	s.samplerInitialized = true
-	// }
-	//
-	// indices, ok := s.sampler.Sample(size)
-	// if !ok {
-	//	return nil, errInsufficientWeight
-	// }
 
 	list := make([]ids.NodeID, size)
-	// for i, index := range indices {
-	//	list[i] = s.vdrSlice[index].NodeID
-	// }
 	return list, nil
 }
 

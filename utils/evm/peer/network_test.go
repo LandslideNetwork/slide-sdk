@@ -339,7 +339,6 @@ func TestAppRequestAnyOnCtxCancellation(t *testing.T) {
 	_, cancel = context.WithCancel(context.Background())
 	doneChan := make(chan struct{})
 	go func() {
-		// _, _, err = client.SendAppRequestAny(ctx, defaultPeerVersion, requestBytes)
 		assert.ErrorIs(t, err, context.Canceled)
 		close(doneChan)
 	}()
@@ -437,45 +436,12 @@ func TestOnRequestHonoursDeadline(t *testing.T) {
 	assert.EqualValues(t, requestHandler.calls, 1)
 }
 
-func TestNetworkRouting(t *testing.T) {
-	//require := require.New(t)
-	//sender := &testAppSender{
-	//	sendAppRequestFn: func(_ context.Context, s set.Set[ids.NodeID], u uint32, bytes []byte) error {
-	//		return nil
-	//	},
-	//	sendAppResponseFn: func(id ids.NodeID, u uint32, bytes []byte) error {
-	//		return nil
-	//	},
-	//}
-	//protocol := 0
-	//handler := &testSDKHandler{}
-	//p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), sender, prometheus.NewRegistry(), "")
-	//require.NoError(err)
-	//require.NoError(p2pNetwork.AddHandler(uint64(protocol), handler))
-	//
-	//networkCodec := codec.NewManager(0)
-	//network := NewNetwork(p2pNetwork, nil, networkCodec, ids.EmptyNodeID, 1)
-	//
-	//nodeID := ids.GenerateTestNodeID()
-	//foobar := append([]byte{byte(protocol)}, []byte("foobar")...)
-	//err = network.AppRequest(context.Background(), nodeID, 0, time.Time{}, foobar)
-	//require.NoError(err)
-	//require.True(handler.appRequested)
-	//
-	//err = network.AppResponse(context.Background(), ids.GenerateTestNodeID(), 0, foobar)
-	//require.ErrorIs(err, p2p.ErrUnrequestedResponse)
-	//
-	//err = network.AppRequestFailed(context.Background(), nodeID, 0, common.ErrTimeout)
-	//require.ErrorIs(err, p2p.ErrUnrequestedResponse)
-}
-
 func buildCodec(t *testing.T, types ...interface{}) codec.Manager {
 	lc := linearcodec.NewDefault()
 	for _, typ := range types {
 		assert.NoError(t, lc.RegisterType(typ))
 	}
 
-	// assert.NoError(t, codecManager.Register(message.Version, c))
 	codecManager := codec.NewManager(math.MaxInt, lc)
 	return codecManager
 }

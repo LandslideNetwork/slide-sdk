@@ -11,12 +11,7 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"go.uber.org/zap"
 
-	// "go.uber.org/zap"
-
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	// "github.com/ava-labs/avalanchego/message"
-	// "github.com/ava-labs/avalanchego/snow/engine/common"
-	// "github.com/ava-labs/avalanchego/utils/logging"
 )
 
 // Standardized identifiers for application protocol handlers

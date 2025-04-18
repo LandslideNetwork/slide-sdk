@@ -20,20 +20,9 @@ func TestManagerFire(t *testing.T) {
 	)
 	require.NoError(t, err)
 	t.Logf("%t", manager.IsBenched(ids.EmptyNodeID))
-	// TODO: implement
-	// go manager.Dispatch()
-	// defer manager.Stop()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-
-	// manager.RegisterRequest(
-	//	ids.EmptyNodeID,
-	//	ids.Empty,
-	//	true,
-	//	ids.RequestID{},
-	//	wg.Done,
-	// )
 
 	wg.Wait()
 }
