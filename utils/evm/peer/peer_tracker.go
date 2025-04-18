@@ -68,6 +68,7 @@ func (p *peerTracker) shouldTrackNewPeer() bool {
 		return false
 	}
 	newPeerProbability := math.Exp(-float64(numResponsivePeers) * newPeerConnectFactor)
+	//nolint:gosec // copied from subnet-evm
 	return rand.Float64() < newPeerProbability
 }
 
@@ -101,6 +102,7 @@ func (p *peerTracker) GetAnyPeer(minVersion *version.Application) (ids.NodeID, b
 		ok     bool
 		random bool
 	)
+	//nolint:gosec // copied from subnet-evm
 	if rand.Float64() < randomPeerProbability {
 		random = true
 		nodeID, ok = p.getResponsivePeer()

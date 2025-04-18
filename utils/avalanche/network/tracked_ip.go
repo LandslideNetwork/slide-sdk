@@ -13,6 +13,7 @@ import (
 var random *rand.Rand
 
 func init() {
+	//nolint:gosec // copied from subnet-evm
 	random = rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 

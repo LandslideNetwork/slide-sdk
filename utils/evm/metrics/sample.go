@@ -122,6 +122,7 @@ func (s *ExpDecaySample) update(t time.Time, v int64) {
 	if s.rand != nil {
 		f64 = s.rand.Float64()
 	} else {
+		//nolint:gosec // copied from subnet-evm
 		f64 = rand.Float64()
 	}
 	s.values.Push(expDecaySample{
@@ -363,6 +364,7 @@ func (s *UniformSample) Update(v int64) {
 		if s.rand != nil {
 			r = s.rand.Int63n(s.count)
 		} else {
+			//nolint:gosec // copied from subnet-evm
 			r = rand.Int63n(s.count)
 		}
 		if r < int64(len(s.values)) {

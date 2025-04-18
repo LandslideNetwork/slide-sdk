@@ -249,6 +249,7 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 	} else {
 		vm.logger.Info("Server Address initial:", req.ServerAddr)
 		addrData := []byte(req.ServerAddr)
+		//nolint:gosec // temporary needed
 		err := os.WriteFile("/tmp/vm_server_address", addrData, 0600)
 		if err != nil {
 			vm.logger.Error("failed to write server address to file", "err", err)

@@ -464,7 +464,6 @@ func TestDialDeletesNonValidators(t *testing.T) {
 
 		config := config
 
-		//config.Beacons = beacons
 		config.Validators = vdrs
 		config.AllowPrivateIPs = false
 

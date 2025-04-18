@@ -7,8 +7,8 @@ import (
 
 	"io"
 
-	//nolint:staticcheck
-	//lint:ignore SA1019 avalanche deprecated dependency
+	//nolint:staticcheck \\ deprecated dependency from avalanchego
+	//lint:ignore SA1019 deprecated dependency from avalanchego
 	"golang.org/x/crypto/ripemd160"
 )
 
@@ -52,7 +52,7 @@ func ComputeHash160Array(buf []byte) Hash160 {
 // ComputeHash160 computes a cryptographically strong 160 bit hash of the input
 // byte slice.
 func ComputeHash160(buf []byte) []byte {
-	//nolint:gosec
+	//nolint:gosec // deprecated dependency from avalanche
 	//lint:ignore G406 avalanche deprecated dependency
 	ripe := ripemd160.New()
 	_, err := io.Writer(ripe).Write(buf)

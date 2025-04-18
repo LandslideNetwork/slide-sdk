@@ -18,6 +18,7 @@ var (
 
 // MessageSignatureRequest is used to request a warp message's signature.
 //
+//nolint:revive // full struct name is needed to differ message signature request and block signature request
 //lint:ignore revive we should figure difference btw msg and block signature request
 type MessageSignatureRequest struct {
 	MessageID ids.ID `serialize:"true"`

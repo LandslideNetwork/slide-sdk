@@ -10,7 +10,6 @@ import (
 
 var (
 	_ net.Listener = (*testListener)(nil)
-	//errClosed              = errors.New("closed")
 )
 
 type testListener struct {

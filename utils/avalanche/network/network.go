@@ -468,18 +468,17 @@ func (n *network) ManuallyTrack(nodeID ids.NodeID, ip netip.AddrPort) {
 }
 
 func (n *network) track(ip *ips.ClaimedIPPort, trackAllSubnets bool) error {
-	//// To avoid signature verification when the IP isn't needed, we
-	//// optimistically filter out IPs. This can result in us not tracking an IP
-	//// that we otherwise would have. This case can only happen if the node
-	//// became a validator between the time we verified the signature and when we
-	//// processed the IP; which should be very rare.
-	////
-	//// Note: Avoiding signature verification when the IP isn't needed is a
-	//// **significant** performance optimization.
-	//if !n.ipTracker.ShouldVerifyIP(ip, trackAllSubnets) {
-	//	n.metrics.numUselessPeerListBytes.Add(float64(ip.Size()))
-	//	return nil
-	//}
+	// To avoid signature verification when the IP isn't needed, we
+	// optimistically filter out IPs. This can result in us not tracking an IP
+	// that we otherwise would have. This case can only happen if the node
+	// became a validator between the time we verified the signature and when we
+	// processed the IP; which should be very rare.
+	//
+	// Note: Avoiding signature verification when the IP isn't needed is a
+	// **significant** performance optimization.
+	if !n.ipTracker.ShouldVerifyIP(ip, trackAllSubnets) {
+		return nil
+	}
 
 	// Perform all signature verification and hashing before grabbing the peer
 	// lock.
