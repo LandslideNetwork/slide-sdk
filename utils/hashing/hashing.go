@@ -7,7 +7,7 @@ import (
 
 	"io"
 
-	//nolint:staticcheck \\ deprecated dependency from avalanchego
+	//nolint:staticcheck // deprecated dependency from avalanchego
 	//lint:ignore SA1019 deprecated dependency from avalanchego
 	"golang.org/x/crypto/ripemd160"
 )
