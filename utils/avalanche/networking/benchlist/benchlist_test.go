@@ -4,6 +4,7 @@
 package benchlist
 
 import (
+	"github.com/cometbft/cometbft/libs/log"
 	"testing"
 	"time"
 
@@ -42,6 +43,9 @@ func TestBenchlistAdd(t *testing.T) {
 	duration := time.Minute
 	maxPortion := 0.5
 	benchIntf, err := NewBenchlist(
+		log.NewNopLogger(),
+		subnetID,
+		ids.Empty,
 		benchable,
 		vdrs,
 		threshold,
@@ -166,6 +170,9 @@ func TestBenchlistMaxStake(t *testing.T) {
 	// Shouldn't bench more than 2550 (5100/2)
 	maxPortion := 0.5
 	benchIntf, err := NewBenchlist(
+		log.NewNopLogger(),
+		subnetID,
+		ids.Empty,
 		&TestBenchable{T: t},
 		vdrs,
 		threshold,
@@ -288,6 +295,9 @@ func TestBenchlistRemove(t *testing.T) {
 	duration := 2 * time.Second
 	maxPortion := 0.76 // can bench 3 of the 5 validators
 	benchIntf, err := NewBenchlist(
+		log.NewNopLogger(),
+		subnetID,
+		ids.Empty,
 		benchable,
 		vdrs,
 		threshold,

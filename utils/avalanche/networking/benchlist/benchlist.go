@@ -98,6 +98,9 @@ type benchlist struct {
 
 // NewBenchlist returns a new Benchlist
 func NewBenchlist(
+	log log.Logger,
+	subnetID ids.ID,
+	chainID ids.ID,
 	benchable Benchable,
 	validators validators.Manager,
 	threshold int,
@@ -111,6 +114,7 @@ func NewBenchlist(
 	}
 
 	benchlist := &benchlist{
+		log: log,
 		numBenched: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "benched_num",
 			Help: "Number of currently benched validators",
@@ -124,6 +128,8 @@ func NewBenchlist(
 		benchlistSet:           set.Set[ids.NodeID]{},
 		benchable:              benchable,
 		benchedHeap:            heap.NewMap[ids.NodeID, time.Time](time.Time.Before),
+		subnetID:               subnetID,
+		chainID:                chainID,
 		vdrs:                   validators,
 		threshold:              threshold,
 		minimumFailingDuration: minimumFailingDuration,
