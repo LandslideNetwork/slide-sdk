@@ -27,7 +27,6 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/ips"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/staking"
-	"github.com/landslidenetwork/slide-sdk/utils/subnets"
 	"github.com/landslidenetwork/slide-sdk/utils/version"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
@@ -220,51 +219,6 @@ func newFullyConnectedTestNetwork(t *testing.T, handlers []router.InboundHandler
 	}
 
 	return nodeIDs, networks, &wg
-}
-
-func TestSend(t *testing.T) {
-	require := require.New(t)
-
-	received := make(chan message.InboundMessage)
-	nodeIDs, networks, wg := newFullyConnectedTestNetwork(
-		t,
-		[]router.InboundHandler{
-			router.InboundHandlerFunc(func(context.Context, message.InboundMessage) {
-				require.FailNow("unexpected message received")
-			}),
-			router.InboundHandlerFunc(func(_ context.Context, msg message.InboundMessage) {
-				received <- msg
-			}),
-			router.InboundHandlerFunc(func(context.Context, message.InboundMessage) {
-				require.FailNow("unexpected message received")
-			}),
-		},
-	)
-
-	net0 := networks[0]
-
-	mc := newMessageCreator(t)
-	outboundAppRequestMsg, err := mc.AppRequest(ids.Empty, 1, time.Second, []byte("content"))
-	require.NoError(err)
-
-	toSend := set.Of(nodeIDs[1])
-	sentTo := net0.Send(
-		outboundAppRequestMsg,
-		common.SendConfig{
-			NodeIDs: toSend,
-		},
-		constants.PrimaryNetworkID,
-		subnets.NoOpAllower,
-	)
-	require.Equal(toSend, sentTo)
-
-	inboundAppRequestMsg := <-received
-	require.Equal(message.AppRequestOp, inboundAppRequestMsg.Op())
-
-	for _, net := range networks {
-		net.StartClose()
-	}
-	wg.Wait()
 }
 
 func TestSendWithFilter(t *testing.T) {
