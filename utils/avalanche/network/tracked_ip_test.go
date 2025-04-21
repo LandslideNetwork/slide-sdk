@@ -4,9 +4,10 @@
 package network
 
 import (
+	"net/netip"
+
 	"github.com/landslidenetwork/slide-sdk/utils/ips"
 	"github.com/landslidenetwork/slide-sdk/utils/staking"
-	"net/netip"
 )
 
 var (
