@@ -109,10 +109,9 @@ func TestRequestAnyRequestsRoutingAndResponse(t *testing.T) {
 	for i := 0; i < totalCalls; i++ {
 		go func(wg *sync.WaitGroup) {
 			defer wg.Done()
-			requestBytes, err := message.RequestToBytes(codecManager, requestMessage)
+			_, err := message.RequestToBytes(codecManager, requestMessage)
 			assert.NoError(t, err)
 			// TODO: implement
-			t.Log(requestBytes)
 		}(requestWg)
 	}
 
