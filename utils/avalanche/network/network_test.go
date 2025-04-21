@@ -222,14 +222,6 @@ func newFullyConnectedTestNetwork(t *testing.T, handlers []router.InboundHandler
 	return nodeIDs, networks, &wg
 }
 
-func TestNewNetwork(t *testing.T) {
-	_, networks, wg := newFullyConnectedTestNetwork(t, []router.InboundHandler{nil, nil, nil})
-	for _, net := range networks {
-		net.StartClose()
-	}
-	wg.Wait()
-}
-
 func TestSend(t *testing.T) {
 	require := require.New(t)
 

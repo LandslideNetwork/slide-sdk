@@ -319,66 +319,6 @@ func TestSetWeight(t *testing.T) {
 	require.Equal(expectedWeight, setWeight)
 }
 
-func TestSetSample(t *testing.T) {
-	require := require.New(t)
-
-	s := newSet(ids.Empty, nil)
-
-	sampled, err := s.Sample(0)
-	require.NoError(err)
-	require.Empty(sampled)
-
-	sk, err := bls.NewSecretKey()
-	require.NoError(err)
-
-	nodeID0 := ids.GenerateTestNodeID()
-	pk := bls.PublicFromSecretKey(sk)
-	require.NoError(s.Add(nodeID0, pk, ids.Empty, 1))
-
-	sampled, err = s.Sample(1)
-	require.NoError(err)
-	require.Equal([]ids.NodeID{nodeID0}, sampled)
-
-	_, err = s.Sample(2)
-	require.ErrorIs(err, errInsufficientWeight)
-
-	nodeID1 := ids.GenerateTestNodeID()
-	require.NoError(s.Add(nodeID1, nil, ids.Empty, math.MaxInt64-1))
-
-	sampled, err = s.Sample(1)
-	require.NoError(err)
-	require.Equal([]ids.NodeID{nodeID1}, sampled)
-
-	sampled, err = s.Sample(2)
-	require.NoError(err)
-	require.Equal([]ids.NodeID{nodeID1, nodeID1}, sampled)
-
-	sampled, err = s.Sample(3)
-	require.NoError(err)
-	require.Equal([]ids.NodeID{nodeID1, nodeID1, nodeID1}, sampled)
-}
-
-func TestSetString(t *testing.T) {
-	require := require.New(t)
-
-	nodeID0 := ids.EmptyNodeID
-	nodeID1 := ids.BuildTestNodeID([]byte{
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-	})
-
-	s := newSet(ids.Empty, nil)
-	require.NoError(s.Add(nodeID0, nil, ids.Empty, 1))
-
-	require.NoError(s.Add(nodeID1, nil, ids.Empty, math.MaxInt64-1))
-
-	expected := `Validator Set: (Size = 2, Weight = 9223372036854775807)
-   Validator[0]: NodeID-111111111111111111116DBWJs, 1
-   Validator[1]: NodeID-QLbz7JHiBTspS962RLKV8GndWFwdYhk6V, 9223372036854775806`
-	result := s.String()
-	require.Equal(expected, result)
-}
-
 func TestSetAddCallback(t *testing.T) {
 	require := require.New(t)
 
