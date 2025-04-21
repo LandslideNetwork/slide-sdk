@@ -24,7 +24,6 @@ var (
 	errDuplicateValidator   = errors.New("duplicate validator")
 	errMissingValidator     = errors.New("missing validator")
 	errTotalWeightNotUint64 = errors.New("total weight is not a uint64")
-	errInsufficientWeight   = errors.New("insufficient weight")
 )
 
 // newSet returns a new, empty set of validators.
