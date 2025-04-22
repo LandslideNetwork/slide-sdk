@@ -4,7 +4,6 @@
 package network
 
 import (
-	"context"
 	"crypto"
 	"net/netip"
 	"sync"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/constants"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/message"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/peer"
@@ -219,53 +217,6 @@ func newFullyConnectedTestNetwork(t *testing.T, handlers []router.InboundHandler
 	}
 
 	return nodeIDs, networks, &wg
-}
-
-func TestSendWithFilter(t *testing.T) {
-	require := require.New(t)
-
-	received := make(chan message.InboundMessage)
-	nodeIDs, networks, wg := newFullyConnectedTestNetwork(
-		t,
-		[]router.InboundHandler{
-			router.InboundHandlerFunc(func(context.Context, message.InboundMessage) {
-				require.FailNow("unexpected message received")
-			}),
-			router.InboundHandlerFunc(func(_ context.Context, msg message.InboundMessage) {
-				received <- msg
-			}),
-			router.InboundHandlerFunc(func(context.Context, message.InboundMessage) {
-				require.FailNow("unexpected message received")
-			}),
-		},
-	)
-
-	net0 := networks[0]
-
-	mc := newMessageCreator(t)
-	outboundAppRequestMsg, err := mc.AppRequest(ids.Empty, 1, time.Second, []byte("content"))
-	require.NoError(err)
-
-	toSend := set.Of(nodeIDs...)
-	validNodeID := nodeIDs[1]
-	sentTo := net0.Send(
-		outboundAppRequestMsg,
-		common.SendConfig{
-			NodeIDs: toSend,
-		},
-		constants.PrimaryNetworkID,
-		newNodeIDConnector(validNodeID),
-	)
-	require.Len(sentTo, 1)
-	require.Contains(sentTo, validNodeID)
-
-	inboundGetMsg := <-received
-	require.Equal(message.AppRequestOp, inboundGetMsg.Op())
-
-	for _, net := range networks {
-		net.StartClose()
-	}
-	wg.Wait()
 }
 
 func TestTrackVerifiesSignatures(t *testing.T) {

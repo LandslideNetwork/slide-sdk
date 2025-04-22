@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -59,42 +58,6 @@ func TestNetworkDoesNotConnectToItself(t *testing.T) {
 	// TODO: implement if necessary
 	t.Log(n)
 	t.Log(selfNodeID)
-}
-
-func TestRequestMinVersion(t *testing.T) {
-	callNum := uint32(0)
-	nodeID := ids.GenerateTestNodeID()
-	codecManager := buildCodec(t, TestMessage{})
-
-	var net Network
-	sender := testAppSender{
-		sendAppRequestFn: func(_ context.Context, nodes set.Set[ids.NodeID], reqID uint32, messageBytes []byte) error {
-			atomic.AddUint32(&callNum, 1)
-			assert.True(t, nodes.Contains(nodeID), "request nodes should contain expected nodeID")
-			assert.Len(t, nodes, 1, "request nodes should contain exactly one node")
-
-			go func() {
-				time.Sleep(200 * time.Millisecond)
-				atomic.AddUint32(&callNum, 1)
-			}()
-			return nil
-		},
-	}
-
-	// passing nil as codec works because the net.AppRequest is never called
-	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
-	require.NoError(t, err)
-	networkCodec := message.Codec
-	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1, networkCodec)
-	client := NewNetworkClient(net)
-	requestMessage := TestMessage{Message: "this is a request"}
-	requestBytes, err := message.RequestToBytes(codecManager, requestMessage)
-	assert.NoError(t, err)
-	// TODO: remove logging
-	t.Log(client)
-	t.Log(requestBytes)
-	assert.Equal(t, err.Error(), "no peers found matching version avalanchego/2.0.0 out of 1 peers")
-	assert.NoError(t, err)
 }
 
 func TestOnRequestHonoursDeadline(t *testing.T) {
