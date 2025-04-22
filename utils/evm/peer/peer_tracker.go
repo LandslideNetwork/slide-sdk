@@ -1,0 +1,173 @@
+// (c) 2019-2022, Ava Labs, Inc. All rights reserved.
+// See the file LICENSE for licensing terms.
+
+package peer
+
+import (
+	"math"
+	"math/rand"
+
+	"github.com/cometbft/cometbft/libs/log"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/set"
+	"github.com/landslidenetwork/slide-sdk/utils/version"
+	"github.com/rcrowley/go-metrics"
+)
+
+const (
+	// controls how eagerly we connect to new peers vs. using
+	// peers with known good response bandwidth.
+	desiredMinResponsivePeers = 20
+	newPeerConnectFactor      = 0.1
+
+	// controls how often we prefer a random responsive peer over the most
+	// performant peer.
+	randomPeerProbability = 0.2
+)
+
+// information we track on a given peer
+type peerInfo struct {
+	version *version.Application
+}
+
+// peerTracker tracks the bandwidth of responses coming from peers,
+// preferring to contact peers with known good bandwidth, connecting
+// to new peers with an exponentially decaying probability.
+// Note: is not thread safe, caller must handle synchronization.
+type peerTracker struct {
+	logger                 log.Logger
+	peers                  map[ids.NodeID]*peerInfo // all peers we are connected to
+	numTrackedPeers        metrics.Gauge
+	trackedPeers           set.Set[ids.NodeID] // peers that we have sent a request to
+	numResponsivePeers     metrics.Gauge
+	responsivePeers        set.Set[ids.NodeID] // peers that responded to the last request they were sent
+	averageBandwidthMetric metrics.GaugeFloat64
+}
+
+func NewPeerTracker(logger log.Logger) *peerTracker {
+	return &peerTracker{
+		logger:                 logger,
+		peers:                  make(map[ids.NodeID]*peerInfo),
+		numTrackedPeers:        metrics.GetOrRegisterGauge("net_tracked_peers", nil),
+		trackedPeers:           make(set.Set[ids.NodeID]),
+		numResponsivePeers:     metrics.GetOrRegisterGauge("net_responsive_peers", nil),
+		responsivePeers:        make(set.Set[ids.NodeID]),
+		averageBandwidthMetric: metrics.GetOrRegisterGaugeFloat64("net_average_bandwidth", nil),
+	}
+}
+
+// shouldTrackNewPeer returns true if we are not connected to enough peers.
+// otherwise returns true probabilistically based on the number of tracked peers.
+func (p *peerTracker) shouldTrackNewPeer() bool {
+	numResponsivePeers := p.responsivePeers.Len()
+	if numResponsivePeers < desiredMinResponsivePeers {
+		return true
+	}
+	if len(p.trackedPeers) >= len(p.peers) {
+		// already tracking all the peers
+		return false
+	}
+	newPeerProbability := math.Exp(-float64(numResponsivePeers) * newPeerConnectFactor)
+	//nolint:gosec // copied from subnet-evm
+	return rand.Float64() < newPeerProbability
+}
+
+// getResponsivePeer returns a random [ids.NodeID] of a peer that has responded
+// to a request.
+func (p *peerTracker) getResponsivePeer() (ids.NodeID, bool) {
+	nodeID, ok := p.responsivePeers.Peek()
+	if !ok {
+		return ids.NodeID{}, false
+	}
+	return nodeID, true
+}
+
+func (p *peerTracker) GetAnyPeer(minVersion *version.Application) (ids.NodeID, bool) {
+	if p.shouldTrackNewPeer() {
+		for nodeID := range p.peers {
+			// if minVersion is specified and peer's version is less, skip
+			if minVersion != nil && p.peers[nodeID].version.Compare(minVersion) < 0 {
+				continue
+			}
+			// skip peers already tracked
+			if p.trackedPeers.Contains(nodeID) {
+				continue
+			}
+			p.logger.Debug("peer tracking: connecting to new peer", "trackedPeers", len(p.trackedPeers), "nodeID", nodeID)
+			return nodeID, true
+		}
+	}
+	var (
+		nodeID ids.NodeID
+		ok     bool
+		random bool
+	)
+	//nolint:gosec // copied from subnet-evm
+	if rand.Float64() < randomPeerProbability {
+		random = true
+		nodeID, ok = p.getResponsivePeer()
+	}
+	if ok {
+		p.logger.Debug("peer tracking: popping peer", "nodeID", nodeID, "random", random)
+		return nodeID, true
+	}
+	// if no nodes found in the bandwidth heap, return a tracked node at random
+	return p.trackedPeers.Peek()
+}
+
+func (p *peerTracker) TrackPeer(nodeID ids.NodeID) {
+	p.trackedPeers.Add(nodeID)
+	p.numTrackedPeers.Update(int64(p.trackedPeers.Len()))
+}
+
+func (p *peerTracker) TrackBandwidth(nodeID ids.NodeID, bandwidth float64) {
+	peer := p.peers[nodeID]
+	if peer == nil {
+		// we're not connected to this peer, nothing to do here
+		p.logger.Debug("tracking bandwidth for untracked peer", "nodeID", nodeID)
+		return
+	}
+
+	if bandwidth == 0 {
+		p.responsivePeers.Remove(nodeID)
+	} else {
+		p.responsivePeers.Add(nodeID)
+	}
+	p.numResponsivePeers.Update(int64(p.responsivePeers.Len()))
+}
+
+// Connected should be called when [nodeID] connects to this node
+func (p *peerTracker) Connected(nodeID ids.NodeID, nodeVersion *version.Application) {
+	if peer := p.peers[nodeID]; peer != nil {
+		// Peer is already connected, update the version if it has changed.
+		// Log a warning message since the consensus engine should never call Connected on a peer
+		// that we have already marked as Connected.
+		if nodeVersion.Compare(peer.version) != 0 {
+			p.peers[nodeID] = &peerInfo{
+				version: nodeVersion,
+			}
+			p.logger.Info("updating node version of already connected peer", "nodeID", nodeID, "storedVersion", peer.version, "nodeVersion", nodeVersion)
+		} else {
+			p.logger.Info("ignoring peer connected event for already connected peer with identical version", "nodeID", nodeID)
+		}
+		return
+	}
+
+	p.peers[nodeID] = &peerInfo{
+		version: nodeVersion,
+	}
+}
+
+// Disconnected should be called when [nodeID] disconnects from this node
+func (p *peerTracker) Disconnected(nodeID ids.NodeID) {
+	p.trackedPeers.Remove(nodeID)
+	p.numTrackedPeers.Update(int64(p.trackedPeers.Len()))
+	p.responsivePeers.Remove(nodeID)
+	p.numResponsivePeers.Update(int64(p.responsivePeers.Len()))
+	delete(p.peers, nodeID)
+}
+
+// Size returns the number of peers the node is connected to
+func (p *peerTracker) Size() int {
+	return len(p.peers)
+}

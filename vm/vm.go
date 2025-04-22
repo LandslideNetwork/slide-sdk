@@ -12,6 +12,25 @@ import (
 	"sync"
 	"time"
 
+	"github.com/landslidenetwork/slide-sdk/grpcutils/p2psender"
+	appsenderpb "github.com/landslidenetwork/slide-sdk/proto/appsender"
+	warppb "github.com/landslidenetwork/slide-sdk/proto/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/acp118"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/gwarp"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/peer"
+	evmvalidators "github.com/landslidenetwork/slide-sdk/utils/evm/validators"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/validators/interfaces"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/aggregator"
+	"github.com/landslidenetwork/slide-sdk/utils/message"
+
+	"github.com/landslidenetwork/slide-sdk/grpcutils/gvalidators"
+
+	"github.com/landslidenetwork/slide-sdk/warp"
+
 	dbm "github.com/cometbft/cometbft-db"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/config"
@@ -44,6 +63,7 @@ import (
 	httppb "github.com/landslidenetwork/slide-sdk/proto/http"
 	messengerpb "github.com/landslidenetwork/slide-sdk/proto/messenger"
 	"github.com/landslidenetwork/slide-sdk/proto/rpcdb"
+	validatorstatepb "github.com/landslidenetwork/slide-sdk/proto/validatorstate"
 	vmpb "github.com/landslidenetwork/slide-sdk/proto/vm"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	vmtypes "github.com/landslidenetwork/slide-sdk/vm/types"
@@ -54,16 +74,19 @@ import (
 )
 
 const (
-	genesisChunkSize = 16 * 1024 * 1024 // 16
+	genesisChunkSize             = 16 * 1024 * 1024 // 16
+	requirePrimaryNetworkSigners = true
 )
 
 var (
 	_ vmpb.VMServer = (*LandslideVM)(nil)
 
-	dbPrefixBlockStore   = []byte("block-store")
-	dbPrefixStateStore   = []byte("state-store")
-	dbPrefixTxIndexer    = []byte("tx-indexer")
-	dbPrefixBlockIndexer = []byte("block-indexer")
+	dbPrefixBlockStore       = []byte("block-store")
+	dbPrefixStateStore       = []byte("state-store")
+	dbPrefixValidatorManager = []byte("validator-manager")
+	dbPrefixTxIndexer        = []byte("tx-indexer")
+	dbPrefixBlockIndexer     = []byte("block-indexer")
+	dbPrefixWarp             = []byte("warp")
 
 	// TODO: use internal app validators instead
 	proposerAddress = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -97,6 +120,7 @@ type (
 	AppCreator func(*AppCreatorOpts) (Application, error)
 
 	LandslideVM struct {
+		peer.Network
 		allowShutdown *vmtypes.Atomic[bool]
 
 		processMetrics prometheus.Gatherer
@@ -128,12 +152,22 @@ type (
 		blockIndexer   indexer.BlockIndexer
 		indexerService *txindex.IndexerService
 
-		vmenabled      *vmtypes.Atomic[bool]
-		vmstate        *vmtypes.Atomic[vmpb.State]
-		vmconnected    *vmtypes.Atomic[bool]
-		verifiedBlocks sync.Map
-		preferred      [32]byte
-		wrappedBlocks  *vmstate.WrappedBlocksStorage
+		vmenabled         *vmtypes.Atomic[bool]
+		vmstate           *vmtypes.Atomic[vmpb.State]
+		vmconnected       *vmtypes.Atomic[bool]
+		verifiedBlocks    sync.Map
+		validatorsManager interfaces.ValidatorReader
+		preferred         [32]byte
+		wrappedBlocks     *vmstate.WrappedBlocksStorage
+
+		// Avalanche Warp Messaging backend
+		// Used to serve BLS signatures of warp messages over RPC
+		warpBackend      warp.Backend
+		warpSignerClient warputils.Signer
+		warpService      *API
+		warpDB           dbm.DB
+
+		p2pClient peer.NetworkClient
 
 		clientConn    grpc.ClientConnInterface
 		optClientConn *grpc.ClientConn
@@ -182,7 +216,7 @@ func WithOptClientConn(clientConn *grpc.ClientConn) func(vm *LandslideVM) {
 
 // Initialize initializes the VM.
 // This method should only be accessible by the AvalancheGo node and not exposed publicly.
-func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest) (*vmpb.InitializeResponse, error) {
+func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeRequest) (*vmpb.InitializeResponse, error) {
 	registerer := prometheus.NewRegistry()
 
 	// Current state of process metrics
@@ -213,6 +247,14 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		vm.connCloser.Add(vm.optClientConn)
 		vm.clientConn = vm.optClientConn
 	} else {
+		vm.logger.Info("Server Address initial:", req.ServerAddr)
+		addrData := []byte(req.ServerAddr)
+		//nolint:gosec // temporary needed
+		err := os.WriteFile("/tmp/vm_server_address", addrData, 0600)
+		if err != nil {
+			vm.logger.Error("failed to write server address to file", "err", err)
+			return nil, err
+		}
 		clientConn, err := grpc.NewClient(
 			"passthrough:///"+req.ServerAddr,
 			grpc.WithChainUnaryInterceptor(grpcClientMetrics.UnaryClientInterceptor()),
@@ -231,6 +273,10 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	}
 
 	msgClient := messengerpb.NewMessengerClient(vm.clientConn)
+
+	validatorStateClient := gvalidators.NewClient(validatorstatepb.NewValidatorStateClient(vm.clientConn))
+
+	vm.warpSignerClient = gwarp.NewClient(warppb.NewSignerClient(vm.clientConn))
 
 	vm.toEngine = make(chan messengerpb.Message, 1)
 	vm.closed = make(chan struct{})
@@ -379,6 +425,7 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 	)
 	vm.mempool.SetLogger(vm.logger.With("module", "mempool"))
 	vm.mempool.EnableTxsAvailable()
+	vm.logger.Info("MEMPOOL INITIALIZED")
 
 	go func() {
 		for {
@@ -434,15 +481,90 @@ func (vm *LandslideVM) Initialize(_ context.Context, req *vmpb.InitializeRequest
 		vm.state = newstate
 	}
 
+	vm.logger.Info("ENCODE BLOCK WITH STATUS ACCEPTED")
 	blockBytes, err := vmstate.EncodeBlockWithStatus(blk, vmpb.Status_STATUS_ACCEPTED)
 	if err != nil {
-		return nil, err
+		vm.logger.Info(fmt.Sprintf("failed to encode block with status ACCEPTED: %s", err))
+		return nil, fmt.Errorf("failed to encode block with status ACCEPTED: %w", err)
 	}
-	// vm.logger.Debug("initialize block", "bytes ", blockBytes)
-	vm.logger.Info("vm initialization completed")
 
 	parentHash := block.ParentHash(blk)
 
+	vm.warpDB = dbm.NewPrefixDB(vm.database, dbPrefixWarp)
+	// TODO: implement bls secret key check
+	chainID, err := ids.ToID(req.ChainId)
+	if err != nil {
+		vm.logger.Info(fmt.Sprintf("failed to parse chain ID: %s", err))
+		return nil, fmt.Errorf("failed to parse chain ID: %w", err)
+	}
+	vm.logger.Info("BLS Public KEY:", req.PublicKey)
+
+	dbValidatorManager := dbm.NewPrefixDB(vm.database, dbPrefixValidatorManager)
+	vm.validatorsManager, err = evmvalidators.NewManager(dbValidatorManager, &mockable.Clock{})
+	if err != nil {
+		vm.logger.Info(fmt.Sprintf("failed to create validators manager: %s", err))
+		return nil, fmt.Errorf("failed to create validators manager: %w", err)
+	}
+
+	vm.warpBackend = warp.NewBackend(
+		req.NetworkId,
+		chainID,
+		vm.warpSignerClient,
+		vm.logger,
+		vm.warpDB,
+		vm,
+		vm.validatorsManager,
+	)
+
+	subnetID, err := ids.ToID(req.SubnetId)
+	if err != nil {
+		vm.logger.Info(fmt.Sprintf("failed to parse subnet ID: %s", err))
+		return nil, fmt.Errorf("failed to parse subnet ID: %w", err)
+	}
+	//TODO: exclude rpcClients and AddressBook
+	rpcClients := make(map[ids.NodeID]warp.Client)
+
+	var appSenderClient common.AppSender
+	appSenderClientIfc := ctx.Value("appSender")
+	if appSenderClientIfc != nil {
+		appSenderClient = appSenderClientIfc.(common.AppSender)
+	} else {
+		appSenderClient = p2psender.NewClient(appsenderpb.NewAppSenderClient(vm.clientConn))
+		vm.logger.Debug("Setup p2p communication with avalanche engine")
+	}
+
+	p2pNetwork, err := p2p.NewNetwork(
+		vm.logger,
+		appSenderClient,
+		registerer,
+		"p2p",
+	)
+	if err != nil {
+		vm.logger.Info(fmt.Sprintf("failed to create p2p network: %s", err))
+		return nil, fmt.Errorf("failed to create p2p network: %w", err)
+	}
+	networkCodec := message.Codec
+	vm.Network = peer.NewNetwork(p2pNetwork, appSenderClient, vm.logger, 100, networkCodec)
+	vm.p2pClient = peer.NewNetworkClient(vm.Network)
+	signatureGetter := aggregator.NewSignatureGetter(vm.p2pClient)
+
+	vm.warpService = NewAPI(vm, vm.logger, req.NetworkId, validatorStateClient, subnetID, chainID, vm.warpBackend, signatureGetter, rpcClients, requirePrimaryNetworkSigners)
+
+	// Allow signing of all warp messages. This is not typically safe, but is
+	// allowed for this example.
+	acp118Handler := acp118.NewHandler(
+		vm.warpBackend,
+		vm.warpSignerClient,
+	)
+	if err := p2pNetwork.AddHandler(p2p.SignatureRequestHandlerID, acp118Handler); err != nil {
+		vm.logger.Info(fmt.Sprintf("failed to add p2p handler: %s", err))
+		return nil, fmt.Errorf("failed to add p2p handler: %w", err)
+	}
+
+	networkHandler := newNetworkHandler(vm.warpBackend, networkCodec, vm.logger)
+	vm.Network.SetRequestHandler(networkHandler)
+
+	vm.logger.Info("vm initialization completed")
 	return &vmpb.InitializeResponse{
 		LastAcceptedId:       blk.Hash(),
 		LastAcceptedParentId: parentHash[:],
@@ -780,20 +902,38 @@ func (vm *LandslideVM) Version(context.Context, *emptypb.Empty) (*vmpb.VersionRe
 }
 
 // AppRequest notify this engine of a request for data from [nodeID].
-func (vm *LandslideVM) AppRequest(context.Context, *vmpb.AppRequestMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me 3")
+func (vm *LandslideVM) AppRequest(ctx context.Context, msg *vmpb.AppRequestMsg) (*emptypb.Empty, error) {
+	nodeId, err := ids.ToNodeID(msg.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	err = vm.Network.AppRequest(ctx, nodeId, msg.RequestId, msg.Deadline.AsTime(), msg.Request)
+	return nil, err
 }
 
 // AppRequestFailed notify this engine that an AppRequest message it sent to [nodeID] with
 // request ID [requestID] failed.
-func (vm *LandslideVM) AppRequestFailed(context.Context, *vmpb.AppRequestFailedMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me 4")
+func (vm *LandslideVM) AppRequestFailed(ctx context.Context, msg *vmpb.AppRequestFailedMsg) (*emptypb.Empty, error) {
+	nodeId, err := ids.ToNodeID(msg.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	err = vm.Network.AppRequestFailed(ctx, nodeId, msg.RequestId, &common.AppError{
+		Code:    msg.ErrorCode,
+		Message: msg.ErrorMessage,
+	})
+	return nil, err
 }
 
 // AppResponse notify this engine of a response to the AppRequest message it sent to
 // [nodeID] with request ID [requestID].
-func (vm *LandslideVM) AppResponse(context.Context, *vmpb.AppResponseMsg) (*emptypb.Empty, error) {
-	return nil, errors.New("TODO: implement me 5")
+func (vm *LandslideVM) AppResponse(ctx context.Context, msg *vmpb.AppResponseMsg) (*emptypb.Empty, error) {
+	nodeId, err := ids.ToNodeID(msg.NodeId)
+	if err != nil {
+		return nil, err
+	}
+	err = vm.Network.AppResponse(ctx, nodeId, msg.RequestId, msg.Response)
+	return nil, err
 }
 
 // AppGossip notify this engine of a gossip message from [nodeID].
@@ -882,7 +1022,6 @@ func (vm *LandslideVM) GetStateSummary(context.Context, *vmpb.GetStateSummaryReq
 
 func (vm *LandslideVM) BlockVerify(_ context.Context, req *vmpb.BlockVerifyRequest) (*vmpb.BlockVerifyResponse, error) {
 	vm.logger.Info("BlockVerify")
-	// vm.logger.Debug("block verify", "bytes", req.Bytes)
 
 	blk, blkStatus, err := vmstate.DecodeBlockWithStatus(req.Bytes)
 	if err != nil {

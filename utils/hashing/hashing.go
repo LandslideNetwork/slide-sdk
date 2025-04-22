@@ -4,16 +4,27 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+
+	"io"
+
+	//nolint:staticcheck // deprecated dependency from avalanchego
+	//lint:ignore SA1019 deprecated dependency from avalanchego
+	"golang.org/x/crypto/ripemd160"
 )
 
 const (
 	HashLen = sha256.Size
+	// The size of the checksum in bytes.
+	RIPEMD160Size = 20
 )
 
 var ErrInvalidHashLen = errors.New("invalid hash length")
 
 // Hash256 A 256 bit long hash value.
 type Hash256 = [HashLen]byte
+
+// Hash160 A 160 bit long hash value.
+type Hash160 = [RIPEMD160Size]byte
 
 // ComputeHash256Array computes a cryptographically strong 256 bit hash of the
 // input byte slice.
@@ -26,6 +37,29 @@ func ComputeHash256Array(buf []byte) Hash256 {
 func ComputeHash256(buf []byte) []byte {
 	arr := ComputeHash256Array(buf)
 	return arr[:]
+}
+
+// ComputeHash160Array computes a cryptographically strong 160 bit hash of the
+// input byte slice.
+func ComputeHash160Array(buf []byte) Hash160 {
+	h, err := ToHash160(ComputeHash160(buf))
+	if err != nil {
+		panic(err)
+	}
+	return h
+}
+
+// ComputeHash160 computes a cryptographically strong 160 bit hash of the input
+// byte slice.
+func ComputeHash160(buf []byte) []byte {
+	//nolint:gosec // deprecated dependency from avalanche
+	//lint:ignore G406 avalanche deprecated dependency
+	ripe := ripemd160.New()
+	_, err := io.Writer(ripe).Write(buf)
+	if err != nil {
+		panic(err)
+	}
+	return ripe.Sum(nil)
 }
 
 // ComputeHash256Ranges computes a cryptographically strong 256 bit hash of the input
@@ -58,6 +92,15 @@ func ToHash256(bytes []byte) (Hash256, error) {
 	hash := Hash256{}
 	if bytesLen := len(bytes); bytesLen != HashLen {
 		return hash, fmt.Errorf("%w: expected 32 bytes but got %d", ErrInvalidHashLen, bytesLen)
+	}
+	copy(hash[:], bytes)
+	return hash, nil
+}
+
+func ToHash160(bytes []byte) (Hash160, error) {
+	hash := Hash160{}
+	if bytesLen := len(bytes); bytesLen != RIPEMD160Size {
+		return hash, fmt.Errorf("%w: expected 20 bytes but got %d", ErrInvalidHashLen, bytesLen)
 	}
 	copy(hash[:], bytes)
 	return hash, nil
