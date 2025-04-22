@@ -7,13 +7,15 @@ import (
 	"os"
 	"testing"
 
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/warptest"
+
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/libs/rand"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,11 +23,11 @@ var (
 	err                 error
 	networkID           uint32 = 54321
 	sourceChainID              = ids.GenerateTestID()
-	testUnsignedMessage *warputils.UnsignedMessage
+	testUnsignedMessage *warp.UnsignedMessage
 )
 
 func init() {
-	testUnsignedMessage, err = warputils.NewUnsignedMessage(networkID, sourceChainID, []byte(rand.Str(30)))
+	testUnsignedMessage, err = warp.NewUnsignedMessage(networkID, sourceChainID, []byte(rand.Str(30)))
 	if err != nil {
 		panic(err)
 	}
@@ -35,10 +37,10 @@ func TestAddAndGetValidMessage(t *testing.T) {
 	logger := log.NewTMLogger(os.Stdout)
 	db := dbm.NewMemDB()
 
-	sk, err := bls.NewSecretKey()
+	sk, err := bls.NewSigner()
 	require.NoError(t, err)
-	warpSigner := warputils.NewSigner(sk, networkID, sourceChainID)
-	backend := NewBackend(networkID, sourceChainID, warpSigner, logger, db)
+	warpSigner := warp.NewSigner(sk, networkID, sourceChainID)
+	backend := NewBackend(networkID, sourceChainID, warpSigner, logger, db, nil, warptest.NoOpValidatorReader{})
 	require.NoError(t, err)
 
 	// Add testUnsignedMessage to the warp backend
@@ -65,10 +67,10 @@ func TestAddAndGetUnknownMessage(t *testing.T) {
 	logger := log.NewTMLogger(os.Stdout)
 	db := dbm.NewMemDB()
 
-	sk, err := bls.NewSecretKey()
+	sk, err := bls.NewSigner()
 	require.NoError(t, err)
-	warpSigner := warputils.NewSigner(sk, networkID, sourceChainID)
-	backend := NewBackend(networkID, sourceChainID, warpSigner, logger, db)
+	warpSigner := warp.NewSigner(sk, networkID, sourceChainID)
+	backend := NewBackend(networkID, sourceChainID, warpSigner, logger, db, nil, warptest.NoOpValidatorReader{})
 	require.NoError(t, err)
 
 	// Try getting a signature for a message that was not added.

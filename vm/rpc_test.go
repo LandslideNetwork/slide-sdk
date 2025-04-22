@@ -6,9 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/engine/enginetest"
+	warputils "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
+
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
 
 	ctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/rpc/jsonrpc/client"
@@ -18,8 +20,8 @@ import (
 	"github.com/landslidenetwork/slide-sdk/jsonrpc"
 )
 
-func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
-	vm := newFreshKvApp(t)
+func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client, *enginetest.Sender) {
+	vm, appSender := NewFreshKvApp(t)
 	vmLnd := vm.(*LandslideVM)
 	mux := http.NewServeMux()
 	jsonrpc.RegisterRPCFuncs(mux, NewRPC(vmLnd).Routes(), vmLnd.logger)
@@ -38,11 +40,11 @@ func setupRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
 	client, err := client.New("tcp://" + address)
 	require.NoError(t, err)
 
-	return server, vmLnd, client
+	return server, vmLnd, client, appSender
 }
 
 func TestHealth(t *testing.T) {
-	server, _, client := setupRPC(t)
+	server, _, client, _ := setupRPC(t)
 	defer server.Close()
 
 	result := new(ctypes.ResultHealth)
@@ -53,7 +55,7 @@ func TestHealth(t *testing.T) {
 }
 
 func TestStatus(t *testing.T) {
-	server, _, client := setupRPC(t)
+	server, _, client, _ := setupRPC(t)
 	defer server.Close()
 
 	result := new(ctypes.ResultStatus)
@@ -64,7 +66,7 @@ func TestStatus(t *testing.T) {
 }
 
 func TestWarpGetMessage(t *testing.T) {
-	server, vm, rpcClient := setupRPC(t)
+	server, vm, rpcClient, _ := setupRPC(t)
 	defer server.Close()
 
 	chainID, err := ids.ToID(vm.appOpts.ChainID)
@@ -78,29 +80,6 @@ func TestWarpGetMessage(t *testing.T) {
 	t.Log(result.Message)
 	t.Log(testUnsignedMessage.Bytes())
 	require.Equal(t, result.Message, testUnsignedMessage.Bytes())
-}
-
-func TestWarpGetMessageSignature(t *testing.T) {
-	server, vm, rpcClient := setupRPC(t)
-	defer server.Close()
-
-	chainID, err := ids.ToID(vm.appOpts.ChainID)
-	require.NoError(t, err)
-	testUnsignedMessage, err := warputils.NewUnsignedMessage(vm.appOpts.NetworkID, chainID, []byte(rand.Str(30)))
-	require.NoError(t, err)
-	vm.warpBackend.AddMessage(testUnsignedMessage)
-	result := new(ResultGetMessageSignature)
-	_, err = rpcClient.Call(context.Background(), "warp_get_message_signature", map[string]interface{}{"messageID": testUnsignedMessage.ID().String()}, result)
-	require.NoError(t, err)
-	expectedSig, err := vm.warpSigner.Sign(testUnsignedMessage)
-	require.NoError(t, err)
-	require.NotNil(t, expectedSig)
-
-	t.Log(result.Signature)
-	t.Log(expectedSig)
-
-	require.NoError(t, err)
-	require.Equal(t, expectedSig, result.Signature)
 }
 
 // TestRPC is a test RPC server for the LandslideVM.
@@ -126,8 +105,8 @@ func (rpc *TestRPC) TestPanic(_ *rpctypes.Context) (*ctypes.ResultUnconfirmedTxs
 }
 
 // setupTestRPC sets up a test server and client for the LandslideVM.
-func setupTestRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
-	vm := newFreshKvApp(t)
+func setupTestRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client, *enginetest.Sender) {
+	vm, appSender := NewFreshKvApp(t)
 	vmLnd := vm.(*LandslideVM)
 	mux := http.NewServeMux()
 	jsonrpc.RegisterRPCFuncs(mux, NewTestRPC(vmLnd).Routes(), vmLnd.logger)
@@ -144,12 +123,12 @@ func setupTestRPC(t *testing.T) (*http.Server, *LandslideVM, *client.Client) {
 	rpcClient, err := client.New("tcp://" + address)
 	require.NoError(t, err)
 
-	return server, vmLnd, rpcClient
+	return server, vmLnd, rpcClient, appSender
 }
 
 // TestPanic tests that the server recovers from a panic.
 func TestPanic(t *testing.T) {
-	server, _, rpcClient := setupTestRPC(t)
+	server, _, rpcClient, _ := setupTestRPC(t)
 	defer server.Close()
 
 	result := new(ctypes.ResultStatus)

@@ -11,12 +11,12 @@ import (
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/libs/log"
 	rpctypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/validators"
+	warp2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/payload"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/aggregator"
+	warpValidators "github.com/landslidenetwork/slide-sdk/utils/evm/warp/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	"github.com/landslidenetwork/slide-sdk/utils/validators"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
-	"github.com/landslidenetwork/slide-sdk/utils/warp/aggregator"
-	"github.com/landslidenetwork/slide-sdk/utils/warp/payload"
-	warpValidators "github.com/landslidenetwork/slide-sdk/utils/warp/validators"
 	"github.com/landslidenetwork/slide-sdk/warp"
 )
 
@@ -29,7 +29,7 @@ type ResultAddMessage struct {
 	MessageID string `json:"messageID"`
 }
 
-var errNoValidators = errors.New("cannot aggregate signatures from subnet with no validators")
+var errNoValidators = errors.New("cannot aggregate signatures from subnets with no validators")
 
 type ResultGetMessage struct {
 	Message []byte `json:"message"`
@@ -37,6 +37,10 @@ type ResultGetMessage struct {
 
 type ResultGetMessageSignature struct {
 	Signature []byte `json:"signature"`
+}
+
+type ResultGetAggregatedSignature struct {
+	Message []byte `json:"message"`
 }
 
 // API introduces snowman specific functionality to the evm
@@ -51,12 +55,18 @@ type API struct {
 	// TODO: investigate necessity to set up value according to validation of Primary Network
 	// requirePrimaryNetworkSigners returns true if warp messages from the primary
 	// network must be signed by the primary network validators.
-	// This is necessary when the subnet is not validating the primary network.
+	// This is necessary when the subnets is not validating the primary network.
 	requirePrimaryNetworkSigners bool
 }
 
 func NewAPI(vm *LandslideVM, logger log.Logger, networkID uint32, state validators.State, sourceSubnetID ids.ID, sourceChainID ids.ID,
-	backend warp.Backend, rpcClients map[ids.NodeID]warp.Client, requirePrimaryNetworkSigners bool) *API {
+	backend warp.Backend, sigGetter *aggregator.NetworkSignatureGetter, rpcClients map[ids.NodeID]warp.Client, requirePrimaryNetworkSigners bool) *API {
+	var signatureGetter aggregator.SignatureGetter
+	if sigGetter != nil {
+		signatureGetter = sigGetter
+	} else {
+		signatureGetter = warp.NewAPIFetcher(rpcClients)
+	}
 	return &API{
 		vm:                           vm,
 		logger:                       logger,
@@ -65,14 +75,14 @@ func NewAPI(vm *LandslideVM, logger log.Logger, networkID uint32, state validato
 		sourceSubnetID:               sourceSubnetID,
 		sourceChainID:                sourceChainID,
 		backend:                      backend,
-		signatureGetter:              warp.NewAPIFetcher(rpcClients),
+		signatureGetter:              signatureGetter,
 		requirePrimaryNetworkSigners: requirePrimaryNetworkSigners,
 	}
 }
 
 // AddMessage returns the Warp message associated with a messageID.
 func (a *API) AddMessage(_ *rpctypes.Context, message []byte) (*ResultAddMessage, error) {
-	msg, err := warputils.ParseUnsignedMessage(message)
+	msg, err := warp2.ParseUnsignedMessage(message)
 	if err != nil {
 		return nil, fmt.Errorf(failedParseWARPMessage, message, err)
 	}
@@ -114,16 +124,19 @@ func (a *API) GetMessageSignature(_ *rpctypes.Context, messageID string) (*Resul
 }
 
 // GetMessageAggregateSignature fetches the aggregate signature for the requested [messageID]
-func (a *API) GetMessageAggregateSignature(ctx context.Context, messageID ids.ID, quorumNum uint64, subnetIDStr string) (signedMessageBytes tmbytes.HexBytes, err error) {
+func (a *API) GetMessageAggregateSignature(_ *rpctypes.Context, messageID ids.ID, quorumNum uint64, subnetIDStr string) (*ResultGetAggregatedSignature, error) {
 	unsignedMessage, err := a.backend.GetMessage(messageID)
+	a.vm.logger.Info("Get unsigned message with backend")
 	if err != nil {
 		return nil, err
 	}
-	return a.aggregateSignatures(ctx, unsignedMessage, quorumNum, subnetIDStr)
+	a.vm.logger.Info("Try to aggregate signatures")
+	aggregatedSignatures, err := a.aggregateSignatures(context.Background(), unsignedMessage, quorumNum, subnetIDStr)
+	return &ResultGetAggregatedSignature{Message: aggregatedSignatures}, err
 }
 
 // GetBlockSignature returns the BLS signature associated with a blockID.
-func (a *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (tmbytes.HexBytes, error) {
+func (a *API) GetBlockSignature(_ *rpctypes.Context, blockID ids.ID) (tmbytes.HexBytes, error) {
 	signature, err := a.backend.GetBlockSignature(blockID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get signature for block %s with error %w", blockID, err)
@@ -132,20 +145,21 @@ func (a *API) GetBlockSignature(ctx context.Context, blockID ids.ID) (tmbytes.He
 }
 
 // GetBlockAggregateSignature fetches the aggregate signature for the requested [blockID]
-func (a *API) GetBlockAggregateSignature(ctx context.Context, blockID ids.ID, quorumNum uint64, subnetIDStr string) (signedMessageBytes tmbytes.HexBytes, err error) {
+func (a *API) GetBlockAggregateSignature(_ *rpctypes.Context, blockID ids.ID, quorumNum uint64, subnetIDStr string) (*ResultGetAggregatedSignature, error) {
 	blockHashPayload, err := payload.NewHash(blockID)
 	if err != nil {
 		return nil, err
 	}
-	unsignedMessage, err := warputils.NewUnsignedMessage(a.networkID, a.sourceChainID, blockHashPayload.Bytes())
+	unsignedMessage, err := warp2.NewUnsignedMessage(a.networkID, a.sourceChainID, blockHashPayload.Bytes())
 	if err != nil {
 		return nil, err
 	}
 
-	return a.aggregateSignatures(ctx, unsignedMessage, quorumNum, subnetIDStr)
+	aggregatedSignatures, err := a.aggregateSignatures(context.Background(), unsignedMessage, quorumNum, subnetIDStr)
+	return &ResultGetAggregatedSignature{Message: aggregatedSignatures}, err
 }
 
-func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warputils.UnsignedMessage, quorumNum uint64, subnetIDStr string) (tmbytes.HexBytes, error) {
+func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warp2.UnsignedMessage, quorumNum uint64, subnetIDStr string) (tmbytes.HexBytes, error) {
 	subnetID := a.sourceSubnetID
 	if len(subnetIDStr) > 0 {
 		sid, err := ids.FromString(subnetIDStr)
@@ -158,14 +172,15 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warputil
 	if err != nil {
 		return nil, err
 	}
+	a.logger.Info("received pchain height")
 	// Get the validator set at the given height.
 	vdrSet, err := a.valState.GetValidatorSet(ctx, pChainHeight, subnetID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get validator set: %w", err)
 	}
-
+	a.logger.Info("receive flatten validator set")
 	// Convert the validator set into the canonical ordering.
-	validators, totalWeight, err := warputils.FlattenValidatorSet(vdrSet)
+	validators, totalWeight, err := warp2.FlattenValidatorSet(vdrSet)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert the validator set into the canonical ordering: %w", err)
 	}
@@ -180,6 +195,7 @@ func (a *API) aggregateSignatures(ctx context.Context, unsignedMessage *warputil
 		"totalWeight", totalWeight,
 	)
 	agg := aggregator.New(a.signatureGetter, a.logger, validators, totalWeight)
+	a.vm.logger.Info("agg.AggregateSignatures")
 	signatureResult, err := agg.AggregateSignatures(ctx, unsignedMessage, quorumNum)
 	if err != nil {
 		return nil, err

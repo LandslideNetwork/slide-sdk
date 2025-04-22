@@ -9,9 +9,9 @@ import (
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	"github.com/landslidenetwork/slide-sdk/utils/validators"
 
 	pb "github.com/landslidenetwork/slide-sdk/proto/validatorstate"
 )

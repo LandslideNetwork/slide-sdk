@@ -7,11 +7,12 @@ import (
 	"context"
 	"fmt"
 
+	warputils "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
+	payload2 "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp/payload"
+
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/aggregator"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
-	warputils "github.com/landslidenetwork/slide-sdk/utils/warp"
-	"github.com/landslidenetwork/slide-sdk/utils/warp/aggregator"
-	"github.com/landslidenetwork/slide-sdk/utils/warp/payload"
 )
 
 var _ aggregator.SignatureGetter = (*apiFetcher)(nil)
@@ -32,14 +33,14 @@ func (f *apiFetcher) GetSignature(ctx context.Context, nodeID ids.NodeID, unsign
 		return nil, fmt.Errorf("no warp client for nodeID: %s", nodeID)
 	}
 	var signatureBytes []byte
-	parsedPayload, err := payload.Parse(unsignedWarpMessage.Payload)
+	parsedPayload, err := payload2.Parse(unsignedWarpMessage.Payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse unsigned message payload: %w", err)
 	}
 	switch p := parsedPayload.(type) {
-	case *payload.AddressedCall:
+	case *payload2.AddressedCall:
 		signatureBytes, err = client.GetMessageSignature(ctx, unsignedWarpMessage.ID())
-	case *payload.Hash:
+	case *payload2.Hash:
 		signatureBytes, err = client.GetBlockSignature(ctx, p.Hash)
 	}
 	if err != nil {
