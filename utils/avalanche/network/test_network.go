@@ -54,6 +54,10 @@ type nodeIDConnector struct {
 	nodeID ids.NodeID
 }
 
+func newNodeIDConnector(nodeID ids.NodeID) *nodeIDConnector {
+	return &nodeIDConnector{nodeID: nodeID}
+}
+
 func (f *nodeIDConnector) IsAllowed(nodeID ids.NodeID, _ bool) bool {
 	return nodeID == f.nodeID
 }

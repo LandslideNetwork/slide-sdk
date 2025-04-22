@@ -5,7 +5,16 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/network/p2p"
+	"github.com/landslidenetwork/slide-sdk/utils/codec"
+	"github.com/landslidenetwork/slide-sdk/utils/codec/linearcodec"
+	"github.com/landslidenetwork/slide-sdk/utils/version"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"math"
 	"net"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -176,6 +185,16 @@ func NewFreshKvApp(t *testing.T) (vmpb.VMServer, *enginetest.Sender) {
 	return newKvApp(t, vmdb, appdb)
 }
 
+func buildCodec(t *testing.T, types ...interface{}) codec.Manager {
+	lc := linearcodec.NewDefault()
+	for _, typ := range types {
+		assert.NoError(t, lc.RegisterType(typ))
+	}
+
+	codecManager := codec.NewManager(math.MaxInt, lc)
+	return codecManager
+}
+
 func TestCreation(t *testing.T) {
 	vm := New(func(*AppCreatorOpts) (Application, error) {
 		return kvstore.NewInMemoryApplication(), nil
@@ -236,6 +255,78 @@ func TestAcceptBlock(t *testing.T) {
 		Id: buildRes.GetId(),
 	})
 	require.NoError(t, err)
+}
+
+func TestRequestRequestsRoutingAndResponse(t *testing.T) {
+	vm, _ := NewFreshKvApp(t)
+	vmLnd := vm.(*LandslideVM)
+	callNum := uint32(0)
+	var lock sync.Mutex
+	contactedNodes := make(map[ids.NodeID]struct{})
+
+	requestMessage := evmmessage.BlockSignatureRequest{BlockID: ids.GenerateTestID()}
+
+	totalRequests := 5000
+	numCallsPerRequest := 1 // on sending response
+	totalCalls := totalRequests * numCallsPerRequest
+
+	requestWg := &sync.WaitGroup{}
+	requestWg.Add(totalCalls)
+	requestBytes, err := evmmessage.Codec.Marshal(requestMessage)
+	assert.NoError(t, err)
+	nodeID := ids.GenerateTestNodeID()
+	responseBytes, err := vmLnd.p2pClient.SendAppRequest(context.Background(), nodeID, requestBytes)
+	assert.NoError(t, err)
+	assert.NotNil(t, responseBytes)
+
+	var response evmmessage.SignatureResponse
+	if err = evmmessage.Codec.Unmarshal(responseBytes, &response); err != nil {
+		panic(fmt.Errorf("unexpected error during unmarshal: %w", err))
+	}
+	assert.Equal(t, "signature", response.Signature)
+	lock.Lock()
+	contactedNodes[nodeID] = struct{}{}
+	lock.Unlock()
+	assert.Equal(t, totalCalls, int(atomic.LoadUint32(&callNum)))
+
+	// ensure empty nodeID is not allowed
+	_, err = vmLnd.p2pClient.SendAppRequest(context.Background(), ids.EmptyNodeID, []byte("hello there"))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot send request to empty nodeID")
+}
+
+func TestP2PAppRequest(t *testing.T) {
+	vm, _ := NewFreshKvApp(t)
+
+	codecManager := buildCodec(t, evmmessage.BlockSignatureRequest{})
+
+	nodeID := ids.GenerateTestNodeID()
+	_, err := vm.Connected(context.Background(), &vmpb.ConnectedRequest{
+		NodeId: nodeID.Bytes(),
+		Major:  uint32(version.CurrentApp.Major),
+		Minor:  uint32(version.CurrentApp.Minor),
+		Patch:  uint32(version.CurrentApp.Patch),
+	})
+	require.NoError(t, err)
+
+	blkSignatureRequest := evmmessage.BlockSignatureRequest{BlockID: ids.GenerateTestID()}
+
+	protocolAppRequestBytes, err := evmmessage.RequestToBytes(codecManager, blkSignatureRequest)
+	require.NoError(t, err)
+
+	appRequestBytes := p2p.PrefixMessage(
+		p2p.ProtocolPrefix(p2p.SignatureRequestHandlerID),
+		protocolAppRequestBytes,
+	)
+
+	appRequestRes, err := vm.AppRequest(context.Background(), &vmpb.AppRequestMsg{
+		NodeId:    nodeID.Bytes(),
+		RequestId: 1,
+		Deadline:  timestamppb.New(time.Now().Add(5 * time.Minute)),
+		Request:   appRequestBytes,
+	})
+	require.NoError(t, err)
+	t.Log(appRequestRes.String())
 }
 
 // TestShutdownWithoutInit tests VM Shutdown function. This function called without Initialize in Avalanchego Factory
