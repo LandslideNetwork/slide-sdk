@@ -5,10 +5,11 @@ package vm
 import (
 	"context"
 	_ "embed"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
-	"github.com/landslidenetwork/slide-sdk/warp"
 	"testing"
 	"time"
+
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
+	"github.com/landslidenetwork/slide-sdk/warp"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	vmpb "github.com/landslidenetwork/slide-sdk/proto/vm"

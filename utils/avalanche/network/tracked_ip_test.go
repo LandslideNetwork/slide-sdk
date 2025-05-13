@@ -4,10 +4,11 @@
 package network
 
 import (
-	"github.com/stretchr/testify/require"
 	"net/netip"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/landslidenetwork/slide-sdk/utils/ips"
 	"github.com/landslidenetwork/slide-sdk/utils/staking"

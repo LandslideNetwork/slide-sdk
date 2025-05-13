@@ -6,12 +6,13 @@ package network
 import (
 	"context"
 	"crypto"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
-	"github.com/landslidenetwork/slide-sdk/utils/subnets"
 	"net/netip"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
+	"github.com/landslidenetwork/slide-sdk/utils/subnets"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils"
