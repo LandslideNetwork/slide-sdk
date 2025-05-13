@@ -11,13 +11,13 @@ import (
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/warp"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	vmpb "github.com/landslidenetwork/slide-sdk/proto/vm"
 	avalancheWarp "github.com/landslidenetwork/slide-sdk/utils/avalanche/warp"
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/message"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func TestMessageSignatureRequestsToVM(t *testing.T) {
@@ -25,7 +25,7 @@ func TestMessageSignatureRequestsToVM(t *testing.T) {
 	vmLnd := vm.(*LandslideVM)
 
 	defer func() {
-		_, err := vm.Shutdown(context.Background(), &empty.Empty{})
+		_, err := vm.Shutdown(context.Background(), &emptypb.Empty{})
 		require.NoError(t, err)
 	}()
 
@@ -90,7 +90,7 @@ func TestBlockSignatureRequestsToVM(t *testing.T) {
 	vmLnd := vm.(*LandslideVM)
 
 	defer func() {
-		_, err := vm.Shutdown(context.Background(), &empty.Empty{})
+		_, err := vm.Shutdown(context.Background(), &emptypb.Empty{})
 		require.NoError(t, err)
 	}()
 
@@ -169,7 +169,7 @@ func TestClearWarpDB(t *testing.T) {
 		messages = append(messages, unsignedMsg)
 	}
 
-	_, err = vm.Shutdown(context.Background(), &empty.Empty{})
+	_, err = vm.Shutdown(context.Background(), &emptypb.Empty{})
 	require.NoError(t, err)
 
 	_, err = vm.Initialize(context.Background(), &vmpb.InitializeRequest{
@@ -197,7 +197,7 @@ func TestClearWarpDB(t *testing.T) {
 		require.NotEmpty(t, bytes)
 	}
 
-	_, err = vm.Shutdown(context.Background(), &empty.Empty{})
+	_, err = vm.Shutdown(context.Background(), &emptypb.Empty{})
 	require.NoError(t, err)
 
 	// restart the VM with pruning enabled
