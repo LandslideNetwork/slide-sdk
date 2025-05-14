@@ -66,7 +66,7 @@ func TestEqualSubsetBadMiddle(t *testing.T) {
 }
 
 func TestEqualSubsetAll3Bytes(t *testing.T) {
-	seed := uint64(saferand.CryptoRandInt(math.MaxUint64))
+	seed := uint64(saferand.CryptoRandInt(math.MaxInt64))
 	t.Logf("seed: %d", seed)
 	id1 := ID{}.Prefix(seed)
 
