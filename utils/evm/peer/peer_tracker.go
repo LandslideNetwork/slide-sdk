@@ -4,13 +4,14 @@
 package peer
 
 import (
+	"math"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	"github.com/landslidenetwork/slide-sdk/utils/saferand"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/version"
 	"github.com/rcrowley/go-metrics"
-	"math"
 )
 
 const (

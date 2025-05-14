@@ -4,10 +4,11 @@
 package network
 
 import (
-	"github.com/landslidenetwork/slide-sdk/utils/saferand"
 	"net/netip"
 	"sync"
 	"time"
+
+	"github.com/landslidenetwork/slide-sdk/utils/saferand"
 )
 
 type trackedIP struct {

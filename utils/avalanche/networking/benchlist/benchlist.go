@@ -6,6 +6,7 @@ package benchlist
 import (
 	"errors"
 	"fmt"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/validators"

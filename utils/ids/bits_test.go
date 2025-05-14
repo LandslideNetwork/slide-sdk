@@ -2,11 +2,12 @@ package ids
 
 import (
 	"fmt"
-	"github.com/landslidenetwork/slide-sdk/utils/saferand"
-	"github.com/stretchr/testify/require"
 	"math"
 	"strings"
 	"testing"
+
+	"github.com/landslidenetwork/slide-sdk/utils/saferand"
+	"github.com/stretchr/testify/require"
 )
 
 func flip(b uint8) uint8 {
