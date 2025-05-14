@@ -6,11 +6,10 @@ package benchlist
 import (
 	"errors"
 	"fmt"
-	"math/rand"
-
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
 	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/validators"
+	"github.com/landslidenetwork/slide-sdk/utils/saferand"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
@@ -337,7 +336,7 @@ func (b *benchlist) bench(nodeID ids.NodeID) {
 	minBenchedUntil := now.Add(minBenchDuration)
 	maxBenchedUntil := now.Add(b.duration)
 	diff := maxBenchedUntil.Sub(minBenchedUntil)
-	benchedUntil := minBenchedUntil.Add(time.Duration(rand.Float64() * float64(diff))) // #nosec G404
+	benchedUntil := minBenchedUntil.Add(time.Duration(saferand.CryptoRandFloat64() * float64(diff))) // #nosec G404
 
 	b.log.Debug("benching validator after consecutive failed queries",
 		zap.Stringer("nodeID", nodeID),

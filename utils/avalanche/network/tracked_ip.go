@@ -4,18 +4,11 @@
 package network
 
 import (
-	"math/rand"
+	"github.com/landslidenetwork/slide-sdk/utils/saferand"
 	"net/netip"
 	"sync"
 	"time"
 )
-
-var random *rand.Rand
-
-func init() {
-	//nolint:gosec // copied from subnet-evm
-	random = rand.New(rand.NewSource(time.Now().UnixNano()))
-}
 
 type trackedIP struct {
 	delayLock sync.RWMutex
@@ -63,10 +56,10 @@ func (ip *trackedIP) increaseDelay(initialDelay, maxDelay time.Duration) {
 	// attempts to a node that previously shut down. This doesn't
 	// require cryptographically secure random number generation.
 	// set the timeout to [1, 2) * timeout
-	ip.delay = time.Duration(float64(ip.delay) * (1 + random.Float64())) // #nosec G404
+	ip.delay = time.Duration(float64(ip.delay) * (1 + saferand.CryptoRandFloat64()))
 	if ip.delay > maxDelay {
 		// set the timeout to [.75, 1) * maxDelay
-		ip.delay = time.Duration(float64(maxDelay) * (3 + random.Float64()) / 4) // #nosec G404
+		ip.delay = time.Duration(float64(maxDelay) * (3 + saferand.CryptoRandFloat64()) / 4)
 	}
 }
 

@@ -2,13 +2,11 @@ package ids
 
 import (
 	"fmt"
+	"github.com/landslidenetwork/slide-sdk/utils/saferand"
+	"github.com/stretchr/testify/require"
 	"math"
-	"math/rand"
 	"strings"
 	"testing"
-	"time"
-
-	"github.com/stretchr/testify/require"
 )
 
 func flip(b uint8) uint8 {
@@ -68,9 +66,7 @@ func TestEqualSubsetBadMiddle(t *testing.T) {
 }
 
 func TestEqualSubsetAll3Bytes(t *testing.T) {
-	source := rand.NewSource(time.Now().UnixNano())
-	newRand := rand.New(source)
-	seed := uint64(newRand.Int63())
+	seed := uint64(saferand.CryptoRandInt(math.MaxUint64))
 	t.Logf("seed: %d", seed)
 	id1 := ID{}.Prefix(seed)
 

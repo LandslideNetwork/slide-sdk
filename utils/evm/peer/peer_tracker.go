@@ -4,14 +4,13 @@
 package peer
 
 import (
-	"math"
-	"math/rand"
-
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/saferand"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/version"
 	"github.com/rcrowley/go-metrics"
+	"math"
 )
 
 const (
@@ -68,8 +67,7 @@ func (p *peerTracker) shouldTrackNewPeer() bool {
 		return false
 	}
 	newPeerProbability := math.Exp(-float64(numResponsivePeers) * newPeerConnectFactor)
-	//nolint:gosec // copied from subnet-evm
-	return rand.Float64() < newPeerProbability
+	return saferand.CryptoRandFloat64() < newPeerProbability
 }
 
 // getResponsivePeer returns a random [ids.NodeID] of a peer that has responded
@@ -102,8 +100,7 @@ func (p *peerTracker) GetAnyPeer(minVersion *version.Application) (ids.NodeID, b
 		ok     bool
 		random bool
 	)
-	//nolint:gosec // copied from subnet-evm
-	if rand.Float64() < randomPeerProbability {
+	if saferand.CryptoRandFloat64() < randomPeerProbability {
 		random = true
 		nodeID, ok = p.getResponsivePeer()
 	}
