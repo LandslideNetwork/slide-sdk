@@ -321,8 +321,15 @@ func TestAppRequestAnyOnCtxCancellation(t *testing.T) {
 
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	networkCodec := message.Codec
-	net := NewNetwork(p2pNetwork, sender, log.NewNopLogger(), ids.EmptyNodeID, 1, networkCodec)
+	net := NewNetwork(p2pNetwork, sender, log.NewNopLogger(), ids.EmptyNodeID, 1, codecManager)
+	net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
+	assert.NoError(t,
+		net.Connected(
+			context.Background(),
+			ids.GenerateTestNodeID(),
+			version.CurrentApp,
+		),
+	)
 
 	requestMessage := HelloRequest{Message: "this is a request"}
 	requestBytes, err := message.RequestToBytes(codecManager, requestMessage)
@@ -331,9 +338,9 @@ func TestAppRequestAnyOnCtxCancellation(t *testing.T) {
 	// cancel context prior to sending
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	// TODO: implement
-	t.Log(requestBytes)
-	t.Log(ctx)
+	client := NewNetworkClient(net)
+	_, _, err = client.SendAppRequestAny(ctx, defaultPeerVersion, requestBytes)
+	assert.ErrorIs(t, err, context.Canceled)
 	// Assert we didn't send anything
 	select {
 	case <-sentAppRequest:
@@ -343,9 +350,10 @@ func TestAppRequestAnyOnCtxCancellation(t *testing.T) {
 
 	// Cancel context after sending
 	assert.Empty(t, net.(*network).outstandingRequestHandlers) // no outstanding requests
-	_, cancel = context.WithCancel(context.Background())
+	ctx, cancel = context.WithCancel(context.Background())
 	doneChan := make(chan struct{})
 	go func() {
+		_, _, err = client.SendAppRequestAny(ctx, defaultPeerVersion, requestBytes)
 		assert.ErrorIs(t, err, context.Canceled)
 		close(doneChan)
 	}()
@@ -452,18 +460,13 @@ func TestOnRequestHonoursDeadline(t *testing.T) {
 	requestBytes, err := marshalStruct(codecManager, TestMessage{Message: "hello there"})
 	assert.NoError(t, err)
 
-	// TODO: remove logging
-	t.Log(requestBytes)
-	t.Log(net)
-
 	requestHandler := &testRequestHandler{
 		processingDuration: 500 * time.Millisecond,
 	}
 
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	networkCodec := message.Codec
-	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), ids.EmptyNodeID, 1, networkCodec)
+	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), ids.EmptyNodeID, 1, codecManager)
 	net.SetRequestHandler(requestHandler)
 	nodeID := ids.GenerateTestNodeID()
 
@@ -475,6 +478,7 @@ func TestOnRequestHonoursDeadline(t *testing.T) {
 	assert.EqualValues(t, requestHandler.calls, 0)
 
 	requestHandler.processingDuration = 0
+	err = net.AppRequest(context.Background(), nodeID, 2, time.Now().Add(250*time.Millisecond), requestBytes)
 	assert.NoError(t, err)
 	assert.True(t, responded)
 	assert.EqualValues(t, requestHandler.calls, 1)

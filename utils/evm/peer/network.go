@@ -38,6 +38,12 @@ type Network interface {
 	validators.Connector
 	common.AppHandler
 
+	// SendAppRequestAny synchronously sends request to an arbitrary peer with a
+	// node version greater than or equal to minVersion.
+	// Returns the ID of the chosen peer, and an error if the request could not
+	// be sent to a peer with the desired [minVersion].
+	SendAppRequestAny(ctx context.Context, minVersion *version.Application, message []byte, handler message.ResponseHandler) (ids.NodeID, error)
+
 	// SendAppRequest sends message to given nodeID, notifying handler when there's a response or timeout
 	SendAppRequest(ctx context.Context, nodeID ids.NodeID, message []byte, handler message.ResponseHandler) error
 
@@ -95,6 +101,32 @@ func NewNetwork(p2pNetwork *p2p.Network, appSender common.AppSender, log log.Log
 		peers:                      NewPeerTracker(log),
 		appStats:                   stats.NewRequestHandlerStats(),
 	}
+}
+
+// SendAppRequestAny synchronously sends request to an arbitrary peer with a
+// node version greater than or equal to minVersion. If minVersion is nil,
+// the request will be sent to any peer regardless of their version.
+// Returns the ID of the chosen peer, and an error if the request could not
+// be sent to a peer with the desired [minVersion].
+func (n *network) SendAppRequestAny(ctx context.Context, minVersion *version.Application, request []byte, handler message.ResponseHandler) (ids.NodeID, error) {
+	// If the context was cancelled, we can skip sending this request.
+	if err := ctx.Err(); err != nil {
+		return ids.EmptyNodeID, err
+	}
+
+	// Take a slot from total [activeAppRequests] and block until a slot becomes available.
+	if err := n.activeAppRequests.Acquire(ctx, 1); err != nil {
+		return ids.EmptyNodeID, errAcquiringSemaphore
+	}
+
+	n.lock.Lock()
+	defer n.lock.Unlock()
+	if nodeID, ok := n.peers.GetAnyPeer(minVersion); ok {
+		return nodeID, n.sendAppRequest(ctx, nodeID, request, handler)
+	}
+
+	n.activeAppRequests.Release(1)
+	return ids.EmptyNodeID, fmt.Errorf("no peers found matching version %s out of %d peers", minVersion, n.peers.Size())
 }
 
 // SendAppRequest sends request message bytes to specified nodeID, notifying the responseHandler on response or failure
