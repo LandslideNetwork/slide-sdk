@@ -497,6 +497,11 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		vm.logger.Info(fmt.Sprintf("failed to parse chain ID: %s", err))
 		return nil, fmt.Errorf("failed to parse chain ID: %w", err)
 	}
+	nodeID, err := ids.ToNodeID(req.NodeId)
+	if err != nil {
+		vm.logger.Info(fmt.Sprintf("failed to parse node ID: %s", err))
+		return nil, fmt.Errorf("failed to parse node ID: %w", err)
+	}
 	vm.logger.Info("BLS Public KEY:", req.PublicKey)
 
 	dbValidatorManager := dbm.NewPrefixDB(vm.database, dbPrefixValidatorManager)
@@ -544,7 +549,7 @@ func (vm *LandslideVM) Initialize(ctx context.Context, req *vmpb.InitializeReque
 		return nil, fmt.Errorf("failed to create p2p network: %w", err)
 	}
 	networkCodec := message.Codec
-	vm.Network = peer.NewNetwork(p2pNetwork, appSenderClient, vm.logger, 100, networkCodec)
+	vm.Network = peer.NewNetwork(p2pNetwork, appSenderClient, vm.logger, nodeID, 100, networkCodec)
 	vm.p2pClient = peer.NewNetworkClient(vm.Network)
 	signatureGetter := aggregator.NewSignatureGetter(vm.p2pClient)
 
