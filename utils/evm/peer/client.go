@@ -6,6 +6,7 @@ package peer
 import (
 	"context"
 	"errors"
+
 	"github.com/landslidenetwork/slide-sdk/utils/version"
 
 	"github.com/landslidenetwork/slide-sdk/utils/ids"

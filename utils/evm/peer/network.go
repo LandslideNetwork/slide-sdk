@@ -7,10 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/landslidenetwork/slide-sdk/utils/avalanche/validators"
-	"github.com/landslidenetwork/slide-sdk/utils/version"
 	"sync"
 	"time"
+
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/validators"
+	"github.com/landslidenetwork/slide-sdk/utils/version"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils"
