@@ -57,9 +57,8 @@ func TestNetworkDoesNotConnectToItself(t *testing.T) {
 	require.NoError(t, err)
 	networkCodec := message.Codec
 	n := NewNetwork(p2pNetwork, nil, nil, 1, networkCodec)
-	// TODO: implement if necessary
-	t.Log(n)
-	t.Log(selfNodeID)
+	assert.NoError(t, n.Connected(context.Background(), selfNodeID, defaultPeerVersion))
+	assert.EqualValues(t, 0, n.Size())
 }
 
 func TestRequestAnyRequestsRoutingAndResponse(t *testing.T) {
@@ -72,8 +71,9 @@ func TestRequestAnyRequestsRoutingAndResponse(t *testing.T) {
 			senderWg.Add(1)
 			go func() {
 				defer senderWg.Done()
-				// TODO: implement
-				t.Log(nodeID)
+				if err := net.AppRequest(context.Background(), nodeID, requestID, time.Now().Add(5*time.Second), requestBytes); err != nil {
+					panic(err)
+				}
 			}()
 			return nil
 		},
@@ -81,7 +81,9 @@ func TestRequestAnyRequestsRoutingAndResponse(t *testing.T) {
 			senderWg.Add(1)
 			go func() {
 				defer senderWg.Done()
-				// TODO: implement
+				if err := net.AppResponse(context.Background(), nodeID, requestID, responseBytes); err != nil {
+					panic(err)
+				}
 				atomic.AddUint32(&callNum, 1)
 			}()
 			return nil
@@ -91,14 +93,13 @@ func TestRequestAnyRequestsRoutingAndResponse(t *testing.T) {
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	networkCodec := message.Codec
-	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 16, networkCodec)
-	// TODO: implement
-	t.Log(net)
+	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 16, codecManager)
+	net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
+	client := NewNetworkClient(net)
+	nodeID := ids.GenerateTestNodeID()
+	assert.NoError(t, net.Connected(context.Background(), nodeID, defaultPeerVersion))
 
 	requestMessage := HelloRequest{Message: "this is a request"}
-
-	// TODO: implement
 
 	totalRequests := 5000
 	numCallsPerRequest := 1 // on sending response
@@ -109,9 +110,17 @@ func TestRequestAnyRequestsRoutingAndResponse(t *testing.T) {
 	for i := 0; i < totalCalls; i++ {
 		go func(wg *sync.WaitGroup) {
 			defer wg.Done()
-			_, err := message.RequestToBytes(codecManager, requestMessage)
+			requestBytes, err := message.RequestToBytes(codecManager, requestMessage)
 			assert.NoError(t, err)
-			// TODO: implement
+			responseBytes, err := client.SendAppRequest(context.Background(), nodeID, requestBytes)
+			assert.NoError(t, err)
+			assert.NotNil(t, responseBytes)
+
+			var response TestMessage
+			if err = codecManager.Unmarshal(responseBytes, &response); err != nil {
+				panic(fmt.Errorf("unexpected error during unmarshal: %w", err))
+			}
+			assert.Equal(t, "Hi", response.Message)
 		}(requestWg)
 	}
 
@@ -175,7 +184,9 @@ func TestRequestRequestsRoutingAndResponse(t *testing.T) {
 			senderWg.Add(1)
 			go func() {
 				defer senderWg.Done()
-				// TODO: implement
+				if err := net.AppResponse(context.Background(), nodeID, requestID, responseBytes); err != nil {
+					panic(err)
+				}
 				atomic.AddUint32(&callNum, 1)
 			}()
 			return nil
@@ -185,9 +196,8 @@ func TestRequestRequestsRoutingAndResponse(t *testing.T) {
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	networkCodec := message.Codec
-	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 16, networkCodec)
-	// TODO: implement if necessary
+	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 16, codecManager)
+	net.SetRequestHandler(&HelloGreetingRequestHandler{codec: codecManager})
 	client := NewNetworkClient(net)
 
 	nodes := []ids.NodeID{
@@ -253,7 +263,7 @@ func TestAppRequestOnShutdown(t *testing.T) {
 			go func() {
 				called = true
 				// shutdown the network here to ensure any outstanding requests are handled as failed
-				// TODO: implement
+				net.Shutdown()
 				wg.Done()
 			}() // this is on a goroutine to avoid a deadlock since calling Shutdown takes the lock.
 			return nil
@@ -263,13 +273,10 @@ func TestAppRequestOnShutdown(t *testing.T) {
 	codecManager := buildCodec(t, HelloRequest{}, HelloResponse{})
 	p2pNetwork, err := p2p.NewNetwork(log.NewNopLogger(), nil, prometheus.NewRegistry(), "")
 	require.NoError(t, err)
-	networkCodec := message.Codec
-	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1, networkCodec)
+	net = NewNetwork(p2pNetwork, sender, log.NewNopLogger(), 1, codecManager)
 	client := NewNetworkClient(net)
 	nodeID := ids.GenerateTestNodeID()
-	// TODO: implement
-	t.Log(nodeID)
-	t.Log(client)
+	require.NoError(t, net.Connected(context.Background(), nodeID, defaultPeerVersion))
 
 	requestMessage := HelloRequest{Message: "this is a request"}
 
@@ -278,8 +285,9 @@ func TestAppRequestOnShutdown(t *testing.T) {
 		defer wg.Done()
 		requestBytes, err := message.RequestToBytes(codecManager, requestMessage)
 		require.NoError(t, err)
-		// TODO: implement
-		t.Log(requestBytes)
+		responseBytes, err := client.SendAppRequest(context.Background(), nodeID, requestBytes)
+		require.Error(t, err, ErrRequestFailed)
+		require.Nil(t, responseBytes)
 	}()
 	wg.Wait()
 	require.True(t, called)
