@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ava-labs/avalanchego/ids"
+	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
 func TestAveragerHeap(t *testing.T) {
