@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"math"
 	"net"
 	"testing"
 	"time"
@@ -15,12 +14,9 @@ import (
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/engine/enginetest"
-	"github.com/landslidenetwork/slide-sdk/utils/codec"
-	"github.com/landslidenetwork/slide-sdk/utils/codec/linearcodec"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	evmmessage "github.com/landslidenetwork/slide-sdk/utils/message"
 	vmtypes "github.com/landslidenetwork/slide-sdk/vm/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -178,16 +174,6 @@ func NewFreshKvApp(t *testing.T) (vmpb.VMServer, *enginetest.Sender) {
 	vmdb := dbm.NewMemDB()
 	appdb := dbm.NewMemDB()
 	return newKvApp(t, vmdb, appdb)
-}
-
-func buildCodec(t *testing.T, types ...interface{}) codec.Manager {
-	lc := linearcodec.NewDefault()
-	for _, typ := range types {
-		assert.NoError(t, lc.RegisterType(typ))
-	}
-
-	codecManager := codec.NewManager(math.MaxInt, lc)
-	return codecManager
 }
 
 func TestCreation(t *testing.T) {
