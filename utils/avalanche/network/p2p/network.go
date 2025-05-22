@@ -10,6 +10,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/validators"
+	"github.com/landslidenetwork/slide-sdk/utils/version"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
@@ -18,10 +21,11 @@ import (
 )
 
 var (
-	_            common.AppHandler = (*Network)(nil)
-	opLabel                        = "op"
-	handlerLabel                   = "handlerID"
-	labelNames                     = []string{opLabel, handlerLabel}
+	_            validators.Connector = (*Network)(nil)
+	_            common.AppHandler    = (*Network)(nil)
+	opLabel                           = "op"
+	handlerLabel                      = "handlerID"
+	labelNames                        = []string{opLabel, handlerLabel}
 )
 
 // NewNetwork returns an instance of Network
@@ -93,6 +97,16 @@ func (n *Network) AppGossip(ctx context.Context, nodeID ids.NodeID, msg []byte) 
 	return n.router.AppGossip(ctx, nodeID, msg)
 }
 
+func (n *Network) Connected(_ context.Context, nodeID ids.NodeID, _ *version.Application) error {
+	n.Peers.add(nodeID)
+	return nil
+}
+
+func (n *Network) Disconnected(_ context.Context, nodeID ids.NodeID) error {
+	n.Peers.remove(nodeID)
+	return nil
+}
+
 // AddHandler reserves an identifier for an application protocol
 func (n *Network) AddHandler(handlerID uint64, handler Handler) error {
 	return n.router.addHandler(handlerID, handler)
@@ -104,6 +118,20 @@ type Peers struct {
 	lock sync.RWMutex
 	//lint:ignore U1000 will be used to store peers
 	set set.SampleableSet[ids.NodeID]
+}
+
+func (p *Peers) add(nodeID ids.NodeID) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	p.set.Add(nodeID)
+}
+
+func (p *Peers) remove(nodeID ids.NodeID) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	p.set.Remove(nodeID)
 }
 
 func ProtocolPrefix(handlerID uint64) []byte {

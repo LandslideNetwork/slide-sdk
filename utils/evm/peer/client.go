@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/landslidenetwork/slide-sdk/utils/version"
+
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 
@@ -18,6 +20,11 @@ var (
 
 // NetworkClient defines ability to send request / response through the Network
 type NetworkClient interface {
+	// SendAppRequestAny synchronously sends request to an arbitrary peer with a
+	// node version greater than or equal to minVersion.
+	// Returns response bytes, the ID of the chosen peer, and ErrRequestFailed if
+	// the request should be retried.
+	SendAppRequestAny(ctx context.Context, minVersion *version.Application, request []byte) ([]byte, ids.NodeID, error)
 
 	// SendAppRequest synchronously sends request to the selected nodeID
 	// Returns response bytes, and ErrRequestFailed if the request should be retried.
@@ -46,4 +53,18 @@ func (c *client) SendAppRequest(ctx context.Context, nodeID ids.NodeID, request 
 		return nil, err
 	}
 	return waitingHandler.WaitForResult(ctx)
+}
+
+// SendAppRequestAny synchronously sends request to an arbitrary peer with a
+// node version greater than or equal to minVersion.
+// Returns response bytes, the ID of the chosen peer, and ErrRequestFailed if
+// the request should be retried.
+func (c *client) SendAppRequestAny(ctx context.Context, minVersion *version.Application, request []byte) ([]byte, ids.NodeID, error) {
+	waitingHandler := newWaitingResponseHandler()
+	nodeID, err := c.network.SendAppRequestAny(ctx, minVersion, request, waitingHandler)
+	if err != nil {
+		return nil, nodeID, err
+	}
+	response, err := waitingHandler.WaitForResult(ctx)
+	return response, nodeID, err
 }

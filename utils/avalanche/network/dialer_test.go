@@ -23,6 +23,12 @@ type testDialer struct {
 	listeners map[netip.AddrPort]*testListener
 }
 
+func newTestDialer() *testDialer {
+	return &testDialer{
+		listeners: make(map[netip.AddrPort]*testListener),
+	}
+}
+
 func (d *testDialer) NewListener() (netip.AddrPort, *testListener) {
 	// Uses a private IP to easily enable testing AllowPrivateIPs
 	addrPort := netip.AddrPortFrom(

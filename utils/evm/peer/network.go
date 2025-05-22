@@ -10,6 +10,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/validators"
+	"github.com/landslidenetwork/slide-sdk/utils/version"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/common"
@@ -33,19 +36,35 @@ var (
 )
 
 type Network interface {
+	validators.Connector
 	common.AppHandler
+
+	// SendAppRequestAny synchronously sends request to an arbitrary peer with a
+	// node version greater than or equal to minVersion.
+	// Returns the ID of the chosen peer, and an error if the request could not
+	// be sent to a peer with the desired [minVersion].
+	SendAppRequestAny(ctx context.Context, minVersion *version.Application, message []byte, handler message.ResponseHandler) (ids.NodeID, error)
 
 	// SendAppRequest sends message to given nodeID, notifying handler when there's a response or timeout
 	SendAppRequest(ctx context.Context, nodeID ids.NodeID, message []byte, handler message.ResponseHandler) error
 
 	// SetRequestHandler sets the provided request handler as the request handler
 	SetRequestHandler(handler message.RequestHandler)
+
+	// Shutdown stops all peer channel listeners and marks the node to have stopped
+	// n.Start() can be called again but the peers will have to be reconnected
+	// by calling OnPeerConnected for each peer
+	Shutdown()
+
+	// Size returns the size of the network in number of connected peers
+	Size() uint32
 }
 
 // network is an implementation of Network that processes message requests for
 // each peer in linear fashion
 type network struct {
 	lock                       sync.RWMutex // lock for mutating state of this Network struct
+	self                       ids.NodeID   // NodeID of this node
 	log                        log.Logger
 	requestIDGen               uint32                             // requestID counter used to track outbound requests
 	outstandingRequestHandlers map[uint32]message.ResponseHandler // maps avalanchego requestID => message.ResponseHandler
@@ -68,12 +87,13 @@ type network struct {
 	closed utils.Atomic[bool]
 }
 
-func NewNetwork(p2pNetwork *p2p.Network, appSender common.AppSender, log log.Logger, maxActiveAppRequests int64, codec codec.Manager,
+func NewNetwork(p2pNetwork *p2p.Network, appSender common.AppSender, log log.Logger, self ids.NodeID, maxActiveAppRequests int64, codec codec.Manager,
 ) Network {
 	return &network{
 		log:                        log,
 		appSender:                  appSender,
 		codec:                      codec,
+		self:                       self,
 		outstandingRequestHandlers: make(map[uint32]message.ResponseHandler),
 		activeAppRequests:          semaphore.NewWeighted(maxActiveAppRequests),
 		p2pNetwork:                 p2pNetwork,
@@ -82,6 +102,32 @@ func NewNetwork(p2pNetwork *p2p.Network, appSender common.AppSender, log log.Log
 		peers:                      NewPeerTracker(log),
 		appStats:                   stats.NewRequestHandlerStats(),
 	}
+}
+
+// SendAppRequestAny synchronously sends request to an arbitrary peer with a
+// node version greater than or equal to minVersion. If minVersion is nil,
+// the request will be sent to any peer regardless of their version.
+// Returns the ID of the chosen peer, and an error if the request could not
+// be sent to a peer with the desired [minVersion].
+func (n *network) SendAppRequestAny(ctx context.Context, minVersion *version.Application, request []byte, handler message.ResponseHandler) (ids.NodeID, error) {
+	// If the context was cancelled, we can skip sending this request.
+	if err := ctx.Err(); err != nil {
+		return ids.EmptyNodeID, err
+	}
+
+	// Take a slot from total [activeAppRequests] and block until a slot becomes available.
+	if err := n.activeAppRequests.Acquire(ctx, 1); err != nil {
+		return ids.EmptyNodeID, errAcquiringSemaphore
+	}
+
+	n.lock.Lock()
+	defer n.lock.Unlock()
+	if nodeID, ok := n.peers.GetAnyPeer(minVersion); ok {
+		return nodeID, n.sendAppRequest(ctx, nodeID, request, handler)
+	}
+
+	n.activeAppRequests.Release(1)
+	return ids.EmptyNodeID, fmt.Errorf("no peers found matching version %s out of %d peers", minVersion, n.peers.Size())
 }
 
 // SendAppRequest sends request message bytes to specified nodeID, notifying the responseHandler on response or failure
@@ -296,6 +342,58 @@ func (n *network) AppGossip(ctx context.Context, nodeID ids.NodeID, gossipBytes 
 	return gossipMsg.Handle(n.gossipHandler, nodeID)
 }
 
+// Connected adds the given nodeID to the peer list so that it can receive messages
+func (n *network) Connected(ctx context.Context, nodeID ids.NodeID, nodeVersion *version.Application) error {
+	n.log.Debug("adding new peer", "nodeID", nodeID)
+
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
+	if n.closed.Get() {
+		return nil
+	}
+
+	if nodeID != n.self {
+		// The legacy peer tracker doesn't expect to be connected to itself.
+		n.peers.Connected(nodeID, nodeVersion)
+	}
+
+	return n.p2pNetwork.Connected(ctx, nodeID, nodeVersion)
+}
+
+// Disconnected removes given [nodeID] from the peer list
+func (n *network) Disconnected(ctx context.Context, nodeID ids.NodeID) error {
+	n.log.Debug("disconnecting peer", "nodeID", nodeID)
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
+	if n.closed.Get() {
+		return nil
+	}
+
+	if nodeID != n.self {
+		// The legacy peer tracker doesn't expect to be connected to itself.
+		n.peers.Disconnected(nodeID)
+	}
+
+	return n.p2pNetwork.Disconnected(ctx, nodeID)
+}
+
+// Shutdown disconnects all peers
+func (n *network) Shutdown() {
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
+	// clean up any pending requests
+	for requestID, handler := range n.outstandingRequestHandlers {
+		_ = handler.OnFailure() // make sure all waiting threads are unblocked
+		delete(n.outstandingRequestHandlers, requestID)
+	}
+
+	n.peers = NewPeerTracker(n.log) // reset peers
+	n.closed.Set(true)              // mark network as closed
+}
+
 func (n *network) SetGossipHandler(handler message.GossipHandler) {
 	n.lock.Lock()
 	defer n.lock.Unlock()
@@ -308,6 +406,13 @@ func (n *network) SetRequestHandler(handler message.RequestHandler) {
 	defer n.lock.Unlock()
 
 	n.appRequestHandler = handler
+}
+
+func (n *network) Size() uint32 {
+	n.lock.RLock()
+	defer n.lock.RUnlock()
+
+	return uint32(n.peers.Size())
 }
 
 // invariant: peer/network must use explicitly even request ids.

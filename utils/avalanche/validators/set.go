@@ -11,6 +11,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/landslidenetwork/slide-sdk/utils/sampler"
+
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/formatting"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
@@ -24,6 +26,7 @@ var (
 	errDuplicateValidator   = errors.New("duplicate validator")
 	errMissingValidator     = errors.New("missing validator")
 	errTotalWeightNotUint64 = errors.New("total weight is not a uint64")
+	errInsufficientWeight   = errors.New("insufficient weight")
 )
 
 // newSet returns a new, empty set of validators.
@@ -32,6 +35,7 @@ func newSet(subnetID ids.ID, callbackListeners []ManagerCallbackListener) *vdrSe
 		subnetID:                 subnetID,
 		vdrs:                     make(map[ids.NodeID]*Validator),
 		totalWeight:              new(big.Int),
+		sampler:                  sampler.NewWeightedWithoutReplacement(),
 		managerCallbackListeners: slices.Clone(callbackListeners),
 	}
 }
@@ -46,6 +50,7 @@ type vdrSet struct {
 	totalWeight *big.Int
 
 	samplerInitialized bool
+	sampler            sampler.WeightedWithoutReplacement
 
 	managerCallbackListeners []ManagerCallbackListener
 	setCallbackListeners     []SetCallbackListener
@@ -249,9 +254,22 @@ func (s *vdrSet) Sample(size int) ([]ids.NodeID, error) {
 }
 
 func (s *vdrSet) sample(size int) ([]ids.NodeID, error) {
-	// TODO: implement
+	if !s.samplerInitialized {
+		if err := s.sampler.Initialize(s.weights); err != nil {
+			return nil, err
+		}
+		s.samplerInitialized = true
+	}
+
+	indices, ok := s.sampler.Sample(size)
+	if !ok {
+		return nil, errInsufficientWeight
+	}
 
 	list := make([]ids.NodeID, size)
+	for i, index := range indices {
+		list[i] = s.vdrSlice[index].NodeID
+	}
 	return list, nil
 }
 
