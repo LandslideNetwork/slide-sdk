@@ -6,11 +6,12 @@ package validators
 import (
 	"errors"
 	"fmt"
-	"github.com/landslidenetwork/slide-sdk/utils/sampler"
 	"math/big"
 	"slices"
 	"strings"
 	"sync"
+
+	"github.com/landslidenetwork/slide-sdk/utils/sampler"
 
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/formatting"
 
