@@ -15,6 +15,11 @@ type Validator struct {
 	PublicKey *bls.PublicKey
 	TxID      ids.ID
 	Weight    uint64
+
+	// index is used to efficiently remove validators from the validator set. It
+	// represents the index of this validator in the vdrSlice and weights
+	// arrays.
+	index int
 }
 
 // GetValidatorOutput is a struct that contains the publicly relevant values of

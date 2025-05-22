@@ -12,7 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 
-	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/validators"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 )
 

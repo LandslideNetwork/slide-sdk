@@ -9,7 +9,7 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/landslidenetwork/slide-sdk/utils/avalanche/timer/mockable"
-	"github.com/landslidenetwork/slide-sdk/utils/evm/warp/validators"
+	"github.com/landslidenetwork/slide-sdk/utils/avalanche/validators"
 	"github.com/landslidenetwork/slide-sdk/utils/saferand"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/prometheus/client_golang/prometheus"
