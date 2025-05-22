@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
+	"github.com/landslidenetwork/slide-sdk/utils/evm/metrics"
 	"github.com/landslidenetwork/slide-sdk/utils/ids"
 	utils_math "github.com/landslidenetwork/slide-sdk/utils/math"
 	"github.com/landslidenetwork/slide-sdk/utils/saferand"
 	"github.com/landslidenetwork/slide-sdk/utils/set"
 	"github.com/landslidenetwork/slide-sdk/utils/version"
-	"github.com/rcrowley/go-metrics"
 )
 
 const (
