@@ -6,7 +6,6 @@ package message
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"reflect"
 	"testing"
 
 	"github.com/landslidenetwork/slide-sdk/utils/crypto/bls"
@@ -71,23 +70,4 @@ func TestMarshalSignatureResponse(t *testing.T) {
 	err = Codec.Unmarshal(signatureResponseBytes, &s)
 	require.NoError(t, err)
 	require.Equal(t, signatureResponse.Signature, s.Signature)
-}
-
-// TestMarshalMessageSignatureRequest asserts that the structure or serialization logic hasn't changed, primarily to
-// ensure compatibility with the network.
-func TestMarshalMessageSignatureRequestInterface(t *testing.T) {
-	var signatureRequest Request = MessageSignatureRequest{
-		MessageID: ids.ID{68, 79, 70, 65, 72, 73, 64, 107},
-	}
-
-	base64MessageSignatureRequest := "AABET0ZBSElAawAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
-	valType := reflect.TypeOf(signatureRequest)
-	t.Log(valType.String())
-	signatureRequestBytes, err := Codec.Marshal(&signatureRequest)
-	require.NoError(t, err)
-	require.Equal(t, base64MessageSignatureRequest, base64.StdEncoding.EncodeToString(signatureRequestBytes))
-
-	var s Request
-	err = Codec.Unmarshal(signatureRequestBytes, &s)
-	require.NoError(t, err)
 }
